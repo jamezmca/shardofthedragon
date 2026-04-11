@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "build": "node generate-homepage.js"
+  }
+}

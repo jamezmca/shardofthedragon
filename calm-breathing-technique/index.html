@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Breathe — Guided Breathing for Stress & Anger Relief</title>
+  <meta name="description" content="An interactive breathing exercise for moments of stress or anger. Drag to match how you're feeling, then breathe with the circle as the fog slowly clears.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Nunito:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/recoleta">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    #landscape, #fog {
+      position: fixed;
+      inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+    #landscape { display: none; }
+    #fog        { z-index: 1; pointer-events: none; }
+
+    /* ── hint (start screen) ── */
+    #hint {
+      position: fixed;
+      bottom: max(72px, 13vh);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      text-align: center;
+      max-width: min(480px, 88vw);
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    #hint-head {
+      display: block;
+      font-family: 'Recoleta', 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-size: clamp(24px, 4vw, 38px);
+      color: rgba(46, 40, 36, 0.62);
+      letter-spacing: -0.01em;
+      margin-bottom: clamp(10px, 1.8vh, 18px);
+      line-height: 1.15;
+    }
+    #hint-body {
+      display: block;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: clamp(13px, 1.55vw, 16px);
+      color: rgba(46, 40, 36, 0.34);
+      line-height: 1.80;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── breathing ui ── */
+    #breath-ui {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(6px, 1.4vh, 14px);
+      opacity: 0;
+      transition: opacity 2s ease;
+      pointer-events: none;
+    }
+
+    #breath-title {
+      font-family: 'Recoleta', 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-size: clamp(28px, 5vw, 52px);
+      color: rgba(46, 40, 36, 0.78);
+      letter-spacing: -0.02em;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    #breath-subtitle {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: clamp(11px, 1.3vw, 14px);
+      color: rgba(46, 40, 36, 0.36);
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+
+    /* used only for 'well done' in done state */
+    #phase-label {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: clamp(12px, 1.4vw, 14px);
+      color: rgba(46, 40, 36, 0.42);
+      letter-spacing: 0.06em;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    #breath-canvas { display: block; }
+
+    /* ── session timer — fixed bottom centre ── */
+    #timer {
+      position: fixed;
+      bottom: max(24px, 4vh);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      font-family: 'Recoleta', 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      font-size: clamp(14px, 1.7vw, 18px);
+      color: rgba(46, 40, 36, 0.22);
+      letter-spacing: 0.01em;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      white-space: nowrap;
+    }
+
+    /* ── reset ── */
+    #reset {
+      position: fixed;
+      bottom: max(22px, 3.5vh);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 6;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 300;
+      font-size: clamp(11px, 1.3vw, 13px);
+      color: rgba(46, 40, 36, 0.30);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 1.5s ease, color 0.3s;
+      pointer-events: none;
+    }
+    #reset:hover { color: rgba(46, 40, 36, 0.58); }
+
+    /* ── anger tag ── */
+    #tag {
+      position: fixed;
+      z-index: 20;
+      pointer-events: none;
+      padding: 5px 13px 6px;
+      border-radius: 100px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 400;
+      font-size: clamp(10px, 1.25vw, 12px);
+      letter-spacing: 0.06em;
+      text-transform: lowercase;
+      white-space: nowrap;
+      opacity: 0;
+      transition: background-color 0.45s ease, color 0.45s ease, opacity 0.2s ease;
+    }
+
+  </style>
+</head>
+<body>
+
+<canvas id="landscape"></canvas>
+<canvas id="fog"></canvas>
+
+<div id="hint">
+  <span id="hint-head">find calm admist the storm.</span>
+  <span id="hint-body">press and hold anywhere, then drag — the further you go,<br>the longer we breathe together until the fog lifts.</span>
+</div>
+
+<div id="breath-ui">
+  <div id="breath-title">breathe to clear the fog</div>
+  <div id="breath-subtitle">pace with the circle</div>
+  <canvas id="breath-canvas"></canvas>
+  <div id="phase-label"></div>
+</div>
+
+<div id="timer"></div>
+<button id="reset">begin again</button>
+<div id="tag"></div>
+
+<script>
+'use strict';
+
+// ── DOM ─────────────────────────────────────────────────────
+const $ls    = document.getElementById('landscape');
+const $fg    = document.getElementById('fog');
+const $hint  = document.getElementById('hint');
+const $bui   = document.getElementById('breath-ui');
+const $bcvs  = document.getElementById('breath-canvas');
+const $phase = document.getElementById('phase-label');
+const $reset = document.getElementById('reset');
+const $tag   = document.getElementById('tag');
+const $timer = document.getElementById('timer');
+
+const lc = $ls.getContext('2d');
+const fc = $fg.getContext('2d');
+const bc = $bcvs.getContext('2d');
+
+// ── STATE ───────────────────────────────────────────────────
+let state   = 'idle';   // idle | dragging | breathing | done
+let dragX0  = 0;
+let dragY0  = 0;
+let anger   = 0;        // 0–1
+let fog     = 0;        // current opacity
+let fog0    = 0;        // opacity at release
+let fogRate = 0;        // opacity per second to decrease
+let bPhase  = 'inhale'; // inhale | hold | exhale
+let bProg   = 0;        // 0–1 within phase
+let fogT    = 0;        // animation clock
+let prevTs  = null;
+
+// Fog blob descriptors
+const blobs = [];
+
+// ── INIT ────────────────────────────────────────────────────
+function init() {
+  sizeCanvases();
+  setupBlobs();
+  drawLandscape();
+  addEvents();
+  requestAnimationFrame(tick);
+}
+
+function sizeCanvases() {
+  const W = innerWidth, H = innerHeight;
+  $ls.width  = $fg.width  = W;
+  $ls.height = $fg.height = H;
+  const bs = Math.min(W * 0.38, H * 0.30, 220);
+  $bcvs.width = $bcvs.height = bs;
+}
+
+function setupBlobs() {
+  blobs.length = 0;
+  const N = 5;
+  for (let i = 0; i < N; i++) {
+    blobs.push({
+      x:    -0.5 + (i / N) * 2.0,
+      y:    0.20 + Math.random() * 0.48,
+      vx:   0.010 + Math.random() * 0.012,
+      size: 0.45 + Math.random() * 0.55,
+      ph:   Math.random() * Math.PI * 2,
+      ps:   0.04 + Math.random() * 0.06,
+    });
+  }
+}
+
+// ── LANDSCAPE (pixel art) ────────────────────────────────────
+function drawLandscape() {
+  const W = $ls.width, H = $ls.height;
+
+  const PW = 320, PH = 180;
+  const off = document.createElement('canvas');
+  off.width = PW; off.height = PH;
+  const oc = off.getContext('2d');
+  oc.imageSmoothingEnabled = false;
+
+  const rng    = seededRng(42);
+  const grassY = 115;
+
+  oc.fillStyle = '#ffffff';
+  oc.fillRect(0, 0, PW, PH);
+
+  pixCircle(oc, 272, 22, 9, '#ffd04a');
+  pixCircle(oc, 270, 20, 3, '#fff4b0');
+
+  oc.fillStyle = '#c8d2da';
+  pixMountain(oc,  48,  78, 32, grassY);
+  pixMountain(oc, 145,  63, 44, grassY);
+  pixMountain(oc, 228,  70, 37, grassY);
+  pixMountain(oc, 298,  76, 26, grassY);
+
+  oc.fillStyle = '#aebec8';
+  pixMountain(oc,  88,  84, 26, grassY);
+  pixMountain(oc, 182,  77, 31, grassY);
+  pixMountain(oc, 258,  82, 22, grassY);
+
+  oc.fillStyle = '#6eb048';
+  oc.fillRect(0, grassY, PW, PH - grassY);
+
+  const gd = oc.getImageData(0, grassY, PW, PH - grassY);
+  const dp = gd.data;
+  for (let i = 0; i < dp.length; i += 4) {
+    const rv = rng();
+    if (rv < 0.06) {
+      dp[i]   = Math.min(255, dp[i]   + 24);
+      dp[i+1] = Math.min(255, dp[i+1] + 24);
+      dp[i+2] = Math.min(255, dp[i+2] + 12);
+    } else if (rv < 0.11) {
+      dp[i]   = Math.max(0, dp[i]   - 18);
+      dp[i+1] = Math.max(0, dp[i+1] - 18);
+      dp[i+2] = Math.max(0, dp[i+2] -  8);
+    }
+  }
+  oc.putImageData(gd, 0, grassY);
+
+  [
+    [ 18,118,'#f090b0'],[ 34,120,'#f0c840'],[ 52,117,'#c090e0'],
+    [ 70,121,'#f090b0'],[ 88,118,'#60d0a8'],[106,116,'#f0c840'],
+    [124,120,'#f090b0'],[144,117,'#c090e0'],[162,121,'#f0c840'],
+    [180,118,'#f090b0'],[200,120,'#60d0a8'],[220,116,'#c090e0'],
+    [238,119,'#f0c840'],[256,117,'#f090b0'],[276,121,'#c090e0'],
+    [294,118,'#f0c840'],[312,120,'#f090b0'],
+  ].forEach(([fx, fy, fcol]) => {
+    oc.fillStyle = fcol;
+    oc.fillRect(fx, fy, 2, 2);
+  });
+
+  lc.clearRect(0, 0, W, H);
+  lc.imageSmoothingEnabled = false;
+  lc.drawImage(off, 0, 0, W, H);
+}
+
+function seededRng(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function pixCircle(ctx, cx, cy, r, color) {
+  ctx.fillStyle = color;
+  for (let dy = -r; dy <= r; dy++) {
+    const w = Math.round(Math.sqrt(r * r - dy * dy));
+    ctx.fillRect(cx - w, cy + dy, w * 2 + 1, 1);
+  }
+}
+
+function pixMountain(ctx, px, py, pw, baseY) {
+  const h = baseY - py;
+  for (let y = 0; y <= h; y++) {
+    const w = Math.round((y / h) * pw);
+    ctx.fillRect(px - w, py + y, w * 2 + 1, 1);
+  }
+}
+
+const PUFFS = [
+  [ 0,     0,    1.00],
+  [-0.60,  0.22, 0.78],
+  [ 0.60,  0.18, 0.80],
+  [-0.28, -0.52, 0.66],
+  [ 0.30, -0.50, 0.70],
+  [-0.88,  0.06, 0.56],
+  [ 0.88,  0.08, 0.58],
+];
+
+// ── FOG ─────────────────────────────────────────────────────
+function drawFog() {
+  const W = $fg.width, H = $fg.height;
+  fc.clearRect(0, 0, W, H);
+  if (fog < 0.008) return;
+
+  fc.save();
+  fc.globalAlpha = fog * 0.60;
+  fc.fillStyle = '#e2e2e6';
+  fc.fillRect(0, 0, W, H);
+  fc.restore();
+
+  const baseR = Math.min(W, H) * 0.36;
+  blobs.forEach(b => {
+    const cx = b.x * W;
+    const cy = (b.y + Math.sin(fogT * b.ps + b.ph) * 0.042) * H;
+    const r  = baseR * b.size;
+
+    PUFFS.forEach(([dx, dy, rs]) => {
+      const bx = cx + dx * r;
+      const by = cy + dy * r;
+      const pr = r * rs;
+
+      const g = fc.createRadialGradient(bx, by, 0, bx, by, pr);
+      g.addColorStop(0,    `rgba(182, 182, 188, ${fog * 0.66})`);
+      g.addColorStop(0.50, `rgba(196, 196, 202, ${fog * 0.28})`);
+      g.addColorStop(1,    `rgba(210, 210, 215,  0)`);
+
+      fc.fillStyle = g;
+      fc.beginPath();
+      fc.arc(bx, by, pr, 0, 2 * Math.PI);
+      fc.fill();
+    });
+  });
+}
+
+// ── ANGER TAG ───────────────────────────────────────────────
+const ANGER_BANDS = [
+  { max: 0.17, label: 'hmmm',        bg: 'rgba(238,182,42,0.92)',  color: '#2c1800' },
+  { max: 0.34, label: 'hmmpffhh',    bg: 'rgba(228,108,32,0.92)',  color: '#fff'    },
+  { max: 0.51, label: 'grrr',        bg: 'rgba(206,46,24,0.93)',   color: '#fff'    },
+  { max: 0.68, label: 'grrrrrrr',    bg: 'rgba(172,14,14,0.94)',   color: '#fff'    },
+  { max: 0.85, label: 'rrrraawwrrr', bg: 'rgba(128,6,6,0.95)',     color: '#fff'    },
+  { max: 1.01, label: 'skreeee',     bg: 'rgba(80,0,24,0.97)',     color: '#fff'    },
+];
+
+function getAngerBand(level) {
+  return ANGER_BANDS.find(b => level < b.max) ?? ANGER_BANDS[ANGER_BANDS.length - 1];
+}
+
+let _ptrType = 'mouse';
+
+function showTag(e) {
+  _ptrType = e.pointerType ?? 'mouse';
+  $tag.style.opacity = '1';
+  moveTag(e);
+}
+
+function moveTag(e) {
+  if (anger < 0.01) { $tag.style.opacity = '0'; return; }
+  const { label, bg, color } = getAngerBand(anger);
+  const dur  = 60 + anger * 9 * 60;
+  const tmins = Math.floor(dur / 60);
+  const tsecs = Math.floor(dur % 60);
+  $tag.textContent           = `${label} | ${tmins}:${tsecs.toString().padStart(2, '0')}`;
+  $tag.style.backgroundColor = bg;
+  $tag.style.color           = color;
+  $tag.style.opacity         = '1';
+
+  if (_ptrType === 'touch') {
+    $tag.style.transform = 'translateX(-50%)';
+    $tag.style.left = `${e.clientX}px`;
+    $tag.style.top  = `${e.clientY - 72}px`;
+  } else {
+    $tag.style.transform = 'none';
+    $tag.style.left = `${e.clientX + 18}px`;
+    $tag.style.top  = `${e.clientY - 34}px`;
+  }
+}
+
+function hideTag() {
+  $tag.style.opacity = '0';
+}
+
+// ── BREATHING ───────────────────────────────────────────────
+function breathTiming() {
+  const p = fog0 > 0 ? Math.max(0, Math.min(1, 1 - fog / fog0)) : 1;
+  return {
+    inhale: 3 + p * 1,   // 3 → 4 s
+    hold:   0.5 + p * 1.5, // 0.5 → 2 s
+    exhale: 3 + p * 3,   // 3 → 6 s
+  };
+}
+
+const CIRCLE_LABELS = { inhale: 'in', hold: 'hold', exhale: 'out' };
+const NEXT_PHASE    = { inhale: 'hold', hold: 'exhale', exhale: 'inhale' };
+
+function easeInOut(t) {
+  return (1 - Math.cos(t * Math.PI)) / 2;
+}
+
+// Per-phase orb color stops as [r, g, b, a] arrays for smooth interpolation
+const ORB_RAW = {
+  inhale: [[112,172,196,0.88],[90, 152,178,0.42],[70, 132,162,0]],
+  hold:   [[102,178,160,0.88],[84, 160,146,0.42],[64, 140,130,0]],
+  exhale: [[126,152,192,0.88],[108,136,176,0.42],[88, 116,160,0]],
+};
+
+function lerpRgba(a, b, t) {
+  return `rgba(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)},${(a[3]+(b[3]-a[3])*t).toFixed(3)})`;
+}
+
+function drawBreath() {
+  const sz = $bcvs.width;
+  bc.clearRect(0, 0, sz, sz);
+  if (state !== 'breathing' && state !== 'done') return;
+
+  const cx = sz / 2, cy = sz / 2;
+  const minR = sz * 0.18, maxR = sz * 0.40;
+  const blur = Math.round(sz * 0.016);
+
+  let r;
+  if      (bPhase === 'inhale') r = minR + (maxR - minR) * easeInOut(bProg);
+  else if (bPhase === 'hold')   r = maxR;
+  else                          r = maxR - (maxR - minR) * easeInOut(bProg);
+
+  // Interpolate color stops between current and next phase using bProg as weight
+  const cur  = ORB_RAW[bPhase]          ?? ORB_RAW.exhale;
+  const nxt  = ORB_RAW[NEXT_PHASE[bPhase]] ?? ORB_RAW.inhale;
+  const t    = bProg; // 0 = start of phase, 1 = end → fully blended to next
+  const c0 = lerpRgba(cur[0], nxt[0], t);
+  const c1 = lerpRgba(cur[1], nxt[1], t);
+  const c2 = lerpRgba(cur[2], nxt[2], t);
+
+  // Subtle ambient glow — less blur than before
+  bc.filter = `blur(${Math.round(blur * 1.5)}px)`;
+  const glow = bc.createRadialGradient(cx, cy, 0, cx, cy, maxR * 1.5);
+  glow.addColorStop(0, 'rgba(102, 162, 184, 0.20)');
+  glow.addColorStop(1, 'rgba(102, 162, 184, 0)');
+  bc.fillStyle = glow;
+  bc.beginPath(); bc.arc(cx, cy, maxR * 1.5, 0, 2 * Math.PI); bc.fill();
+
+  // Orb — softer edge but less blurred than before
+  bc.filter = `blur(${Math.round(blur * 0.5)}px)`;
+  const orb = bc.createRadialGradient(cx, cy, 0, cx, cy, r);
+  orb.addColorStop(0,    c0);
+  orb.addColorStop(0.65, c1);
+  orb.addColorStop(1,    c2);
+  bc.fillStyle = orb;
+  bc.beginPath(); bc.arc(cx, cy, r, 0, 2 * Math.PI); bc.fill();
+
+  bc.filter = 'none';
+}
+
+// ── EVENTS ──────────────────────────────────────────────────
+function addEvents() {
+  document.addEventListener('pointerdown',   onDown, { passive: false });
+  document.addEventListener('pointermove',   onMove, { passive: false });
+  document.addEventListener('pointerup',     onUp,   { passive: false });
+  document.addEventListener('pointercancel', onUp,   { passive: false });
+  $reset.addEventListener('click', resetAll);
+}
+
+function onDown(e) {
+  if (state !== 'idle') return;
+  e.preventDefault();
+  try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+  state  = 'dragging';
+  dragX0 = e.clientX;
+  dragY0 = e.clientY;
+  fog    = 0;
+  showTag(e);
+}
+
+function onMove(e) {
+  if (state !== 'dragging') return;
+  e.preventDefault();
+  const dx   = e.clientX - dragX0;
+  const dy   = e.clientY - dragY0;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  anger = Math.max(0, Math.min(1, dist / (Math.min(innerWidth, innerHeight) * 0.70)));
+  fog   = anger * 0.92;
+  $hint.style.opacity = String(Math.max(0, 1 - anger * 4));
+  moveTag(e);
+}
+
+function onUp(e) {
+  if (state !== 'dragging') return;
+  e.preventDefault();
+  hideTag();
+
+  if (anger < 0.08) {
+    state = 'idle';
+    fog   = 0;
+    anger = 0;
+    $hint.style.opacity = '1';
+    return;
+  }
+
+  fog0    = fog;
+  const duration = 60 + anger * 9 * 60;
+  fogRate = fog0 / duration;
+
+  bPhase = 'inhale';
+  bProg  = 0;
+  state  = 'breathing';
+  $hint.style.opacity  = '0';
+  $bui.style.opacity   = '1';
+  $timer.style.opacity = '1';
+  $phase.textContent   = '';
+}
+
+function resetAll() {
+  state   = 'idle';
+  anger   = 0;
+  fog     = 0;
+  fog0    = 0;
+  fogRate = 0;
+  bPhase  = 'inhale';
+  bProg   = 0;
+  $bui.style.opacity         = '0';
+  $hint.style.opacity        = '1';
+  $reset.style.opacity       = '0';
+  $reset.style.pointerEvents = 'none';
+  $timer.style.opacity       = '0';
+  $timer.textContent         = '';
+  $phase.textContent         = '';
+  bc.clearRect(0, 0, $bcvs.width, $bcvs.height);
+  hideTag();
+}
+
+function onFogCleared() {
+  state = 'done';
+  $phase.textContent         = 'well done';
+  $timer.style.opacity       = '0';
+  $timer.textContent         = '';
+  $reset.style.opacity       = '1';
+  $reset.style.pointerEvents = 'auto';
+}
+
+// ── MAIN LOOP ───────────────────────────────────────────────
+function tick(ts) {
+  const dt = prevTs != null ? Math.min((ts - prevTs) / 1000, 0.12) : 0;
+  prevTs = ts;
+
+  if (fog > 0.005 || state === 'dragging') fogT += dt;
+
+  blobs.forEach(b => {
+    b.x += b.vx * dt;
+    if (b.x > 1.65) b.x -= 2.1;
+  });
+
+  if (state === 'breathing' && fog > 0) {
+    fog = Math.max(0, fog - fogRate * dt);
+    if (fog <= 0) onFogCleared();
+  }
+
+  if (state === 'breathing' || state === 'done') {
+    const t = breathTiming();
+    bProg  += dt / t[bPhase];
+    if (bProg >= 1) {
+      bProg -= 1;
+      bPhase = NEXT_PHASE[bPhase] ?? 'inhale';
+    }
+  }
+
+  if (state === 'breathing' && fogRate > 0) {
+    const rem  = Math.max(0, fog / fogRate);
+    const mins = Math.floor(rem / 60);
+    const secs = Math.floor(rem % 60);
+    $timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  drawFog();
+  drawBreath();
+
+  requestAnimationFrame(tick);
+}
+
+// ── RESIZE ──────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  sizeCanvases();
+  drawLandscape();
+});
+
+// ── START ───────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
