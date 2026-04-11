@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Codebreaker is a free tool for teachers to create printable maths worksheets where students decode a secret message by solving 26 equations. Covers NZ Year 9-10 curriculum including fractions, percentages, indices, ratios, BODMAS, and 25 composite question types across 5 difficulty levels.">
+    <title>Codebreaker | The Mathematics & Numeracy Worksheet Puzzle</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; color: #000; background: #fff; }
+
+        header { text-align: center; margin-bottom: 32px; }
+        header h1 { font-size: 2.4rem; letter-spacing: 6px; text-transform: uppercase; font-weight: 300; }
+        header p { color: #888; font-size: 0.85rem; margin-top: 4px; }
+
+        .config-section { margin-bottom: 24px; }
+        .config-section > label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 8px; }
+
+        .preset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .preset-btn { padding: 8px 18px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; }
+        .preset-btn:hover { border-color: #888; }
+        .preset-btn.active { background: #000; color: #fff; border-color: #000; }
+
+        .saved-selections { margin-top: 8px; }
+        .saved-sel-row { display: flex; gap: 6px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+        .saved-sel-btn { padding: 6px 14px; border: 1px solid #b0b0b0; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.15s; }
+        .saved-sel-btn:hover { border-color: #888; }
+        .saved-sel-btn.active { background: #000; color: #fff; border-color: #000; }
+        .edit-sel-btn, .del-sel-btn { padding: 4px 10px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        .edit-sel-btn:hover { border-color: #888; }
+        .del-sel-btn:hover { border-color: #c00; color: #c00; }
+
+        input[type="text"] { width: 100%; padding: 10px 14px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; background: #fff; }
+        input[type="text"]:focus { outline: none; border-color: #888; }
+
+        .actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: 1px solid #000; background: #000; color: #fff; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover { background: #333; }
+        .btn.secondary { background: #fff; color: #000; }
+        .btn.secondary:hover { background: #f0f0f0; }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        /* Print preview container */
+        .print-preview-scroll { margin-top: 32px; overflow-x: auto; display: none; }
+        .print-preview { min-width: fit-content; border: 2px solid #000; border-radius: 6px; padding: 32px 28px; background: #fff; }
+        .print-preview-header { text-align: center; margin-bottom: 24px; }
+        .print-preview-header h2 { font-size: 1.8rem; letter-spacing: 6px; text-transform: uppercase; font-weight: 300; margin-bottom: 2px; }
+        .print-preview-header .print-site { font-size: 0.75rem; color: #888; }
+
+        .worksheet-title { text-align: center; font-size: 1.1rem; font-weight: 600; margin-bottom: 28px; }
+
+        .code-sequence { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 40px; }
+        .code-group { display: flex; gap: 6px; margin-right: 20px; }
+        .code-cell { display: flex; flex-direction: column; align-items: center; width: 36px; }
+        .code-letter-line { width: 30px; border-bottom: 1.5px solid #000; height: 24px; margin-bottom: 3px; }
+        .code-number { font-size: 1.05rem; font-weight: 600; }
+
+        .key-section h3 { text-align: center; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 16px; }
+        .key-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+        .key-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eee; }
+        .key-row:last-child { border-bottom: none; }
+        .key-letter { font-weight: 700; font-size: 0.95rem; min-width: 18px; }
+        .key-equation { flex: 1; }
+        .key-equals { font-size: 0.85rem; color: #888; white-space: nowrap; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: #fff; border-radius: 8px; width: 94%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.1rem; font-weight: 600; }
+        .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #888; }
+        .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid #eee; display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-body input[type="text"] { margin-bottom: 12px; }
+
+        /* Tabs */
+        .modal-tabs { display: flex; border-bottom: 1px solid #eee; padding: 0 20px; }
+        .modal-tab { padding: 10px 20px; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: #888; border-bottom: 2px solid transparent; transition: all 0.15s; }
+        .modal-tab:hover { color: #444; }
+        .modal-tab.active { color: #000; border-bottom-color: #000; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Selected items tray */
+        .selected-tray { margin-bottom: 12px; min-height: 0; }
+        .selected-tray-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px; }
+        .selected-tray-items { display: flex; flex-wrap: wrap; gap: 4px; }
+        .selected-tray-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: #e8f0fe; color: #1a56aa; border-radius: 3px; font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: background 0.1s; }
+        .selected-tray-chip:hover { background: #d0e0f8; }
+        .selected-tray-chip::after { content: '\00d7'; font-size: 0.85rem; margin-left: 2px; }
+
+        /* Flat curriculum list (By Topic tab) */
+        .curriculum-search { margin-bottom: 12px; }
+        .curriculum-list { display: flex; flex-direction: column; gap: 4px; }
+        .curriculum-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 4px; transition: background 0.1s; }
+        .curriculum-item:hover { background: #f5f5f5; }
+        .curriculum-item.selected { background: #e8f0fe; }
+        .curriculum-item.hidden { display: none; }
+        .curriculum-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
+        .curriculum-item-content { flex: 1; }
+        .curriculum-item-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
+        .cur-tag { font-size: 0.65rem; padding: 1px 6px; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .cur-tag.cat-a { background: #e8f4fd; color: #1a6daa; }
+        .cur-tag.cat-b { background: #fdf2e8; color: #aa6d1a; }
+        .cur-tag.cat-c { background: #e8fdf0; color: #1aaa4d; }
+        .cur-tag.cat-d { background: #f3e8fd; color: #7a1aaa; }
+        .cur-tag.cat-e { background: #fde8ee; color: #aa1a4d; }
+        .cur-tag.cat-f { background: #e8eafd; color: #3a3aaa; }
+        .cur-tag.sub { background: #f0f0f0; color: #555; }
+        .cur-tag.level { background: #fff; border: 1px solid #ccc; color: #333; }
+        .curriculum-item-desc { font-size: 0.8rem; color: #444; }
+
+        /* Question cards grid (By Question tab) */
+        .question-search { margin-bottom: 12px; }
+        .question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .question-card { border: 1.5px solid #ddd; border-radius: 6px; padding: 12px; cursor: pointer; transition: all 0.15s; background: #fff; }
+        .question-card:hover { border-color: #aaa; }
+        .question-card.selected { background: #e8f0fe; border-color: #a0c4f0; }
+        .question-card.hidden { display: none; }
+        .question-card-eq { min-height: 32px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+        .question-card-tags { display: flex; gap: 3px; flex-wrap: wrap; }
+
+        /* Instructions */
+        .instructions { color: #aaa; font-size: 0.78rem; line-height: 1.6; }
+        .instructions hr { border: none; border-top: 1px solid #ddd; margin-bottom: 12px; }
+
+        /* Print */
+        @media print {
+            body { max-width: 100%; padding: 0; background: #fff; color: #000; }
+            .no-print { display: none !important; }
+            .print-preview-scroll { display: block !important; overflow: visible !important; margin: 0; }
+            .print-preview { border: none !important; padding: 0; margin: 0; min-width: 0 !important; }
+            .print-preview-header .print-site { color: #666; }
+            header { display: none !important; }
+            .key-columns { grid-template-columns: 1fr 1fr; gap: 0 24px; }
+            .key-row { border-color: #ccc; }
+            .code-number { color: #000; }
+        }
+
+        @page { size: A4; margin: 15mm; }
+    </style>
+</head>
+<body>
+
+<header class="no-print">
+    <h1>Codebreaker</h1>
+    <p>Encoded math puzzles for the classroom</p>
+</header>
+
+<!-- Config -->
+<div class="config-section no-print">
+    <label>Difficulty Preset</label>
+    <div class="preset-row">
+        <button class="preset-btn" data-preset="beginner" onclick="selectPreset('beginner')">Beginner</button>
+        <button class="preset-btn" data-preset="junior" onclick="selectPreset('junior')">Junior</button>
+        <button class="preset-btn" data-preset="intermediate" onclick="selectPreset('intermediate')">Intermediate</button>
+        <button class="preset-btn" data-preset="advanced" onclick="selectPreset('advanced')">Advanced</button>
+        <button class="preset-btn" data-preset="expert" onclick="selectPreset('expert')">Expert</button>
+        <button class="preset-btn" data-preset="custom" onclick="openCustomModal()">Custom</button>
+    </div>
+    <div class="saved-selections" id="saved-selections"></div>
+</div>
+
+<div class="config-section no-print">
+    <label>Worksheet Title</label>
+    <input type="text" id="worksheet-title" placeholder="e.g. Year 9 Number Warm-Up">
+</div>
+
+<div class="config-section no-print" id="message-input-section">
+    <label>Secret Message</label>
+    <input type="text" id="secret-message" placeholder="e.g. MATH IS AWESOME" oninput="this.value = this.value.toUpperCase()">
+</div>
+
+<div class="actions no-print" id="action-buttons">
+    <button class="btn" id="encode-btn" onclick="encode()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Encode
+    </button>
+    <button class="btn" id="regen-btn" onclick="regenerate()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Re-generate
+    </button>
+    <button class="btn secondary" id="save-btn" onclick="saveWorksheet()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+    </button>
+    <button class="btn secondary" id="print-btn" onclick="window.print()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print
+    </button>
+    <button class="btn secondary" id="reset-btn" onclick="resetWorksheet()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Reset
+    </button>
+</div>
+
+<!-- Print Preview / Worksheet -->
+<div class="print-preview-scroll" id="print-preview-scroll">
+    <div class="print-preview" id="print-preview">
+        <div class="print-preview-header">
+            <h2>Codebreaker</h2>
+            <span class="print-site">Codebreaker.smoljames.com</span>
+        </div>
+        <div class="worksheet-title" id="ws-title"></div>
+        <div class="code-sequence" id="code-sequence"></div>
+        <div class="key-section">
+            <h3>Decode Key</h3>
+            <div class="key-columns" id="key-grid"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="instructions no-print" style="margin-top:48px;">
+    <hr>
+    <p><strong>How Codebreaker works:</strong></p>
+    <ol>
+        <li><strong>Choose difficulty:</strong> Pick a preset (Beginner, Junior, Intermediate, Advanced, or Expert) or tap "Custom" to hand-pick topics. Presets cascade &mdash; selecting a higher level automatically includes all easier levels for a balanced mix.</li>
+        <li><strong>Build your selection:</strong> In the custom builder you can browse <em>By Topic</em> (flat list with colour-coded tags) or <em>By Question</em> (example cards rendered in LaTeX). Selected items appear in the tray above and stay in sync across both tabs. Use the search bar to filter quickly.</li>
+        <li><strong>Set up the worksheet:</strong> Enter a worksheet title and type your secret message. Click <strong>Encode</strong> to generate 26 unique equations &mdash; one per letter A&ndash;Z &mdash; each evaluating to a number 1&ndash;26. The message is displayed as a number sequence that students decode.</li>
+        <li><strong>Question variety:</strong> Codebreaker draws from 14 core topic generators (addition, fractions, percentages, indices, ratios, and more) plus 25 composite question types that merge concepts (e.g. fractions wrapping arithmetic, roots inside expressions, percentage of a fraction, cube roots with indices). Each composite supports up to 3 difficulty tiers.</li>
+        <li><strong>Re-generate vs Encode:</strong> <strong>Re-generate</strong> keeps the same question types assigned to each letter but re-rolls the numbers, giving students a fresh worksheet with the same structure. <strong>Encode</strong> fully rebuilds the worksheet &mdash; new question types, new letter assignments, everything from scratch.</li>
+        <li><strong>Print:</strong> Click <strong>Print</strong> for a clean black-and-white A4 worksheet with the code sequence, two-column answer key, and all equations rendered in LaTeX. All UI controls are hidden automatically.</li>
+        <li><strong>Save:</strong> Custom curriculum selections and generated worksheets are saved to your browser&rsquo;s local storage so you can reuse or edit them later.</li>
+    </ol>
+</div>
+
+<!-- Custom Curriculum Modal -->
+<div class="modal-overlay" id="custom-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Custom Curriculum Selection</h2>
+            <button class="modal-close" onclick="closeCustomModal()">&times;</button>
+        </div>
+        <div class="modal-tabs">
+            <button class="modal-tab active" onclick="switchTab('topic')">By Topic</button>
+            <button class="modal-tab" onclick="switchTab('question')">By Question</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="custom-name" placeholder="Selection name (e.g. My Year 10 Set)">
+            <div class="selected-tray" id="selected-tray"></div>
+            <!-- By Topic tab -->
+            <div class="tab-content active" id="tab-topic">
+                <input type="text" id="curriculum-search" class="curriculum-search" placeholder="Search topics..." oninput="filterCurriculum()">
+                <div class="curriculum-list" id="curriculum-list"></div>
+            </div>
+            <!-- By Question tab -->
+            <div class="tab-content" id="tab-question">
+                <input type="text" id="question-search" class="question-search" placeholder="Search questions..." oninput="filterQuestions()">
+                <div class="question-grid" id="question-grid"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn secondary" onclick="closeCustomModal()">Cancel</button>
+            <button class="btn" onclick="saveCustomSelection()">Save Selection</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Curriculum Data ──
+const CURRICULUM = {
+    "A_Number_Sense_and_Operations": {
+        "Place_Value_Rounding_Estimation": {
+            "Level_1": "Whole numbers to 10,000; identify place value; round to nearest 10, 100, 1000",
+            "Level_2": "Large whole numbers; decimals to 2dp; rounding decimals",
+            "Level_3": "Decimals to 4dp; significant figures",
+            "Level_4": "Upper and lower bounds from rounding; interval notation for bounds",
+            "Level_5": "Error intervals and rounding within calculations"
+        },
+        "Addition_Subtraction": {
+            "Level_1": "Single and multi-digit whole numbers with regrouping",
+            "Level_2": "Decimals to 2dp; mixed whole and decimal numbers",
+            "Level_3": "Integers including negatives; subtracting negatives; sign rules",
+            "Level_4": "Mixed integers, decimals, and fractions in expressions",
+            "Level_5": "Real numbers including indices and signed values"
+        },
+        "Multiplication_Division": {
+            "Level_1": "Single-digit multiplication; exact division",
+            "Level_2": "Multi-digit multiplication; division with remainder",
+            "Level_3": "Decimal multiplication and division",
+            "Level_4": "Integers with negatives; long division with decimals",
+            "Level_5": "Real numbers including standard form"
+        },
+        "Order_of_Operations": {
+            "Level_1": "BODMAS with whole numbers",
+            "Level_2": "Include brackets and mixed operations",
+            "Level_3": "Include squares and cubes",
+            "Level_4": "Nested brackets and fractional components",
+            "Level_5": "Expressions including indices and negative values"
+        },
+        "Factors_and_Multiples": {
+            "Level_1": "List factors and factor pairs",
+            "Level_2": "Identify prime and composite numbers",
+            "Level_3": "Prime factorisation",
+            "Level_4": "Use prime factorisation to find HCF and LCM",
+            "Level_5": "LCM and HCF in applied contexts"
+        }
+    },
+    "B_Fractions_Decimals_Percentages": {
+        "Fractions": {
+            "Level_1": "Equivalent fractions; simplify; common denominators",
+            "Level_2": "Add and subtract fractions",
+            "Level_3": "Multiply and divide fractions including mixed numbers",
+            "Level_4": "Fraction of a fraction; proportional fraction reasoning",
+            "Level_5": "Midpoint (mean) of two fractions; fraction scaling with unknowns"
+        },
+        "Decimals": {
+            "Level_1": "Convert between fractions and terminating decimals",
+            "Level_2": "Recurring decimals to fractions (simple cases)",
+            "Level_3": "Operations with decimals to 3dp",
+            "Level_4": "Decimal expressions with indices and standard form",
+            "Level_5": "Decimal reasoning within proportional contexts"
+        },
+        "Percentages": {
+            "Level_1": "Convert between fraction, decimal and percentage",
+            "Level_2": "Find percentage of a quantity",
+            "Level_3": "Percentage increase and decrease",
+            "Level_4": "Reverse percentages using multipliers",
+            "Level_5": "Successive percentage change using multiplicative factors"
+        }
+    },
+    "C_Ratios_Rates_Proportion": {
+        "Ratios": {
+            "Level_1": "Simplify ratios",
+            "Level_2": "Divide quantities in a given ratio",
+            "Level_3": "Equivalent ratios and scaling",
+            "Level_4": "Solve missing value in ratio",
+            "Level_5": "Ratios with mixed number systems (fractions/percentages)"
+        },
+        "Rates_and_Unit_Rates": {
+            "Level_1": "Calculate simple rates",
+            "Level_2": "Unit rate calculations",
+            "Level_3": "Compare value using common unit rate",
+            "Level_4": "Convert between units (e.g., km/h to m/s)",
+            "Level_5": "Rates expressed using algebraic reasoning"
+        },
+        "Proportion": {
+            "Level_1": "Direct proportion",
+            "Level_2": "Solve proportions with cross multiplication",
+            "Level_3": "Solve for total from fractional or percentage parts",
+            "Level_4": "Equivalent fractions with unknown multiplier",
+            "Level_5": "Combined proportional reasoning"
+        }
+    },
+    "D_Indices_and_Standard_Form": {
+        "Index_Laws": {
+            "Level_1": "Positive integer powers; squares and cubes",
+            "Level_2": "Product and quotient laws",
+            "Level_3": "Power of a power; zero index",
+            "Level_4": "Negative indices",
+            "Level_5": "Fractional indices (numeric only)"
+        },
+        "Standard_Form": {
+            "Level_1": "Write numbers in scientific notation",
+            "Level_2": "Convert from scientific notation",
+            "Level_3": "Multiply and divide in standard form",
+            "Level_4": "Add and subtract in standard form",
+            "Level_5": "Standard form within rounding constraints"
+        }
+    },
+    "E_Integers_and_Number_Line": {
+        "Ordering_and_Absolute_Value": {
+            "Level_1": "Order integers on a number line",
+            "Level_2": "Absolute value",
+            "Level_3": "Operations with signed integers",
+            "Level_4": "Signed decimals and fractions",
+            "Level_5": "Expressions with multiple signed operations"
+        }
+    },
+    "F_Composite_Questions": {
+        "Frac_Wrap_AddSub": {
+            "Level_1": "(a+b)/c with whole numbers",
+            "Level_2": "(a+b)/c with decimals or negatives",
+            "Level_3": "(a²+b)/c or (√a+b)/c"
+        },
+        "Frac_Wrap_Multiply": {
+            "Level_1": "(a×b)/c with whole numbers",
+            "Level_2": "(a×b)/c with negatives",
+            "Level_3": "(a²×b)/c with indices inside"
+        },
+        "Frac_AddSub_Different": {
+            "Level_1": "a/b + c/d with small different denominators",
+            "Level_2": "a/b - c/d with larger denominators",
+            "Level_3": "Negative fractions with different denominators"
+        },
+        "Root_of_Expression": {
+            "Level_1": "√(a+b) with simple integers",
+            "Level_2": "√(a×b) or √(a²+b)",
+            "Level_3": "³√a or √(expression) with indices"
+        },
+        "Root_Plus_Arithmetic": {
+            "Level_1": "√a + b×c with whole numbers",
+            "Level_2": "√a + b×c with negatives",
+            "Level_3": "√a × b + c² combined"
+        },
+        "Index_Over_Divisor": {
+            "Level_1": "a²/b + c with whole numbers",
+            "Level_2": "a³/b + c with cubes",
+            "Level_3": "a²/b - c with negatives or a⁻¹ in expression"
+        },
+        "BODMAS_With_Fraction": {
+            "Level_1": "(a + b/c) × d with simple values",
+            "Level_2": "(a² + b/c) × d with power inside",
+            "Level_3": "(√a + b/c) × d - e nested"
+        },
+        "Nested_Brackets": {
+            "Level_1": "((a+b)×c - d) ÷ e",
+            "Level_2": "((a²+b)×c - d) ÷ e with power inside",
+            "Level_3": "((√a+b)×c - d) ÷ e with root inside"
+        },
+        "Root_Times_Integer": {
+            "Level_1": "√a × b + c with small values",
+            "Level_2": "√a × b - c with subtraction",
+            "Level_3": "√a × b + c² mixed"
+        },
+        "Cube_Plus_Fraction": {
+            "Level_1": "a³ + b/c with simple cube",
+            "Level_2": "a³ - b/c with subtraction",
+            "Level_3": "a³ + √b combined"
+        },
+        "Neg_Exponent_Multiply": {
+            "Level_1": "a⁻¹ × b + c basic",
+            "Level_2": "a⁻¹ × b - c with subtraction",
+            "Level_3": "a⁻¹ × b + c⁻¹ × d double negative exponent"
+        },
+        "Mixed_Op_Fraction": {
+            "Level_1": "(a²+b)/c with simple values",
+            "Level_2": "(a²-b)/c or (a×b+c)/d",
+            "Level_3": "(a³+√b)/c mixed powers and roots"
+        },
+        "Double_Fraction": {
+            "Level_1": "(a/b) ÷ c with small values",
+            "Level_2": "(a/b) ÷ (c/d) fraction divided by fraction",
+            "Level_3": "((a+b)/c) ÷ d nested"
+        },
+        "Percent_of_Expression": {
+            "Level_1": "p% of (a+b) simple percentage",
+            "Level_2": "p% of (a×b) or p% of a²",
+            "Level_3": "Compound: increase by p% then q%"
+        },
+        "Index_Subtract_Index": {
+            "Level_1": "a² - b² difference of squares",
+            "Level_2": "a² - b² + c with extra step",
+            "Level_3": "a³ - b² mixed powers"
+        },
+        "Frac_Root_Numerator": {
+            "Level_1": "(√a + b)/c simple",
+            "Level_2": "(√a - b)/c with subtraction",
+            "Level_3": "(√a + b²)/c mixed"
+        },
+        "Chain_Multiply_Divide": {
+            "Level_1": "a × b ÷ c + d basic chain",
+            "Level_2": "a × b ÷ c - d with negatives possible",
+            "Level_3": "a² × b ÷ c + d with index start"
+        },
+        "Signed_Frac_Add": {
+            "Level_1": "-a/b + c/b same denominator",
+            "Level_2": "-a/b + c/d different denominators",
+            "Level_3": "-a/b - c/d + e/f multi-term"
+        },
+        "Root_of_Fraction": {
+            "Level_1": "√(a/b) × c simple",
+            "Level_2": "√(a/b) × c + d extra step",
+            "Level_3": "³√(a) × b with cube root"
+        },
+        "Power_Chain": {
+            "Level_1": "a² × b - c × d basic",
+            "Level_2": "a² × b + c² mixed squares",
+            "Level_3": "a³ × b - c² × d cubes and squares"
+        },
+        "Abs_Value_Expression": {
+            "Level_1": "|a - b| + c basic absolute value",
+            "Level_2": "|a - b| × c with multiplication",
+            "Level_3": "|a² - b| ÷ c with power inside"
+        },
+        "Fraction_Times_Fraction": {
+            "Level_1": "(a/b) × (c/d) basic fraction multiply",
+            "Level_2": "(a/b) × (c/d) + e extra step",
+            "Level_3": "(a/b) × (c/d) × e chained"
+        },
+        "Mixed_Number_Ops": {
+            "Level_1": "Mixed number as improper: a b/c simplified",
+            "Level_2": "Mixed number addition: a b/c + d",
+            "Level_3": "Mixed number multiply: a b/c × d"
+        },
+        "Percent_of_Fraction": {
+            "Level_1": "p% of a/b with simple values",
+            "Level_2": "p% of (a/b × c) combined",
+            "Level_3": "Reverse: find whole from p% of fraction"
+        },
+        "Cube_Root_Expression": {
+            "Level_1": "³√a + b basic cube root",
+            "Level_2": "³√a × b + c multiplied",
+            "Level_3": "³√(a×b) + c with expression inside"
+        }
+    }
+};
+
+// Tag color map for categories
+const CAT_COLORS = {
+    'A_Number_Sense_and_Operations': 'cat-a',
+    'B_Fractions_Decimals_Percentages': 'cat-b',
+    'C_Ratios_Rates_Proportion': 'cat-c',
+    'D_Indices_and_Standard_Form': 'cat-d',
+    'E_Integers_and_Number_Line': 'cat-e',
+    'F_Composite_Questions': 'cat-f'
+};
+const CAT_LABELS = {
+    'A_Number_Sense_and_Operations': 'Number',
+    'B_Fractions_Decimals_Percentages': 'Fractions',
+    'C_Ratios_Rates_Proportion': 'Ratios',
+    'D_Indices_and_Standard_Form': 'Indices',
+    'E_Integers_and_Number_Line': 'Integers',
+    'F_Composite_Questions': 'Composite'
+};
+
+// ── State ──
+let currentPreset = null;
+let currentCustomId = null;
+let editingCustomId = null;
+let generatedWorksheet = null;
+
+// ── Presets ──
+const PRESETS = {
+    beginner: { maxLevel: 1 },
+    junior: { maxLevel: 2 },
+    intermediate: { maxLevel: 3 },
+    advanced: { maxLevel: 4 },
+    expert: { maxLevel: 5 }
+};
+
+function getPresetTopics(presetKey) {
+    const { maxLevel } = PRESETS[presetKey];
+    const minLevel = Math.max(1, maxLevel - 1);
+    const topics = [];
+    for (const cat in CURRICULUM) {
+        for (const sub in CURRICULUM[cat]) {
+            for (const lev in CURRICULUM[cat][sub]) {
+                const num = parseInt(lev.replace('Level_', ''));
+                if (num >= minLevel && num <= maxLevel) {
+                    topics.push({ category: cat, subcategory: sub, level: lev, levelNum: num });
+                }
+            }
+        }
+    }
+    return topics;
+}
+
+function selectPreset(key) {
+    currentPreset = key;
+    currentCustomId = null;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === key));
+    document.querySelectorAll('.saved-sel-btn').forEach(b => b.classList.remove('active'));
+    updateEncodeBtn();
+}
+
+// ── Custom Selections (localStorage) ──
+function getSavedSelections() {
+    return JSON.parse(localStorage.getItem('kryptic_selections') || '[]');
+}
+function setSavedSelections(arr) {
+    localStorage.setItem('kryptic_selections', JSON.stringify(arr));
+}
+
+function renderSavedSelections() {
+    const container = document.getElementById('saved-selections');
+    const sels = getSavedSelections();
+    if (!sels.length) { container.innerHTML = ''; return; }
+    container.innerHTML = '<label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:4px;display:block;">Saved Selections</label>';
+    sels.forEach((sel) => {
+        const row = document.createElement('div');
+        row.className = 'saved-sel-row';
+        row.innerHTML = `
+            <button class="saved-sel-btn ${currentCustomId === sel.id ? 'active' : ''}" onclick="selectCustom('${sel.id}')">${sel.name}</button>
+            <button class="edit-sel-btn" onclick="editCustom('${sel.id}')">Edit</button>
+            <button class="del-sel-btn" onclick="deleteCustom('${sel.id}')">Delete</button>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function selectCustom(id) {
+    currentPreset = 'custom';
+    currentCustomId = id;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === 'custom'));
+    document.querySelectorAll('.saved-sel-btn').forEach(b => {
+        const sel = getSavedSelections().find(s => s.id === id);
+        b.classList.toggle('active', sel && b.textContent === sel.name);
+    });
+    updateEncodeBtn();
+}
+
+function deleteCustom(id) {
+    if (!confirm('Delete this selection?')) return;
+    setSavedSelections(getSavedSelections().filter(s => s.id !== id));
+    if (currentCustomId === id) {
+        currentCustomId = null;
+        currentPreset = null;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    }
+    renderSavedSelections();
+    updateEncodeBtn();
+}
+
+function editCustom(id) {
+    editingCustomId = id;
+    openCustomModal();
+}
+
+// ── Modal: Tabs, selection state ──
+let modalSelected = new Set(); // paths currently selected in the modal
+
+// Example LaTeX for each subcategory+level (demo, not evaluated)
+const EXAMPLE_QUESTIONS = {
+    'Addition_Subtraction': {
+        1: '3 + 5', 2: '7.3 + 4.7', 3: '15 - (-3)',
+        4: '\\frac{3}{4} + \\frac{5}{4}', 5: '2^{2} + 7'
+    },
+    'Multiplication_Division': {
+        1: '4 \\times 3', 2: '13 \\times 4', 3: '2.5 \\times 6',
+        4: '(-3) \\times (-8)', 5: '\\frac{4800}{2 \\times 10^{2}}'
+    },
+    'Order_of_Operations': {
+        1: '3 + 2 \\times 4', 2: '(5 + 3) \\times 2', 3: '4^{2} + 3 \\times 2',
+        4: '\\left(\\frac{3}{2} + 5\\right) \\times 4 - 6', 5: '3^{2} - (-4) + 1'
+    },
+    'Place_Value_Rounding_Estimation': {
+        1: '6 + 8', 2: '13.67 \\text{ rounded}', 3: '17.34 \\text{ to nearest whole}',
+        4: '\\text{midpoint of } [11.5,\\, 12.5)', 5: '\\text{error interval calc}'
+    },
+    'Factors_and_Multiples': {
+        1: '3 \\times 7', 2: '42 \\div 7', 3: '2^{2} \\times 3',
+        4: '\\text{HCF}(12,\\, 18)', 5: '\\text{LCM}(4,\\, 6)'
+    },
+    'Fractions': {
+        1: '\\frac{10}{2}', 2: '\\frac{3}{5} + \\frac{7}{5}',
+        3: '\\frac{3}{4} \\times 8', 4: '\\frac{1}{2} \\times \\frac{1}{3} \\times 42',
+        5: '\\frac{\\frac{7}{3} + \\frac{11}{3}}{2}'
+    },
+    'Decimals': {
+        1: '0.5 \\times 14', 2: '3.25 \\times 4', 3: '8.75 + 3.25',
+        4: '0.3^{2} \\times 100 + 7', 5: '0.004 \\times 10^{3}'
+    },
+    'Percentages': {
+        1: '50\\% \\text{ of } 20', 2: '25\\% \\text{ of } 48',
+        3: '8 \\text{ increased by } 50\\%', 4: '\\frac{24}{1.20}',
+        5: '10 \\times 1.2 \\times 1.5'
+    },
+    'Ratios': {
+        1: '\\text{half of } 18', 2: '30 \\div (2\\!:\\!3)\\text{, first}',
+        3: '\\frac{2}{5} \\times 40', 4: '\\frac{3}{7} \\times 28',
+        5: '\\frac{24}{4}'
+    },
+    'Rates_and_Unit_Rates': {
+        1: '20 \\div 2', 2: '\\$36 \\div 4 \\text{ items}',
+        3: '\\frac{\\$45}{5}', 4: '\\frac{60 \\text{ km}}{3 \\text{ h}}',
+        5: '\\frac{120}{3 \\times 2}'
+    },
+    'Proportion': {
+        1: '18 \\div 3', 2: '\\frac{3}{4} \\times 16',
+        3: '\\frac{9}{3} \\times 5', 4: '\\frac{36}{6} \\times 3',
+        5: '\\frac{72}{2 \\times 4}'
+    },
+    'Index_Laws': {
+        1: '3^{2}', 2: '2^{3} \\times 2^{1}', 3: '(2^{2})^{2} + 3',
+        4: '5^{-1} \\times 60', 5: '25^{\\frac{1}{2}} + 7'
+    },
+    'Standard_Form': {
+        1: '12 \\times 1', 2: '1.5 \\times 10^{1}',
+        3: '(3 \\times 10^{2}) \\times (4 \\times 10^{-2})',
+        4: '(0.8 \\times 10^{1}) + (0.6 \\times 10^{1})',
+        5: '(700 \\times 10^{-2}) + 7'
+    },
+    'Ordering_and_Absolute_Value': {
+        1: '5 + 9', 2: '|-7| + 3', 3: '(-3) \\times (-4) + 2',
+        4: '18 + (-2.5) + (-2.5)', 5: '(-5) + 3 + 16'
+    },
+    // Composite
+    'Frac_Wrap_AddSub': { 1: '\\frac{7 + 5}{3}', 2: '\\frac{-3 + 15}{4}', 3: '\\frac{3^{2} + 5}{7}' },
+    'Frac_Wrap_Multiply': { 1: '\\frac{4 \\times 6}{3}', 2: '\\frac{(-3) \\times (-6)}{2}', 3: '\\frac{2^{2} \\times 5}{4}' },
+    'Frac_AddSub_Different': { 1: '\\frac{3}{4} + \\frac{5}{6}', 2: '\\frac{7}{3} - \\frac{5}{6}', 3: '-\\frac{1}{4} + \\frac{13}{6}' },
+    'Root_of_Expression': { 1: '\\sqrt{9 + 16}', 2: '\\sqrt{4 \\times 4}', 3: '\\sqrt[3]{27} + 5' },
+    'Root_Plus_Arithmetic': { 1: '\\sqrt{16} + 3 \\times 2', 2: '\\sqrt{25} + (-2) \\times 3', 3: '\\sqrt{16} \\times 3 + 2^{2}' },
+    'Index_Over_Divisor': { 1: '\\frac{4^{2}}{2} + 3', 2: '\\frac{3^{3}}{9} + 2', 3: '\\frac{4^{2}}{2} - (-3)' },
+    'BODMAS_With_Fraction': { 1: '(3 + \\frac{9}{3}) \\times 2', 2: '(2^{2} + \\frac{6}{3}) \\times 2', 3: '(\\sqrt{9} + \\frac{8}{4}) \\times 3 - 1' },
+    'Nested_Brackets': { 1: '((2 + 3) \\times 4 - 6) \\div 2', 2: '((3^{2} + 1) \\times 2 - 4) \\div 4', 3: '((\\sqrt{16} + 2) \\times 5 - 10) \\div 2' },
+    'Root_Times_Integer': { 1: '\\sqrt{9} \\times 5 + 1', 2: '\\sqrt{25} \\times 3 - 4', 3: '\\sqrt{16} \\times 2 + 3^{2}' },
+    'Cube_Plus_Fraction': { 1: '2^{3} + \\frac{10}{2}', 2: '2^{3} - \\frac{6}{3}', 3: '3^{3} + \\sqrt{4}' },
+    'Neg_Exponent_Multiply': { 1: '3^{-1} \\times 48 + 2', 2: '2^{-1} \\times 30 - 3', 3: '2^{-1} \\times 16 + 5^{-1} \\times 30' },
+    'Mixed_Op_Fraction': { 1: '\\frac{3^{2} + 7}{2}', 2: '\\frac{4 \\times 3 + 6}{3}', 3: '\\frac{2^{3} + \\sqrt{9}}{1}' },
+    'Double_Fraction': { 1: '\\frac{\\frac{24}{3}}{2}', 2: '\\frac{\\frac{15}{3}}{\\frac{5}{4}}', 3: '\\frac{(7+5)/3}{2}' },
+    'Percent_of_Expression': { 1: '50\\% \\text{ of } (4 + 16)', 2: '25\\% \\text{ of } (3 \\times 8)', 3: '10 \\times 1.2 \\times 1.5' },
+    'Index_Subtract_Index': { 1: '5^{2} - 3^{2}', 2: '5^{2} - 3^{2} + 2', 3: '3^{3} - 4^{2}' },
+    'Frac_Root_Numerator': { 1: '\\frac{\\sqrt{25} + 7}{3}', 2: '\\frac{\\sqrt{16} - 1}{3}', 3: '\\frac{\\sqrt{9} + 2^{2}}{1}' },
+    'Chain_Multiply_Divide': { 1: '6 \\times 4 \\div 3 + 2', 2: '(-4) \\times (-3) \\div 2 + 1', 3: '3^{2} \\times 4 \\div 6 + 2' },
+    'Signed_Frac_Add': { 1: '-\\frac{3}{2} + \\frac{11}{2}', 2: '-\\frac{2}{3} + \\frac{5}{4}', 3: '-\\frac{3}{4} - \\frac{1}{2} + \\frac{9}{4}' },
+    'Root_of_Fraction': { 1: '\\sqrt{\\frac{9}{4}} \\times 8', 2: '\\sqrt{\\frac{16}{4}} \\times 5 + 1', 3: '\\sqrt[3]{8} \\times 6' },
+    'Power_Chain': { 1: '2^{2} \\times 3 - 4 \\div 2', 2: '3^{2} \\times 2 + 1^{2}', 3: '2^{3} \\times 3 - 3^{2} \\times 2' },
+    // New composites
+    'Abs_Value_Expression': { 1: '|3 - 10| + 5', 2: '|4 - 11| \\times 2', 3: '|3^{2} - 20| \\div 2' },
+    'Fraction_Times_Fraction': { 1: '\\frac{3}{2} \\times \\frac{8}{3}', 2: '\\frac{5}{4} \\times \\frac{8}{5} + 3', 3: '\\frac{3}{2} \\times \\frac{4}{3} \\times 6' },
+    'Mixed_Number_Ops': { 1: '3\\frac{1}{2} \\times 2', 2: '2\\frac{3}{4} + 5', 3: '1\\frac{2}{3} \\times 6' },
+    'Percent_of_Fraction': { 1: '50\\% \\text{ of } \\frac{24}{1}', 2: '25\\% \\text{ of } (\\frac{3}{2} \\times 16)', 3: '\\frac{18}{0.75}' },
+    'Cube_Root_Expression': { 1: '\\sqrt[3]{8} + 5', 2: '\\sqrt[3]{27} \\times 4 + 1', 3: '\\sqrt[3]{8 \\times 27} + 2' }
+};
+
+function switchTab(tab) {
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.textContent.includes(tab === 'topic' ? 'Topic' : 'Question')));
+    document.getElementById('tab-topic').classList.toggle('active', tab === 'topic');
+    document.getElementById('tab-question').classList.toggle('active', tab === 'question');
+}
+
+function toggleSelection(path) {
+    if (modalSelected.has(path)) {
+        modalSelected.delete(path);
+    } else {
+        modalSelected.add(path);
+    }
+    syncSelectionUI();
+}
+
+function removeSelection(path) {
+    modalSelected.delete(path);
+    syncSelectionUI();
+}
+
+function syncSelectionUI() {
+    // Sync topic list checkboxes + highlight
+    document.querySelectorAll('#curriculum-list .curriculum-item').forEach(item => {
+        const cb = item.querySelector('input[type=checkbox]');
+        if (cb) {
+            const on = modalSelected.has(cb.dataset.path);
+            cb.checked = on;
+            item.classList.toggle('selected', on);
+        }
+    });
+    // Sync question cards
+    document.querySelectorAll('#question-grid .question-card').forEach(card => {
+        card.classList.toggle('selected', modalSelected.has(card.dataset.path));
+    });
+    // Render selected tray
+    renderSelectedTray();
+}
+
+function renderSelectedTray() {
+    const tray = document.getElementById('selected-tray');
+    if (!modalSelected.size) { tray.innerHTML = ''; return; }
+    let html = '<div class="selected-tray-label">Selected (' + modalSelected.size + ')</div><div class="selected-tray-items">';
+    modalSelected.forEach(path => {
+        const [cat, sub, lev] = path.split('|');
+        const catColor = CAT_COLORS[cat] || 'cat-a';
+        const subLabel = sub.replace(/_/g, ' ');
+        const levLabel = lev.replace('_', ' ');
+        html += `<span class="selected-tray-chip" onclick="removeSelection('${path}')">${subLabel} ${levLabel}</span>`;
+    });
+    html += '</div>';
+    tray.innerHTML = html;
+}
+
+function buildCurriculumList() {
+    const container = document.getElementById('curriculum-list');
+    container.innerHTML = '';
+    for (const catKey in CURRICULUM) {
+        for (const subKey in CURRICULUM[catKey]) {
+            for (const levKey in CURRICULUM[catKey][subKey]) {
+                const desc = CURRICULUM[catKey][subKey][levKey];
+                const path = `${catKey}|${subKey}|${levKey}`;
+                const catColor = CAT_COLORS[catKey] || 'cat-a';
+                const catLabel = CAT_LABELS[catKey] || catKey;
+                const subLabel = subKey.replace(/_/g, ' ');
+                const levLabel = levKey.replace('_', ' ');
+                const isOn = modalSelected.has(path);
+
+                const item = document.createElement('div');
+                item.className = 'curriculum-item' + (isOn ? ' selected' : '');
+                item.dataset.search = `${catLabel} ${subLabel} ${levLabel} ${desc}`.toLowerCase();
+                item.innerHTML = `
+                    <input type="checkbox" data-path="${path}" ${isOn ? 'checked' : ''}>
+                    <div class="curriculum-item-content">
+                        <div class="curriculum-item-tags">
+                            <span class="cur-tag ${catColor}">${catLabel}</span>
+                            <span class="cur-tag sub">${subLabel}</span>
+                            <span class="cur-tag level">${levLabel}</span>
+                        </div>
+                        <label class="curriculum-item-desc">${desc}</label>
+                    </div>
+                `;
+                item.querySelector('input').addEventListener('change', () => toggleSelection(path));
+                item.querySelector('label').addEventListener('click', (e) => { e.preventDefault(); toggleSelection(path); });
+                container.appendChild(item);
+            }
+        }
+    }
+}
+
+function buildQuestionGrid() {
+    const container = document.getElementById('question-grid');
+    container.innerHTML = '';
+    for (const catKey in CURRICULUM) {
+        for (const subKey in CURRICULUM[catKey]) {
+            const examples = EXAMPLE_QUESTIONS[subKey];
+            if (!examples) continue;
+            for (const levKey in CURRICULUM[catKey][subKey]) {
+                const levNum = parseInt(levKey.replace('Level_', ''));
+                const latex = examples[levNum];
+                if (!latex) continue;
+                const path = `${catKey}|${subKey}|${levKey}`;
+                const catColor = CAT_COLORS[catKey] || 'cat-a';
+                const catLabel = CAT_LABELS[catKey] || catKey;
+                const subLabel = subKey.replace(/_/g, ' ');
+                const levLabel = levKey.replace('_', ' ');
+                const isOn = modalSelected.has(path);
+
+                const card = document.createElement('div');
+                card.className = 'question-card' + (isOn ? ' selected' : '');
+                card.dataset.path = path;
+                card.dataset.search = `${catLabel} ${subLabel} ${levLabel}`.toLowerCase();
+                card.innerHTML = `
+                    <div class="question-card-eq" data-latex="${latex.replace(/"/g, '&quot;')}"></div>
+                    <div class="question-card-tags">
+                        <span class="cur-tag ${catColor}">${catLabel}</span>
+                        <span class="cur-tag sub">${subLabel}</span>
+                        <span class="cur-tag level">${levLabel}</span>
+                    </div>
+                `;
+                card.addEventListener('click', () => toggleSelection(path));
+                container.appendChild(card);
+            }
+        }
+    }
+    // Render KaTeX in cards
+    container.querySelectorAll('.question-card-eq').forEach(el => {
+        katex.render(el.dataset.latex, el, { throwOnError: false });
+    });
+}
+
+function filterCurriculum() {
+    const query = document.getElementById('curriculum-search').value.toLowerCase().trim();
+    document.querySelectorAll('.curriculum-item').forEach(item => {
+        item.classList.toggle('hidden', query && !item.dataset.search.includes(query));
+    });
+}
+
+function filterQuestions() {
+    const query = document.getElementById('question-search').value.toLowerCase().trim();
+    document.querySelectorAll('.question-card').forEach(card => {
+        card.classList.toggle('hidden', query && !card.dataset.search.includes(query));
+    });
+}
+
+function openCustomModal() {
+    modalSelected = new Set();
+    if (editingCustomId) {
+        const sel = getSavedSelections().find(s => s.id === editingCustomId);
+        if (sel) {
+            document.getElementById('custom-name').value = sel.name;
+            sel.topics.forEach(t => modalSelected.add(t));
+        }
+    } else {
+        document.getElementById('custom-name').value = '';
+    }
+    buildCurriculumList();
+    buildQuestionGrid();
+    renderSelectedTray();
+    document.getElementById('curriculum-search').value = '';
+    document.getElementById('question-search').value = '';
+    switchTab('topic');
+    document.getElementById('custom-modal').classList.add('open');
+}
+
+function closeCustomModal() {
+    document.getElementById('custom-modal').classList.remove('open');
+    editingCustomId = null;
+}
+
+function saveCustomSelection() {
+    const name = document.getElementById('custom-name').value.trim();
+    if (!name) { alert('Please enter a name for this selection.'); return; }
+    if (!modalSelected.size) { alert('Please select at least one topic.'); return; }
+
+    const checked = [...modalSelected];
+    const sels = getSavedSelections();
+    let savedId;
+    if (editingCustomId) {
+        const idx = sels.findIndex(s => s.id === editingCustomId);
+        if (idx >= 0) { sels[idx].name = name; sels[idx].topics = checked; }
+        savedId = editingCustomId;
+    } else {
+        savedId = 'sel_' + Date.now();
+        sels.push({ id: savedId, name, topics: checked });
+    }
+    setSavedSelections(sels);
+    closeCustomModal();
+    renderSavedSelections();
+    selectCustom(savedId);
+}
+
+// ── Encode Button Visibility ──
+function updateEncodeBtn() {
+    const title = document.getElementById('worksheet-title').value.trim();
+    const msg = document.getElementById('secret-message').value.trim();
+    const hasPreset = currentPreset && (currentPreset !== 'custom' || currentCustomId);
+    const hasNoNumbers = !/\d/.test(msg);
+    document.getElementById('encode-btn').disabled = !(title && msg && hasPreset && hasNoNumbers);
+}
+document.getElementById('worksheet-title').addEventListener('input', updateEncodeBtn);
+document.getElementById('secret-message').addEventListener('input', updateEncodeBtn);
+
+// ── Question Generation ──
+function getSelectedTopics() {
+    if (currentPreset && currentPreset !== 'custom') {
+        return getPresetTopics(currentPreset);
+    }
+    if (currentCustomId) {
+        const sel = getSavedSelections().find(s => s.id === currentCustomId);
+        if (!sel) return [];
+        // Always include explicitly selected topics. For cascade, average the selected
+        // levels, floor it, and only pad down by at most 1 level from that floor.
+        const selectedSet = new Set(sel.topics);
+        const levels = sel.topics.map(p => parseInt(p.split('|')[2].replace('Level_', '')));
+        const avgLevel = Math.floor(levels.reduce((a, b) => a + b, 0) / levels.length);
+        const cascadeMin = Math.max(1, avgLevel - 1);
+        const topics = [];
+        const seen = new Set();
+        sel.topics.forEach(path => {
+            const [cat, sub, lev] = path.split('|');
+            const selectedLev = parseInt(lev.replace('Level_', ''));
+            // Always include the explicitly selected level
+            if (!seen.has(path) && CURRICULUM[cat]?.[sub]?.[lev]) {
+                seen.add(path);
+                topics.push({ category: cat, subcategory: sub, level: lev, levelNum: selectedLev });
+            }
+            // Cascade down, but only to cascadeMin
+            for (let l = Math.max(cascadeMin, selectedLev - 1); l < selectedLev; l++) {
+                const key = `${cat}|${sub}|Level_${l}`;
+                if (!seen.has(key) && CURRICULUM[cat]?.[sub]?.['Level_' + l]) {
+                    seen.add(key);
+                    topics.push({ category: cat, subcategory: sub, level: 'Level_' + l, levelNum: l });
+                }
+            }
+        });
+        return topics;
+    }
+    return [];
+}
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ── Topic-Aware Equation Generation ──
+// Each subcategory has its own generator that produces equations authentic to that topic.
+// The level controls complexity within each topic.
+
+function generateEquation(target, topics) {
+    const topic = topics[randInt(0, topics.length - 1)];
+    const sub = topic.subcategory;
+    const level = topic.levelNum;
+
+    // Route to topic-specific generator
+    const generators = {
+        'Place_Value_Rounding_Estimation': genPlaceValue,
+        'Addition_Subtraction': genAddSub,
+        'Multiplication_Division': genMulDiv,
+        'Order_of_Operations': genBODMAS,
+        'Factors_and_Multiples': genFactors,
+        'Fractions': genFractions,
+        'Decimals': genDecimals,
+        'Percentages': genPercentages,
+        'Ratios': genRatios,
+        'Rates_and_Unit_Rates': genRates,
+        'Proportion': genProportion,
+        'Index_Laws': genIndices,
+        'Standard_Form': genStdForm,
+        'Ordering_and_Absolute_Value': genIntegers,
+        // Composites
+        'Frac_Wrap_AddSub': genCompFracWrapAddSub,
+        'Frac_Wrap_Multiply': genCompFracWrapMul,
+        'Frac_AddSub_Different': genCompFracDiffDenom,
+        'Root_of_Expression': genCompRootExpr,
+        'Root_Plus_Arithmetic': genCompRootPlusArith,
+        'Index_Over_Divisor': genCompIdxOverDiv,
+        'BODMAS_With_Fraction': genCompBodmasFrac,
+        'Nested_Brackets': genCompNestedBrackets,
+        'Root_Times_Integer': genCompRootTimesInt,
+        'Cube_Plus_Fraction': genCompCubePlusFrac,
+        'Neg_Exponent_Multiply': genCompNegExp,
+        'Mixed_Op_Fraction': genCompMixedOpFrac,
+        'Double_Fraction': genCompDoubleFrac,
+        'Percent_of_Expression': genCompPctExpr,
+        'Index_Subtract_Index': genCompIdxSubIdx,
+        'Frac_Root_Numerator': genCompFracRootNum,
+        'Chain_Multiply_Divide': genCompChainMulDiv,
+        'Signed_Frac_Add': genCompSignedFrac,
+        'Root_of_Fraction': genCompRootOfFrac,
+        'Power_Chain': genCompPowerChain,
+        'Abs_Value_Expression': genCompAbsValue,
+        'Fraction_Times_Fraction': genCompFracTimesFrac,
+        'Mixed_Number_Ops': genCompMixedNumber,
+        'Percent_of_Fraction': genCompPctFrac,
+        'Cube_Root_Expression': genCompCubeRoot,
+    };
+
+    const gen = generators[sub];
+    const result = gen ? gen(target, level) : genAddSub(target, level);
+    result.subcategory = sub;
+    result.level = level;
+    return result;
+}
+
+// ── Helper ──
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { [a, b] = [b, a % b]; } return a; }
+
+// ── Addition & Subtraction ──
+function genAddSub(target, level) {
+    if (level <= 1) {
+        // Very simple: small number + small number, or subtract from easy number
+        const pick = randInt(0, 1);
+        if (pick === 0) {
+            const a = randInt(1, Math.max(target - 1, 1));
+            return { latex: `${a} + ${target - a}`, answer: target };
+        }
+        const b = randInt(1, 9);
+        return { latex: `${target + b} - ${b}`, answer: target };
+    }
+    if (level === 2) {
+        // Decimals: e.g. 7.3 + 4.7 = 12
+        const d = randInt(1, 9);
+        const a = target - 1 + d / 10;
+        const b = 1 - d / 10;
+        return { latex: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: target };
+    }
+    if (level === 3) {
+        // Negatives: e.g. 15 - (-3) = 18, or -2 + 20 = 18
+        const pick = randInt(0, 2);
+        if (pick === 0) {
+            const neg = randInt(1, 10);
+            return { latex: `${target - neg} - (-${neg})`, answer: target };
+        }
+        if (pick === 1) {
+            const neg = randInt(1, Math.min(target - 1, 12));
+            return { latex: `-${neg} + ${target + neg}`, answer: target };
+        }
+        const a = randInt(target + 1, target + 15);
+        const b = a - target;
+        return { latex: `${a} + (-${b})`, answer: target };
+    }
+    if (level === 4) {
+        // Mixed: fraction + integer, e.g. 3/2 + target - 3/2
+        const d = [2, 4, 5][randInt(0, 2)];
+        const n = randInt(1, d - 1);
+        const whole = target;
+        // n/d + (target*d - n)/d
+        const num2 = target * d - n;
+        return { latex: `\\frac{${n}}{${d}} + \\frac{${num2}}{${d}}`, answer: target };
+    }
+    // Level 5: indices + signed
+    const base = randInt(2, 4);
+    const exp = 2;
+    const sq = base * base;
+    if (sq <= target) {
+        const rest = target - sq;
+        return { latex: `${base}^{2} + ${rest}`, answer: target };
+    }
+    return { latex: `${base}^{2} - ${sq - target}`, answer: target };
+}
+
+// ── Multiplication & Division ──
+function genMulDiv(target, level) {
+    if (level <= 1) {
+        // Very simple times tables with small numbers
+        const pick = randInt(0, 1);
+        if (pick === 0) {
+            const b = randInt(2, 5);
+            return { latex: `${target * b} \\div ${b}`, answer: target };
+        }
+        // Simple multiplication if target has small factors
+        const smallFactors = [2, 3, 4, 5].filter(f => target % f === 0 && target / f <= 9);
+        if (smallFactors.length) {
+            const f = smallFactors[randInt(0, smallFactors.length - 1)];
+            return { latex: `${f} \\times ${target / f}`, answer: target };
+        }
+        const b = randInt(2, 4);
+        return { latex: `${target * b} \\div ${b}`, answer: target };
+    }
+    if (level === 2) {
+        // Multi-digit: e.g. 13 × 2 = 26
+        const factors = [];
+        for (let i = 2; i <= 12; i++) if (target % i === 0) factors.push(i);
+        if (factors.length) {
+            const f = factors[randInt(0, factors.length - 1)];
+            return { latex: `${f} \\times ${target / f}`, answer: target };
+        }
+        const b = randInt(2, 6);
+        return { latex: `${target * b} \\div ${b}`, answer: target };
+    }
+    if (level === 3) {
+        // Decimal mult: e.g. 2.5 × 4 = 10
+        const mults = [0.5, 1.5, 2.5, 0.25];
+        const m = mults[randInt(0, mults.length - 1)];
+        const result = target / m;
+        if (Number.isInteger(result) && result > 0 && result <= 100) {
+            return { latex: `${m} \\times ${result}`, answer: target };
+        }
+        // Find a b where rounding target/b to 1dp still multiplies back to target exactly
+        const bCandidates = [2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+        for (const b of bCandidates) {
+            const dec = Math.round(target / b * 10) / 10;
+            if (Math.round(dec * b * 10) === target * 10) {
+                return { latex: `${dec.toFixed(1)} \\times ${b}`, answer: target };
+            }
+        }
+        // Safe fallback: exact division
+        return { latex: `${target * 2} \\div 2`, answer: target };
+    }
+    if (level === 4) {
+        // Negatives: e.g. -3 × -5 = 15, or -24 ÷ -2 = 12
+        const pick = randInt(0, 1);
+        if (pick === 0) {
+            const factors = [];
+            for (let i = 2; i <= 10; i++) if (target % i === 0) factors.push(i);
+            if (factors.length) {
+                const f = factors[randInt(0, factors.length - 1)];
+                return { latex: `(-${f}) \\times (-${target / f})`, answer: target };
+            }
+        }
+        const b = randInt(2, 8);
+        return { latex: `(-${target * b}) \\div (-${b})`, answer: target };
+    }
+    // Level 5: standard form style
+    const b = randInt(2, 5);
+    const big = target * b * 100;
+    return { latex: `\\frac{${big}}{${b} \\times 10^{2}}`, answer: target };
+}
+
+// ── Order of Operations (BODMAS) ──
+function genBODMAS(target, level) {
+    if (level <= 1) {
+        // Very gentle BODMAS: a + b × 1, or a × 2 + b with small numbers
+        const pick = randInt(0, 1);
+        if (pick === 0 && target > 2) {
+            const b = randInt(1, Math.min(Math.floor(target / 2), 5));
+            const a = target - b * 2;
+            if (a >= 0) return { latex: `${a} + ${b} \\times 2`, answer: target };
+        }
+        // Simple: a + b + c
+        const a = randInt(1, Math.min(target - 1, 9));
+        const rest = target - a;
+        const b = randInt(1, Math.max(rest - 1, 1));
+        const c = rest - b;
+        if (c > 0) return { latex: `${a} + ${b} + ${c}`, answer: target };
+        return { latex: `${a} + ${target - a}`, answer: target };
+    }
+    if (level === 2) {
+        // Brackets: (a + b) × c
+        const c = [2, 3, 4].find(v => target % v === 0) || 2;
+        const inner = Math.round(target / c);
+        if (inner * c === target && inner > 1) {
+            const a = randInt(1, inner - 1);
+            return { latex: `(${a} + ${inner - a}) \\times ${c}`, answer: target };
+        }
+        const d = randInt(1, 8);
+        const before = target + d;
+        const f = [2, 3].find(v => before % v === 0);
+        if (f) {
+            const inner2 = before / f;
+            const a2 = randInt(1, Math.max(inner2 - 1, 1));
+            return { latex: `(${a2} + ${inner2 - a2}) \\times ${f} - ${d}`, answer: target };
+        }
+        return { latex: `${target + d} - ${d} \\times 1`, answer: target };
+    }
+    if (level === 3) {
+        // Squares and cubes in BODMAS: a² + b × c
+        const base = randInt(1, 5);
+        const sq = base * base;
+        const rest = target - sq;
+        if (rest > 0) {
+            const divisors = [2, 3, 4, 5].filter(d => rest % d === 0 && rest / d <= 10);
+            if (divisors.length) {
+                const d = divisors[randInt(0, divisors.length - 1)];
+                return { latex: `${base}^{2} + ${d} \\times ${rest / d}`, answer: target };
+            }
+            return { latex: `${base}^{2} + ${rest}`, answer: target };
+        }
+        if (sq >= target) return { latex: `${base}^{2} - ${sq - target}`, answer: target };
+        // cube fallback
+        if (target <= 27) return { latex: `${target <= 8 ? 2 : 3}^{3} - ${(target <= 8 ? 8 : 27) - target}`, answer: target };
+        return { latex: `3^{3} - ${27 - target}`, answer: target };
+    }
+    if (level === 4) {
+        // Nested brackets and fractions: (a + b) × c - d, with frac component
+        const d = randInt(1, 8);
+        const before = target + d;
+        const c = [2, 3, 4].find(v => before % v === 0);
+        if (c) {
+            const inner = before / c;
+            const fDen = randInt(2, 4);
+            const fNum = randInt(1, inner - 1);
+            if (fNum % fDen === 0) {
+                const fVal = fNum / fDen;
+                const remainder = inner - fVal;
+                if (Number.isInteger(remainder) && remainder > 0) {
+                    return { latex: `\\left(\\frac{${fNum}}{${fDen}} + ${remainder}\\right) \\times ${c} - ${d}`, answer: target };
+                }
+            }
+            const a = randInt(1, Math.max(inner - 1, 1));
+            return { latex: `(${a} + ${inner - a}) \\times ${c} - ${d}`, answer: target };
+        }
+        return { latex: `${target + 3} - (2 + 1)`, answer: target };
+    }
+    // Level 5: indices + negatives in BODMAS
+    const base = randInt(2, 4);
+    const sq = base * base;
+    const neg = randInt(1, 8);
+    const add = target - sq + neg;
+    if (add > 0) {
+        return { latex: `${base}^{2} - (-${neg}) + ${add - neg}`, answer: target };
+    }
+    return { latex: `${base}^{2} + ${target - sq}`, answer: target };
+}
+
+// ── Factors & Multiples ──
+function genFactors(target, level) {
+    if (level <= 1) {
+        // Simple: small multiplication fact or division
+        const b = randInt(2, 5);
+        const pick = randInt(0, 1);
+        if (pick === 0) {
+            const smallF = [2,3,4,5].filter(f => target % f === 0);
+            if (smallF.length) {
+                const f = smallF[randInt(0, smallF.length - 1)];
+                return { latex: `${f} \\times ${target / f}`, answer: target };
+            }
+        }
+        return { latex: `${target * b} \\div ${b}`, answer: target };
+    }
+    if (level === 2) {
+        // Prime identification style: product of small primes
+        const primes = [2, 3, 5, 7, 11, 13];
+        const b = primes[randInt(0, primes.length - 1)];
+        return { latex: `${target * b} \\div ${b}`, answer: target };
+    }
+    if (level === 3) {
+        // Prime factorisation: 2^a × 3^b etc = target (reverse engineer)
+        // e.g. 2² × 3 = 12
+        if (target % 4 === 0) return { latex: `2^{2} \\times ${target / 4}`, answer: target };
+        if (target % 2 === 0 && (target / 2) % 3 === 0) return { latex: `2 \\times 3 \\times ${target / 6}`, answer: target };
+        if (target % 9 === 0) return { latex: `3^{2} \\times ${target / 9}`, answer: target };
+        if (target % 6 === 0) return { latex: `2 \\times 3 \\times ${target / 6}`, answer: target };
+        if (target % 2 === 0) return { latex: `2 \\times ${target / 2}`, answer: target };
+        if (target % 3 === 0) return { latex: `3 \\times ${target / 3}`, answer: target };
+        // odd prime target
+        return { latex: `${target * 2} \\div 2`, answer: target };
+    }
+    if (level === 4) {
+        // HCF/LCM: "HCF of a, b" or "LCM of a, b"
+        // Make target the HCF: target = HCF(target×p, target×q) where p,q coprime
+        const coprimes = [[2,3],[3,4],[2,5],[3,5],[4,5],[2,7],[3,7]];
+        const [p, q] = coprimes[randInt(0, coprimes.length - 1)];
+        return { latex: `\\text{HCF}(${target * p},\\, ${target * q})`, answer: target };
+    }
+    // Level 5: LCM in context
+    // target = LCM(a, b)
+    const divisors = [];
+    for (let i = 2; i < target; i++) if (target % i === 0) divisors.push(i);
+    if (divisors.length >= 2) {
+        // Find two divisors whose LCM = target
+        for (let tries = 0; tries < 20; tries++) {
+            const a = divisors[randInt(0, divisors.length - 1)];
+            const b = divisors[randInt(0, divisors.length - 1)];
+            if (a !== b && (a * b / gcd(a, b)) === target) {
+                return { latex: `\\text{LCM}(${a},\\, ${b})`, answer: target };
+            }
+        }
+    }
+    // Fallback: LCM(target, 1) is trivial, use HCF instead
+    const p = randInt(2, 4);
+    return { latex: `\\text{HCF}(${target * p},\\, ${target})`, answer: target };
+}
+
+// ── Fractions ──
+function genFractions(target, level) {
+    if (level <= 1) {
+        // Very simple fraction: target×2 / 2 or target×3 / 3
+        const m = randInt(2, 3);
+        return { latex: `\\frac{${target * m}}{${m}}`, answer: target };
+    }
+    if (level === 2) {
+        // Add/sub fractions: a/d + b/d = target
+        const d = randInt(2, 6);
+        const total = target * d;
+        const a = randInt(1, total - 1);
+        const b = total - a;
+        return { latex: `\\frac{${a}}{${d}} + \\frac{${b}}{${d}}`, answer: target };
+    }
+    if (level === 3) {
+        // Multiply/divide fractions: a/b × c/d = target
+        // e.g. 3/2 × 8/1 = 12 → simplify: (3 × 8) / (2 × 1)
+        const d1 = randInt(2, 5);
+        const n2 = d1 * target;
+        const n1_choices = [];
+        for (let n1 = 2; n1 <= 9; n1++) {
+            if (n2 % n1 === 0 && n2 / n1 <= 20) n1_choices.push(n1);
+        }
+        if (n1_choices.length) {
+            const n1 = n1_choices[randInt(0, n1_choices.length - 1)];
+            const d2 = n2 / n1;
+            return { latex: `\\frac{${n1}}{${d1}} \\times ${d2}`, answer: target };
+        }
+        const m = randInt(2, 5);
+        return { latex: `\\frac{${target * m}}{1} \\div ${m}`, answer: target };
+    }
+    if (level === 4) {
+        // Fraction of fraction: 1/2 of 3/4 of X = target
+        const d1 = randInt(2, 4);
+        const d2 = randInt(2, 4);
+        const whole = target * d1 * d2;
+        return { latex: `\\frac{1}{${d1}} \\times \\frac{1}{${d2}} \\times ${whole}`, answer: target };
+    }
+    // Level 5: mean of two fractions, scaled
+    const d = randInt(2, 5);
+    const a = target * d - randInt(1, target);
+    const b = target * 2 * d - a;
+    return { latex: `\\frac{\\frac{${a}}{${d}} + \\frac{${b}}{${d}}}{2}`, answer: target };
+}
+
+// ── Decimals ──
+function genDecimals(target, level) {
+    if (level <= 1) {
+        // Convert fraction to decimal × multiplier
+        const d = [2, 4, 5, 10][randInt(0, 3)];
+        return { latex: `${(target / d).toFixed(d === 4 ? 2 : 1)} \\times ${d}`, answer: target };
+    }
+    if (level === 2) {
+        // Decimal × integer: only use when rounded value multiplies back exactly
+        for (const m of [2, 3, 4, 5].sort(() => Math.random() - 0.5)) {
+            const dec = Math.round(target / m * 100) / 100;
+            if (Math.round(dec * m * 100) === target * 100) {
+                return { latex: `${dec.toFixed(2)} \\times ${m}`, answer: target };
+            }
+        }
+        // Safe fallback
+        return { latex: `${target * 4} \\div 4`, answer: target };
+    }
+    if (level === 3) {
+        // Operations with decimals: a.bc + d.ef
+        const a = (target - randInt(1, Math.min(target - 1, 10) || 1));
+        const dec1 = randInt(1, 99) / 100;
+        const part1 = a + dec1;
+        const part2 = target - part1;
+        if (part2 > 0) {
+            return { latex: `${part1.toFixed(2)} + ${part2.toFixed(2)}`, answer: target };
+        }
+        return { latex: `${(target - 0.75).toFixed(2)} + 0.75`, answer: target };
+    }
+    if (level === 4) {
+        // Decimal with index: 0.1² × target × 10000 etc
+        const base = randInt(2, 5);
+        const sq = base * base;
+        const rest = target - sq;
+        if (rest >= 0) {
+            return { latex: `${(base * 0.1).toFixed(1)}^{2} \\times 100 + ${rest}`, answer: target };
+        }
+        return { latex: `${(target * 0.01).toFixed(2)} \\times 10^{2}`, answer: target };
+    }
+    // Level 5
+    const pct = randInt(2, 5) * 10;
+    const whole = target / (pct / 100);
+    if (Number.isInteger(whole)) {
+        return { latex: `${(pct / 100).toFixed(1)} \\times ${whole}`, answer: target };
+    }
+    return { latex: `${(target * 0.001).toFixed(3)} \\times 10^{3}`, answer: target };
+}
+
+// ── Percentages ──
+function genPercentages(target, level) {
+    if (level <= 1) {
+        // Very easy: 50% of even number, or 100% of target
+        if (target % 2 === 0) return { latex: `50\\% \\text{ of } ${target * 2}`, answer: target };
+        return { latex: `100\\% \\text{ of } ${target}`, answer: target };
+    }
+    if (level === 2) {
+        // Find percentage of quantity
+        const pcts = [10, 20, 25, 50, 75];
+        for (const p of shuffle(pcts)) {
+            const whole = target / (p / 100);
+            if (Number.isInteger(whole) && whole <= 200) {
+                return { latex: `${p}\\% \\text{ of } ${whole}`, answer: target };
+            }
+        }
+        return { latex: `${target * 10}\\% \\text{ of } 10`, answer: target };
+    }
+    if (level === 3) {
+        // Percentage increase/decrease: X increased by Y% = target
+        // target = base × (1 + p/100), so base = target / (1 + p/100)
+        const pcts = [10, 20, 25, 50, 100];
+        for (const p of shuffle(pcts)) {
+            const base = target / (1 + p / 100);
+            if (Number.isInteger(base) && base > 0) {
+                return { latex: `${base} \\text{ increased by } ${p}\\%`, answer: target };
+            }
+        }
+        // decrease
+        for (const p of [10, 20, 25, 50]) {
+            const base = target / (1 - p / 100);
+            if (Number.isInteger(base) && base > 0) {
+                return { latex: `${base} \\text{ decreased by } ${p}\\%`, answer: target };
+            }
+        }
+        return { latex: `50\\% \\text{ of } ${target * 2}`, answer: target };
+    }
+    if (level === 4) {
+        // Reverse percentage: "After a 20% increase, result is X. Find original."
+        // But we need answer=target, so: original × 1.2 = something → original = target
+        const p = [10, 20, 25, 50][randInt(0, 3)];
+        const result = target * (1 + p / 100);
+        if (Number.isInteger(result)) {
+            return { latex: `\\frac{${result}}{${(1 + p / 100).toFixed(2)}}`, answer: target };
+        }
+        return { latex: `\\frac{${target * 2}}{2}`, answer: target };
+    }
+    // Level 5: successive change
+    const p1 = [10, 20, 50][randInt(0, 2)];
+    const p2 = [10, 20, 50][randInt(0, 2)];
+    const mult = (1 + p1/100) * (1 + p2/100);
+    const base = target / mult;
+    if (Number.isInteger(base) && base > 0) {
+        return { latex: `${base} \\times ${(1 + p1/100).toFixed(1)} \\times ${(1 + p2/100).toFixed(1)}`, answer: target };
+    }
+    return { latex: `${target * 4} \\times 0.5 \\times 0.5`, answer: target };
+}
+
+// ── Ratios ──
+function genRatios(target, level) {
+    if (level <= 1) {
+        // Very simple: "share X in 1:1, each part" or basic halving/thirding
+        if (target % 2 === 0) {
+            return { latex: `\\text{half of } ${target * 2}`, answer: target };
+        }
+        return { latex: `\\text{share } ${target + 1} \\text{ as } ${target}\\!:\\!1 \\text{, larger}`, answer: target };
+    }
+    if (level === 2) {
+        // Divide in ratio: "Divide X in ratio a:b, find one part"
+        const a = randInt(1, 5);
+        const b = randInt(1, 5);
+        const total = target * (a + b) / a;
+        if (Number.isInteger(total)) {
+            return { latex: `${total} \\div (${a}\\!:\\!${b}) \\text{, first part}`, answer: target };
+        }
+        return { latex: `${target * 3} \\div (1\\!:\\!2) \\text{, largest part}`, answer: target };
+    }
+    if (level === 3) {
+        // Equivalent ratios: "If a:b = c:?, find ?"
+        const a = randInt(2, 6);
+        const scale = randInt(2, 5);
+        const b = target;
+        const c = a * scale;
+        return { latex: `${a}\\!:\\!${b} = ${c}\\!:\\!\\,?`, answer: target * scale };
+        // Actually we need answer = target... let me rethink
+    }
+    if (level >= 3 && level <= 4) {
+        // "a:b = ?:target" → ? = a×target/b
+        // We want the answer to be target, so present differently:
+        // "Share X in ratio a:b, find the part = target"
+        const ratioA = randInt(1, 4);
+        const ratioB = randInt(1, 4);
+        const parts = ratioA + ratioB;
+        // target = ratioA/parts × total → total = target × parts / ratioA
+        const total = target * parts / ratioA;
+        if (Number.isInteger(total) && total > target) {
+            return { latex: `\\frac{${ratioA}}{${parts}} \\times ${total}`, answer: target };
+        }
+        const total2 = target * parts / ratioB;
+        if (Number.isInteger(total2) && total2 > target) {
+            return { latex: `\\frac{${ratioB}}{${parts}} \\times ${total2}`, answer: target };
+        }
+        return { latex: `\\frac{2}{5} \\times ${target * 5 / 2}`, answer: target };
+    }
+    // Level 5: ratio with fractions
+    const d = randInt(2, 4);
+    return { latex: `\\frac{${target * d}}{${d}}`, answer: target };
+}
+
+// ── Rates & Unit Rates ──
+function genRates(target, level) {
+    if (level <= 1) {
+        // Very simple rate: small division
+        const t = randInt(2, 3);
+        return { latex: `${target * t} \\div ${t}`, answer: target };
+    }
+    if (level === 2) {
+        // Unit rate: cost per item
+        const n = randInt(2, 8);
+        return { latex: `\\$${target * n} \\div ${n} \\text{ items}`, answer: target };
+    }
+    if (level === 3) {
+        // Compare rates: which is cheaper expressed as calculation
+        const n = randInt(2, 5);
+        return { latex: `\\frac{\\$${target * n}}{${n}}`, answer: target };
+    }
+    if (level === 4) {
+        // Unit conversion: km/h to m/s style (×1000÷3600 = ÷3.6)
+        // Simpler: convert minutes to hours type calc
+        const hrs = randInt(2, 5);
+        return { latex: `\\frac{${target * hrs} \\text{ km}}{${hrs} \\text{ h}}`, answer: target };
+    }
+    // Level 5
+    const a = randInt(2, 5);
+    const b = randInt(2, 5);
+    return { latex: `\\frac{${target * a * b}}{${a} \\times ${b}}`, answer: target };
+}
+
+// ── Proportion ──
+function genProportion(target, level) {
+    if (level <= 1) {
+        // Very simple: double and halve, or triple and third
+        const a = randInt(2, 3);
+        return { latex: `${target * a} \\div ${a}`, answer: target };
+    }
+    if (level === 2) {
+        // Cross multiplication: a/b = target/x → solve
+        const a = randInt(2, 8);
+        const b = randInt(2, 8);
+        // a/b = ?/x → ? = target → x = target×b/a. Present as a/b × x:
+        const x = target * b / a;
+        if (Number.isInteger(x) && x > 0) {
+            return { latex: `\\frac{${a}}{${b}} \\times ${x}`, answer: target };
+        }
+        return { latex: `\\frac{${target * 3}}{3}`, answer: target };
+    }
+    if (level === 3) {
+        // "3/5 of total = X, find total" where total=target
+        const parts = [2, 3, 4, 5][randInt(0, 3)];
+        const frac = randInt(1, parts - 1);
+        const partial = target * frac / parts;
+        if (Number.isInteger(partial) && partial > 0) {
+            return { latex: `\\frac{${partial}}{${frac}} \\times ${parts}`, answer: target };
+        }
+        return { latex: `\\frac{${target * 4}}{4}`, answer: target };
+    }
+    if (level === 4) {
+        // Equivalent fractions with unknown
+        const m = randInt(2, 6);
+        const d = randInt(2, 5);
+        return { latex: `\\frac{${target * m}}{${d * m}} \\times ${d}`, answer: target };
+    }
+    // Level 5
+    const a = randInt(2, 4);
+    const b = randInt(2, 4);
+    const c = a * b;
+    return { latex: `\\frac{${target * c}}{${a} \\times ${b}}`, answer: target };
+}
+
+// ── Index Laws ──
+function genIndices(target, level) {
+    if (level <= 1) {
+        // Simple: if target IS a perfect square or cube, show it; otherwise just a² + small number
+        const squares = {1:1, 4:2, 9:3, 16:4, 25:5};
+        const cubes = {1:1, 8:2};
+        if (squares[target]) return { latex: `${squares[target]}^{2}`, answer: target };
+        if (cubes[target]) return { latex: `${cubes[target]}^{3}`, answer: target };
+        // For beginners: 2² + small or 3² + small
+        const base = target <= 4 ? 1 : target <= 10 ? 2 : 3;
+        const sq = base * base;
+        if (sq <= target) return { latex: `${base}^{2} + ${target - sq}`, answer: target };
+        return { latex: `${base}^{2} - ${sq - target}`, answer: target };
+    }
+    if (level === 2) {
+        // Product/quotient law: a^m × a^n = a^(m+n)
+        // e.g. 2³ × 2¹ = 2⁴ = 16
+        const bases = [2, 3];
+        for (const b of bases) {
+            let p = b, exp = 1;
+            while (p * b <= 26) { p *= b; exp++; }
+            if (p === target) {
+                const e1 = randInt(1, exp - 1);
+                const e2 = exp - e1;
+                return { latex: `${b}^{${e1}} \\times ${b}^{${e2}}`, answer: target };
+            }
+        }
+        // Quotient: a^m ÷ a^n
+        const base = randInt(2, 3);
+        const bigExp = randInt(3, 5);
+        const bigVal = Math.pow(base, bigExp);
+        if (bigVal % target === 0 && Math.log(bigVal / target) / Math.log(base) % 1 === 0) {
+            const smallExp = Math.round(Math.log(bigVal / target) / Math.log(base));
+            return { latex: `${base}^{${bigExp}} \\div ${base}^{${smallExp}}`, answer: target };
+        }
+        // Fallback: base^2 ± something
+        const sq = 2 * 2;
+        return { latex: `2^{2} + ${target - sq}`, answer: target };
+    }
+    if (level === 3) {
+        // Power of power, zero index: (a^m)^n, a^0 = 1
+        // e.g. (2²)² + 10 = 26
+        const powpow = [[2,2,2,16],[2,1,3,8],[3,1,2,9],[2,3,1,8],[2,1,2,4]];
+        for (const [b, m, n, val] of shuffle(powpow)) {
+            if (val <= target) {
+                const rest = target - val;
+                if (rest === 0) return { latex: `(${b}^{${m}})^{${n}}`, answer: target };
+                return { latex: `(${b}^{${m}})^{${n}} + ${rest}`, answer: target };
+            }
+        }
+        // Zero index: 5^0 + (target-1)
+        return { latex: `${randInt(2,9)}^{0} + ${target - 1}`, answer: target };
+    }
+    if (level === 4) {
+        // Negative indices: a^{-n} = 1/a^n
+        // e.g. 2^{-1} × 48 = 24
+        const base = [2, 3, 5][randInt(0, 2)];
+        const mult = target * base;
+        if (mult <= 200) {
+            return { latex: `${base}^{-1} \\times ${mult}`, answer: target };
+        }
+        return { latex: `${base}^{-1} \\times ${target * base}`, answer: target };
+    }
+    // Level 5: fractional indices: a^{1/2} = sqrt, a^{1/3} = cbrt
+    const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+    const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+    const rest = target - sv;
+    if (rest >= 0) {
+        return { latex: `${sq}^{\\frac{1}{2}} + ${rest}`, answer: target };
+    }
+    // cbrt
+    if (target <= 3) return { latex: `${target * target * target}^{\\frac{1}{3}}`, answer: target };
+    return { latex: `${sq}^{\\frac{1}{2}} + ${rest}`, answer: target };
+}
+
+// ── Standard Form ──
+function genStdForm(target, level) {
+    if (level <= 1) {
+        // Very simple: target × 10 ÷ 10, or target × 1
+        const pick = randInt(0, 1);
+        if (pick === 0) return { latex: `${target} \\times 1`, answer: target };
+        return { latex: `${target * 10} \\div 10`, answer: target };
+    }
+    if (level === 2) {
+        // Convert from scientific notation
+        if (target <= 9) return { latex: `${target}.0 \\times 10^{0}`, answer: target };
+        return { latex: `${(target / 10).toFixed(1)} \\times 10^{1}`, answer: target };
+    }
+    if (level === 3) {
+        // Multiply in standard form: (a × 10^m) × (b × 10^n)
+        // e.g. (2 × 10²) × (3 × 10^{-2}) = 6 → need = target
+        const a = randInt(2, 9);
+        if (target % a === 0 && target / a <= 9) {
+            const b = target / a;
+            return { latex: `(${a} \\times 10^{2}) \\times (${b} \\times 10^{-2})`, answer: target };
+        }
+        // Simpler: a × 10^1 ÷ 10^0 style
+        return { latex: `(${(target/10).toFixed(1)} \\times 10^{1}) \\times (1 \\times 10^{0})`, answer: target };
+    }
+    if (level === 4) {
+        // Add/subtract in standard form
+        const a = randInt(1, Math.min(target - 1, 9));
+        const b = target - a;
+        return { latex: `(${(a/10).toFixed(1)} \\times 10^{1}) + (${(b/10).toFixed(1)} \\times 10^{1})`, answer: target };
+    }
+    // Level 5
+    const a = randInt(1, 5);
+    const b = target - a;
+    return { latex: `(${(a * 100)} \\times 10^{-2}) + (${b}.0 \\times 10^{0})`, answer: target };
+}
+
+// ── Place Value / Rounding ──
+function genPlaceValue(target, level) {
+    if (level <= 1) {
+        // Very simple: basic addition or subtraction
+        const a = randInt(1, Math.max(target - 1, 1));
+        return { latex: `${a} + ${target - a}`, answer: target };
+    }
+    if (level <= 2) {
+        // Round 2dp number to nearest whole
+        const roundUp = Math.random() < 0.5;
+        const d1 = roundUp ? randInt(5, 9) : randInt(1, 4);
+        const d2 = randInt(0, 9);
+        const base = roundUp ? target - 1 : target;
+        return { latex: `${base}.${d1}${d2} \\text{ rounded to nearest whole}`, answer: target };
+    }
+    if (level <= 3) {
+        // Round 2dp number to nearest whole (phrased differently)
+        const roundUp = Math.random() < 0.5;
+        const d1 = roundUp ? randInt(5, 9) : randInt(1, 4);
+        const d2 = randInt(0, 9);
+        const base = roundUp ? target - 1 : target;
+        return { latex: `${base}.${d1}${d2} \\text{ to nearest whole number}`, answer: target };
+    }
+    // Level 4-5: bounds
+    const lower = target - 0.5;
+    const upper = target + 0.5;
+    return { latex: `\\text{midpoint of } [${lower}, ${upper})`, answer: target };
+}
+
+// ── Integers & Number Line ──
+function genIntegers(target, level) {
+    if (level <= 1) {
+        // Order/identify: simple addition
+        const a = randInt(1, Math.max(target - 1, 1));
+        return { latex: `${a} + ${target - a}`, answer: target };
+    }
+    if (level === 2) {
+        // Absolute value: |a| + |b| = target or |a - b| = target
+        const a = randInt(1, target + 10);
+        const b = a - target;
+        if (b < 0) return { latex: `|${b}| + ${target - Math.abs(b)}`, answer: target };
+        return { latex: `|${-a}| + |${target - a}|`, answer: target };
+    }
+    if (level === 3) {
+        // Signed integer operations: (-a) × (-b) + c
+        const a = randInt(1, 6);
+        const b = randInt(1, 6);
+        const prod = a * b;
+        const c = target - prod;
+        if (c >= 0) return { latex: `(-${a}) \\times (-${b}) + ${c}`, answer: target };
+        return { latex: `(-${a}) \\times (-${b}) - ${prod - target}`, answer: target };
+    }
+    if (level === 4) {
+        // Signed decimals/fractions
+        const neg = randInt(1, 10);
+        const pos = target + neg;
+        return { latex: `${pos} + (-${(neg * 0.5).toFixed(1)}) + (-${(neg * 0.5).toFixed(1)})`, answer: target };
+    }
+    // Level 5: multiple signed ops
+    const a = randInt(2, 8);
+    const b = randInt(1, 6);
+    const c = target + a - b;
+    if (c > 0) return { latex: `(-${a}) + ${b} + ${c}`, answer: target };
+    return { latex: `${target + a} - ${a}`, answer: target };
+}
+
+// ── Composite Generators ──
+// Each merges 2+ concepts. Level 1 = basic inner content, Level 2 = decimals/negatives, Level 3 = indices/roots nested inside.
+
+function genCompFracWrapAddSub(target, level) {
+    const c = randInt(2, 5);
+    const num = target * c;
+    if (level >= 3) {
+        // Inner content uses a square
+        const base = randInt(2, 4);
+        const sq = base * base;
+        const rest = num - sq;
+        if (rest > 0) return { latex: `\\frac{${base}^{2} + ${rest}}{${c}}`, answer: target };
+    }
+    if (level >= 2) {
+        // Use a negative number inside
+        const neg = randInt(1, 8);
+        const pos = num + neg;
+        return { latex: `\\frac{${pos} + (-${neg})}{${c}}`, answer: target };
+    }
+    const a = randInt(1, num - 1);
+    return { latex: `\\frac{${a} + ${num - a}}{${c}}`, answer: target };
+}
+
+function genCompFracWrapMul(target, level) {
+    const c = randInt(2, 5);
+    const num = target * c;
+    if (level >= 3) {
+        // Use index in numerator: base^2 × k / c
+        const base = randInt(2, 4);
+        const sq = base * base;
+        if (num % sq === 0) return { latex: `\\frac{${base}^{2} \\times ${num/sq}}{${c}}`, answer: target };
+    }
+    if (level >= 2) {
+        // Decimal multiplication: (a × b.0) / c
+        const a = randInt(2, 6);
+        const bTen = num / a;
+        if (Number.isInteger(bTen) && bTen > 0) return { latex: `\\frac{${a} \\times ${bTen}}{${c}}`, answer: target };
+    }
+    const factors = [];
+    for (let i = 2; i <= 12; i++) if (num % i === 0 && num / i <= 15) factors.push(i);
+    if (factors.length) {
+        const a = factors[randInt(0, factors.length - 1)];
+        return { latex: `\\frac{${a} \\times ${num / a}}{${c}}`, answer: target };
+    }
+    return { latex: `\\frac{${num}}{${c}}`, answer: target };
+}
+
+function genCompFracDiffDenom(target, level) {
+    if (level >= 3) {
+        // Fractions with a squared term: a²/b + c/d = target
+        const b = randInt(2, 4);
+        const d = randInt(2, 4);
+        const lcd = (b * d) / gcd(b, d);
+        const totalNum = target * lcd;
+        const base = randInt(2, 4);
+        const sq = base * base;
+        const n1 = sq * (lcd / b);
+        const n2 = totalNum - n1;
+        if (n2 > 0 && Number.isInteger(n2 / (lcd / d))) {
+            return { latex: `\\frac{${base}^{2}}{${b}} + \\frac{${Math.round(n2 / (lcd / d))}}{${d}}`, answer: target };
+        }
+    }
+    if (level >= 2) {
+        // Use negative fractions
+        const b = randInt(2, 5);
+        const d = randInt(2, 5);
+        const lcd = (b * d) / gcd(b, d);
+        const totalNum = target * lcd;
+        const extra = randInt(1, 5) * (lcd / d);
+        const n1 = totalNum + extra;
+        return { latex: `\\frac{${Math.round(n1 / (lcd / b))}}{${b}} - \\frac{${Math.round(extra / (lcd / d))}}{${d}}`, answer: target };
+    }
+    const d1 = randInt(2, 5);
+    const d2 = randInt(2, 5);
+    const lcd = (d1 * d2) / gcd(d1, d2);
+    const totalNum = target * lcd;
+    const n1 = randInt(1, Math.max(totalNum - 1, 1));
+    const n2 = totalNum - n1;
+    const frac1Num = n1 / (lcd / d1);
+    const frac2Num = n2 / (lcd / d2);
+    if (Number.isInteger(frac1Num) && Number.isInteger(frac2Num) && frac1Num > 0 && frac2Num > 0) {
+        return { latex: `\\frac{${frac1Num}}{${d1}} + \\frac{${frac2Num}}{${d2}}`, answer: target };
+    }
+    return { latex: `\\frac{${target * 3 - 2}}{3} + \\frac{2}{3}`, answer: target };
+}
+
+function genCompRootExpr(target, level) {
+    if (level >= 3 && target <= 5) {
+        // sqrt(a² + b) where inner has index
+        const sq = target * target;
+        const base = randInt(1, 3);
+        const bsq = base * base;
+        if (sq > bsq) return { latex: `\\sqrt{${base}^{2} + ${sq - bsq}}`, answer: target };
+    }
+    if (level >= 2) {
+        // sqrt(a) + decimal arithmetic
+        const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+        const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+        const rest = target - sv;
+        if (rest > 0) return { latex: `\\sqrt{${sq}} + ${rest}.0`, answer: target };
+    }
+    if (target > 5) {
+        const sq = [4,9,16,25][randInt(0,3)];
+        const sv = Math.round(Math.sqrt(sq));
+        return { latex: `\\sqrt{${sq}} + ${target - sv}`, answer: target };
+    }
+    const sq = target * target;
+    const a = randInt(1, sq - 1);
+    return { latex: `\\sqrt{${a} + ${sq - a}}`, answer: target };
+}
+
+function genCompRootPlusArith(target, level) {
+    const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+    const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+    const rest = target - sv;
+    if (level >= 3 && rest > 0) {
+        // Use a power inside the arithmetic part
+        const base = randInt(2, 3);
+        const bsq = base * base;
+        const c = rest - bsq;
+        if (c >= 0) return { latex: `\\sqrt{${sq}} + ${base}^{2} + ${c}`, answer: target };
+        if (rest > bsq) return { latex: `\\sqrt{${sq}} + ${base}^{2} - ${bsq - rest}`, answer: target };
+    }
+    if (level >= 2 && rest > 0) {
+        // Use negative number
+        const neg = randInt(1, 5);
+        return { latex: `\\sqrt{${sq}} + ${rest + neg} - ${neg}`, answer: target };
+    }
+    if (rest > 0) {
+        const divisors = [2,3,4,5].filter(d => rest % d === 0 && rest/d <= 10);
+        if (divisors.length) {
+            const d = divisors[randInt(0, divisors.length - 1)];
+            return { latex: `\\sqrt{${sq}} + ${d} \\times ${rest/d}`, answer: target };
+        }
+        return { latex: `\\sqrt{${sq}} + ${rest}`, answer: target };
+    }
+    return { latex: `\\sqrt{${sq}} + ${target - sv}`, answer: target };
+}
+
+function genCompIdxOverDiv(target, level) {
+    if (level >= 3) {
+        // Use negative exponent: base^{-1} in denominator effectively
+        const base = [2,3,4,5][randInt(0,3)];
+        const c = target - 1;
+        return { latex: `\\frac{${base}}{${base}} + ${c}`, answer: target };
+    }
+    const base = randInt(2, 5);
+    const sq = base * base;
+    const b = [2,3,4,5].filter(d => sq % d === 0)[0] || 1;
+    const divided = sq / b;
+    const c = target - divided;
+    if (level >= 2 && c < 0) {
+        return { latex: `\\frac{${base}^{2}}{${b}} - ${Math.abs(c)}`, answer: target };
+    }
+    if (c >= 0) return { latex: `\\frac{${base}^{2}}{${b}} + ${c}`, answer: target };
+    return { latex: `\\frac{${base}^{2}}{${b}} - ${Math.abs(c)}`, answer: target };
+}
+
+function genCompBodmasFrac(target, level) {
+    if (level >= 3) {
+        // Include a square root in the expression
+        const sqrtPairs = [[4,2],[9,3]];
+        const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+        const rest = target - sv;
+        if (rest > 0) {
+            const c = randInt(2, 3);
+            return { latex: `\\left(\\sqrt{${sq}} + \\frac{${rest * c}}{${c}}\\right)`, answer: target };
+        }
+    }
+    const d = [2,3,4].find(v => target % v === 0);
+    if (d) {
+        const inner = target / d;
+        const c = randInt(2, 4);
+        const fracPart = randInt(1, Math.max(inner - 1, 1));
+        const wholePart = inner - fracPart;
+        if (wholePart > 0 && fracPart * c <= 30) {
+            if (level >= 2) {
+                // Use decimal in the whole part
+                return { latex: `\\left(${wholePart}.0 + \\frac{${fracPart * c}}{${c}}\\right) \\times ${d}`, answer: target };
+            }
+            return { latex: `\\left(${wholePart} + \\frac{${fracPart * c}}{${c}}\\right) \\times ${d}`, answer: target };
+        }
+    }
+    const c = randInt(2, 4);
+    return { latex: `\\left(${target - 1} + \\frac{${c}}{${c}}\\right)`, answer: target };
+}
+
+function genCompNestedBrackets(target, level) {
+    const e = randInt(2, 4);
+    const beforeDiv = target * e;
+    const d = randInt(1, 8);
+    const beforeSub = beforeDiv + d;
+    const c = [2,3,4].find(v => beforeSub % v === 0);
+    if (c) {
+        const inner = beforeSub / c;
+        const a = randInt(1, Math.max(inner - 1, 1));
+        const b = inner - a;
+        if (level >= 3) {
+            return { latex: `((${a}^{1} + ${b}) \\times ${c} - ${d}) \\div ${e}`, answer: target };
+        }
+        if (level >= 2) {
+            return { latex: `((${a} + ${b}) \\times ${c} - ${d}) \\div ${e}`, answer: target };
+        }
+        return { latex: `((${a} + ${b}) \\times ${c} - ${d}) \\div ${e}`, answer: target };
+    }
+    return { latex: `(${beforeDiv + 2} - 2) \\div ${e}`, answer: target };
+}
+
+function genCompRootTimesInt(target, level) {
+    const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+    const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+    if (level >= 3) {
+        // sqrt(a) × b^1 + c
+        const mults = [2,3,4].filter(m => sv * m <= target);
+        if (mults.length) {
+            const m = mults[randInt(0, mults.length - 1)];
+            const c = target - sv * m;
+            if (c >= 0) return { latex: `\\sqrt{${sq}} \\times ${m} + ${c}`, answer: target };
+        }
+    }
+    if (level >= 2) {
+        // Include a subtraction with negatives
+        const extra = randInt(1, 5);
+        return { latex: `\\sqrt{${sq}} \\times 1 + ${target - sv + extra} - ${extra}`, answer: target };
+    }
+    const mults = [2,3,4,5].filter(m => sv * m <= target);
+    if (mults.length) {
+        const m = mults[randInt(0, mults.length - 1)];
+        const c = target - sv * m;
+        if (c >= 0) return { latex: `\\sqrt{${sq}} \\times ${m} + ${c}`, answer: target };
+    }
+    return { latex: `\\sqrt{${sq}} + ${target - sv}`, answer: target };
+}
+
+function genCompCubePlusFrac(target, level) {
+    const cubes = [[1,1],[8,2],[27,3]];
+    if (level >= 3) {
+        // Use negative exponent: a³ + b^{-1} × c
+        const [cube, cr] = cubes[randInt(0, cubes.length - 1)];
+        const rest = target - cube;
+        if (rest > 0) {
+            const base = [2,3,4][randInt(0,2)];
+            return { latex: `${cr}^{3} + ${base}^{-1} \\times ${rest * base}`, answer: target };
+        }
+    }
+    if (level >= 2) {
+        // Use decimal in fraction
+        const [cube, cr] = cubes[randInt(0, cubes.length - 1)];
+        const rest = target - cube;
+        if (rest > 0) {
+            const d = randInt(2, 4);
+            return { latex: `${cr}^{3} + \\frac{${rest * d}}{${d}}`, answer: target };
+        }
+    }
+    const [cube, cr] = cubes[randInt(0, cubes.length - 1)];
+    const rest = target - cube;
+    if (rest > 0) {
+        const d = randInt(2, 4);
+        return { latex: `${cr}^{3} + \\frac{${rest * d}}{${d}}`, answer: target };
+    }
+    if (rest === 0) return { latex: `${cr}^{3}`, answer: target };
+    return { latex: `${cubes[2][1]}^{3} - ${cubes[2][0] - target}`, answer: target };
+}
+
+function genCompNegExp(target, level) {
+    const base = [2,3,4,5][randInt(0,3)];
+    if (level >= 3) {
+        // Double negative exponent: a^{-1} × b + c^{-1} × d
+        const base2 = [2,3,4][randInt(0,2)];
+        const part2 = randInt(1, Math.max(target - 1, 1));
+        const part1 = target - part2;
+        return { latex: `${base}^{-1} \\times ${part1 * base} + ${base2}^{-1} \\times ${part2 * base2}`, answer: target };
+    }
+    if (level >= 2) {
+        // Negative exponent with subtraction
+        const c = randInt(1, Math.min(target - 1, 8));
+        const rest = target + c;
+        return { latex: `${base}^{-1} \\times ${rest * base} - ${c}`, answer: target };
+    }
+    const c = randInt(0, Math.min(target - 1, 10));
+    const rest = target - c;
+    const b = rest * base;
+    return { latex: `${base}^{-1} \\times ${b} + ${c}`, answer: target };
+}
+
+function genCompMixedOpFrac(target, level) {
+    const c = randInt(2, 4);
+    const num = target * c;
+    if (level >= 3) {
+        // (a² + sqrt(b)) / c
+        const base = randInt(1, 4);
+        const sq = base * base;
+        const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+        const [sqv, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+        const rest = num - sq - sv;
+        if (rest >= 0) return { latex: `\\frac{${base}^{2} + \\sqrt{${sqv}} + ${rest}}{${c}}`, answer: target };
+    }
+    const base = randInt(1, 5);
+    const sq = base * base;
+    if (level >= 2 && sq < num) {
+        // Use negative in expression
+        const extra = randInt(1, 5);
+        return { latex: `\\frac{${base}^{2} + ${num - sq + extra} - ${extra}}{${c}}`, answer: target };
+    }
+    if (sq < num) {
+        return { latex: `\\frac{${base}^{2} + ${num - sq}}{${c}}`, answer: target };
+    }
+    return { latex: `\\frac{${base}^{2} - ${sq - num}}{${c}}`, answer: target };
+}
+
+function genCompDoubleFrac(target, level) {
+    const c = randInt(2, 4);
+    const b = randInt(2, 4);
+    const a = target * c * b;
+    if (level >= 3) {
+        // Triple-layer fraction
+        const d = randInt(2, 3);
+        return { latex: `\\frac{\\frac{${a * d}}{${b * d}}}{${c}}`, answer: target };
+    }
+    if (level >= 2) {
+        // Add a constant
+        const k = randInt(1, 5);
+        return { latex: `\\frac{\\frac{${(target + k) * c * b}}{${b}}}{${c}} - ${k}`, answer: target };
+    }
+    return { latex: `\\frac{\\frac{${a}}{${b}}}{${c}}`, answer: target };
+}
+
+function genCompPctExpr(target, level) {
+    if (level >= 3) {
+        // Percentage of expression with a square
+        const pcts = [10,20,25,50];
+        for (const p of shuffle(pcts)) {
+            const whole = target / (p / 100);
+            if (Number.isInteger(whole) && whole > 2) {
+                const base = randInt(2, 4);
+                const sq = base * base;
+                if (sq < whole) return { latex: `${p}\\% \\text{ of } (${base}^{2} + ${whole - sq})`, answer: target };
+            }
+        }
+    }
+    const pcts = [10,20,25,50];
+    for (const p of shuffle(pcts)) {
+        const whole = target / (p / 100);
+        if (Number.isInteger(whole) && whole > 2) {
+            const a = randInt(1, whole - 1);
+            const b = whole - a;
+            if (level >= 2) {
+                return { latex: `${p}\\% \\text{ of } (${a} + ${b})`, answer: target };
+            }
+            return { latex: `${p}\\% \\text{ of } (${a} + ${b})`, answer: target };
+        }
+    }
+    const a = randInt(1, target * 2 - 1);
+    return { latex: `50\\% \\text{ of } (${a} + ${target * 2 - a})`, answer: target };
+}
+
+function genCompIdxSubIdx(target, level) {
+    if (level >= 3) {
+        // a² - b² + sqrt(c) = target
+        for (let diff = 1; diff <= 6; diff++) {
+            if (target % diff === 0) {
+                const sum = target / diff;
+                if ((sum + diff) % 2 === 0) {
+                    const a = (sum + diff) / 2;
+                    const b = (sum - diff) / 2;
+                    if (a > 0 && b > 0 && a <= 10 && b <= 10) {
+                        const sqrtPairs = [[4,2],[9,3]];
+                        const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+                        return { latex: `${a}^{2} - ${b}^{2} + \\sqrt{${sq}} - ${sv}`, answer: target };
+                    }
+                }
+            }
+        }
+    }
+    for (let diff = 1; diff <= 6; diff++) {
+        if (target % diff === 0) {
+            const sum = target / diff;
+            if ((sum + diff) % 2 === 0) {
+                const a = (sum + diff) / 2;
+                const b = (sum - diff) / 2;
+                if (a > 0 && b >= 0 && a <= 10 && b <= 10) {
+                    if (b === 0) return { latex: `${a}^{2}`, answer: target };
+                    return { latex: `${a}^{2} - ${b}^{2}`, answer: target };
+                }
+            }
+        }
+    }
+    const a = randInt(2, 5);
+    return { latex: `${a}^{2} + ${target - a*a}`, answer: target };
+}
+
+function genCompFracRootNum(target, level) {
+    const c = randInt(2, 4);
+    const num = target * c;
+    const sqrtPairs = [[4,2],[9,3],[16,4],[25,5]];
+    const [sq, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+    const b = num - sv;
+    if (level >= 3 && b > 0) {
+        // Use a cube root or power inside
+        return { latex: `\\frac{\\sqrt{${sq}} + ${b}}{${c}}`, answer: target };
+    }
+    if (level >= 2 && b > 0) {
+        // Break b into subtraction
+        const extra = randInt(1, 4);
+        return { latex: `\\frac{\\sqrt{${sq}} + ${b + extra} - ${extra}}{${c}}`, answer: target };
+    }
+    if (b > 0) {
+        return { latex: `\\frac{\\sqrt{${sq}} + ${b}}{${c}}`, answer: target };
+    }
+    return { latex: `\\frac{\\sqrt{${sqrtPairs[3][0]}} + ${num - sqrtPairs[3][1]}}{${c}}`, answer: target };
+}
+
+function genCompChainMulDiv(target, level) {
+    const d = randInt(0, Math.min(target - 1, 8));
+    const rest = target - d;
+    const c = randInt(2, 5);
+    const product = rest * c;
+    if (level >= 3) {
+        // Use a power: a² × b ÷ c + d
+        const base = randInt(2, 4);
+        const sq = base * base;
+        if (product % sq === 0) {
+            return { latex: `${base}^{2} \\times ${product/sq} \\div ${c} + ${d}`, answer: target };
+        }
+    }
+    const factors = [];
+    for (let i = 2; i <= 12; i++) if (product % i === 0 && product/i <= 15) factors.push(i);
+    if (factors.length) {
+        const a = factors[randInt(0, factors.length - 1)];
+        const b = product / a;
+        if (level >= 2) {
+            return { latex: `${a} \\times ${b} \\div ${c} + ${d}`, answer: target };
+        }
+        return { latex: `${a} \\times ${b} \\div ${c} + ${d}`, answer: target };
+    }
+    return { latex: `${product} \\div ${c} + ${d}`, answer: target };
+}
+
+function genCompSignedFrac(target, level) {
+    const b = randInt(2, 5);
+    const totalNum = target * b;
+    if (level >= 3) {
+        // Multiple signed fractions: -a/b + c/b - d/b + e/b
+        const neg1 = randInt(1, 5);
+        const neg2 = randInt(1, 5);
+        const pos = totalNum + neg1 + neg2;
+        const pos1 = randInt(1, pos - 1);
+        const pos2 = pos - pos1;
+        return { latex: `-\\frac{${neg1}}{${b}} + \\frac{${pos1}}{${b}} - \\frac{${neg2}}{${b}} + \\frac{${pos2}}{${b}}`, answer: target };
+    }
+    if (level >= 2) {
+        // Larger negative values
+        const neg = randInt(5, 15);
+        const pos = totalNum + neg;
+        return { latex: `-\\frac{${neg}}{${b}} + \\frac{${pos}}{${b}}`, answer: target };
+    }
+    const neg = randInt(1, 10);
+    const pos = totalNum + neg;
+    return { latex: `-\\frac{${neg}}{${b}} + \\frac{${pos}}{${b}}`, answer: target };
+}
+
+function genCompRootOfFrac(target, level) {
+    if (level >= 3) {
+        // sqrt(a/b) × c + d^{-1} × e
+        const cv = [2,3,4,5].filter(v => target % v === 0);
+        if (cv.length) {
+            const c = cv[randInt(0, cv.length - 1)];
+            const rootVal = target / c;
+            const sq = rootVal * rootVal;
+            const b = randInt(2, 4);
+            const a = sq * b;
+            return { latex: `\\sqrt{\\frac{${a}}{${b}}} \\times ${c}`, answer: target };
+        }
+    }
+    const c = [2,3,4,5].filter(v => target % v === 0);
+    if (c.length) {
+        const cv = c[randInt(0, c.length - 1)];
+        const rootVal = target / cv;
+        const sq = rootVal * rootVal;
+        const b = randInt(2, 4);
+        const a = sq * b;
+        return { latex: `\\sqrt{\\frac{${a}}{${b}}} \\times ${cv}`, answer: target };
+    }
+    const b = randInt(2, 4);
+    const a = 4 * b;
+    return { latex: `\\sqrt{\\frac{${a}}{${b}}} + ${target - 2}`, answer: target };
+}
+
+function genCompPowerChain(target, level) {
+    const base = randInt(2, 4);
+    const sq = base * base;
+    const b = randInt(1, 4);
+    const product1 = sq * b;
+    const rest = product1 - target;
+    if (level >= 3 && rest > 0) {
+        // Use sqrt in the subtracted part
+        const sqrtPairs = [[4,2],[9,3],[16,4]];
+        const [sqv, sv] = sqrtPairs[randInt(0, sqrtPairs.length - 1)];
+        const remainder = rest - sv;
+        if (remainder >= 0) return { latex: `${base}^{2} \\times ${b} - \\sqrt{${sqv}} - ${remainder}`, answer: target };
+    }
+    if (rest > 0) {
+        const divisors = [2,3,4,5].filter(d => rest % d === 0 && rest/d <= 10);
+        if (divisors.length) {
+            const c = divisors[randInt(0, divisors.length - 1)];
+            return { latex: `${base}^{2} \\times ${b} - ${c} \\times ${rest/c}`, answer: target };
+        }
+        return { latex: `${base}^{2} \\times ${b} - ${rest}`, answer: target };
+    }
+    return { latex: `${base}^{2} \\times ${b} + ${target - product1}`, answer: target };
+}
+
+// ── 5 New Composite Generators ──
+
+// |a - b| + c = target
+function genCompAbsValue(target, level) {
+    if (level >= 3) {
+        // |a² - b| + c
+        const base = randInt(2, 5);
+        const sq = base * base;
+        const diff = randInt(1, 8);
+        const absVal = diff;
+        const c = target - absVal;
+        if (c >= 0) return { latex: `|${base}^{2} - ${sq + diff}| + ${c}`, answer: target };
+        return { latex: `|${base}^{2} - ${sq - target}|`, answer: target };
+    }
+    if (level >= 2) {
+        // |negative - positive|
+        const a = randInt(1, 10);
+        const b = randInt(a + 1, a + 15);
+        const absVal = b - a;
+        const c = target - absVal;
+        if (c >= 0) return { latex: `|${a} - ${b}| + ${c}`, answer: target };
+        return { latex: `|${target + a} - ${a}|`, answer: target };
+    }
+    // Simple: |a - b| where a < b
+    const b = randInt(target + 1, target + 10);
+    const a = b - target;
+    return { latex: `|${a} - ${b}|`, answer: target };
+}
+
+// a/b × c/d = target
+function genCompFracTimesFrac(target, level) {
+    if (level >= 3) {
+        // Include a square: (a²/b) × (c/d) = target
+        const base = randInt(2, 4);
+        const sq = base * base;
+        const d = randInt(2, 5);
+        const bc = target * d;
+        if (bc % sq === 0) {
+            const k = bc / sq;
+            return { latex: `\\frac{${base}^{2}}{${d}} \\times ${k}`, answer: target };
+        }
+    }
+    if (level >= 2) {
+        // Larger fractions
+        const b = randInt(2, 6);
+        const d = randInt(2, 6);
+        const num = target * b * d;
+        // Find two factors of num
+        const factors = [];
+        for (let i = 2; i <= 12; i++) if (num % i === 0 && num / i <= 20) factors.push(i);
+        if (factors.length) {
+            const a = factors[randInt(0, factors.length - 1)];
+            const c = num / a;
+            return { latex: `\\frac{${a}}{${b}} \\times \\frac{${c}}{${d}}`, answer: target };
+        }
+    }
+    // Simple: a/b × c where result is target
+    const b = randInt(2, 5);
+    const a = target * b;
+    const c = 1;
+    return { latex: `\\frac{${a}}{${b}} \\times ${c}`, answer: target };
+}
+
+// Mixed number operations: a b/c ± d = target
+function genCompMixedNumber(target, level) {
+    if (level >= 3) {
+        // Mixed number × integer
+        const m = randInt(2, 3);
+        if (target % m === 0) {
+            const mixedVal = target / m;
+            const whole = Math.floor(mixedVal);
+            const frac = mixedVal - whole;
+            if (frac === 0) return { latex: `${whole} \\times ${m}`, answer: target };
+            const d = [2, 3, 4, 5].find(v => Number.isInteger(frac * v));
+            if (d) return { latex: `${whole}\\frac{${Math.round(frac * d)}}{${d}} \\times ${m}`, answer: target };
+        }
+    }
+    if (level >= 2) {
+        // Mixed number subtraction
+        const d = randInt(2, 5);
+        const n = randInt(1, d - 1);
+        const fracVal = n / d;
+        const total = target + fracVal;
+        const whole = Math.floor(total);
+        const sub = total - target;
+        return { latex: `${whole}\\frac{${n}}{${d}} - \\frac{${n}}{${d}}`, answer: target };
+    }
+    // Simple: whole + fraction that equals integer
+    const d = randInt(2, 5);
+    const n = d; // n/d = 1
+    const whole = target - 1;
+    if (whole >= 1) return { latex: `${whole}\\frac{${n}}{${d}}`, answer: target };
+    return { latex: `\\frac{${target * d}}{${d}}`, answer: target };
+}
+
+// p% of a/b = target
+function genCompPctFrac(target, level) {
+    if (level >= 3) {
+        // Percentage of a squared fraction
+        const pcts = [10, 20, 25, 50];
+        for (const p of shuffle(pcts)) {
+            const whole = target / (p / 100);
+            if (Number.isInteger(whole)) {
+                const base = randInt(2, 4);
+                const sq = base * base;
+                if (whole % sq === 0) {
+                    return { latex: `${p}\\% \\text{ of } \\frac{${whole * 2}}{2}`, answer: target };
+                }
+            }
+        }
+    }
+    if (level >= 2) {
+        // Percentage of an improper fraction
+        const pcts = [10, 20, 25, 50];
+        for (const p of shuffle(pcts)) {
+            const whole = target / (p / 100);
+            if (Number.isInteger(whole)) {
+                const d = randInt(2, 5);
+                return { latex: `${p}\\% \\text{ of } \\frac{${whole * d}}{${d}}`, answer: target };
+            }
+        }
+    }
+    // Simple: 50% of 2×target expressed as fraction
+    const d = randInt(2, 4);
+    return { latex: `50\\% \\text{ of } \\frac{${target * 2 * d}}{${d}}`, answer: target };
+}
+
+// Cube root expressions
+function genCompCubeRoot(target, level) {
+    if (level >= 3) {
+        // cbrt(a) + b² - c
+        const cubeRoots = [[1,1],[8,2],[27,3]];
+        const [cube, cr] = cubeRoots[randInt(0, cubeRoots.length - 1)];
+        const base = randInt(2, 4);
+        const sq = base * base;
+        const rest = target - cr - sq;
+        if (rest >= 0) return { latex: `\\sqrt[3]{${cube}} + ${base}^{2} + ${rest}`, answer: target };
+        if (cr + sq > target) return { latex: `\\sqrt[3]{${cube}} + ${base}^{2} - ${cr + sq - target}`, answer: target };
+    }
+    if (level >= 2) {
+        // cbrt(a) × b + c
+        const cubeRoots = [[8,2],[27,3]];
+        const [cube, cr] = cubeRoots[randInt(0, cubeRoots.length - 1)];
+        const mults = [2,3,4].filter(m => cr * m <= target);
+        if (mults.length) {
+            const m = mults[randInt(0, mults.length - 1)];
+            const c = target - cr * m;
+            if (c >= 0) return { latex: `\\sqrt[3]{${cube}} \\times ${m} + ${c}`, answer: target };
+        }
+        return { latex: `\\sqrt[3]{${cube}} + ${target - cr}`, answer: target };
+    }
+    // Simple: cbrt(a) + b
+    const cubeRoots = [[1,1],[8,2],[27,3]];
+    const [cube, cr] = cubeRoots[randInt(0, cubeRoots.length - 1)];
+    const rest = target - cr;
+    if (rest >= 0) return { latex: `\\sqrt[3]{${cube}} + ${rest}`, answer: target };
+    return { latex: `\\sqrt[3]{${cubeRoots[2][0]}} - ${cubeRoots[2][1] - target}`, answer: target };
+}
+
+// ── Encode ──
+function encode() {
+    const title = document.getElementById('worksheet-title').value.trim();
+    const message = document.getElementById('secret-message').value.trim().toUpperCase();
+    if (!title || !message) return;
+
+    const topics = getSelectedTopics();
+    if (!topics.length) { alert('No topics selected.'); return; }
+
+    // Shuffle topics for varied mix across letters
+    const shuffledTopics = shuffle(topics);
+
+    const targets = shuffle([...Array(26)].map((_, i) => i + 1));
+    const letterMap = {};
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    // Cap how many times any one question type can appear.
+    // With many skills there's no need to repeat; with few skills some repeats are unavoidable.
+    const maxRepeats = Math.floor(26 / shuffledTopics.length) + 1;
+    const subcatUsage = {};
+
+    const letterTopics = {};
+    for (let i = 0; i < 26; i++) {
+        const letter = alphabet[i];
+        const target = targets[i];
+        // Pick a topic whose subcategory hasn't yet hit the repeat cap
+        const available = shuffledTopics.filter(t => (subcatUsage[t.subcategory] || 0) < maxRepeats);
+        const pool = available.length > 0 ? available : shuffledTopics;
+        const topic = pool[randInt(0, pool.length - 1)];
+        subcatUsage[topic.subcategory] = (subcatUsage[topic.subcategory] || 0) + 1;
+        const eq = generateEquation(target, [topic]);
+        letterMap[letter] = { equation: eq.latex, answer: eq.answer };
+        letterTopics[letter] = { subcategory: eq.subcategory, level: eq.level };
+    }
+
+    generatedWorksheet = { letterMap, message, title, letterTopics };
+    renderWorksheet();
+}
+
+// Re-generate: keep the same question types per letter, just re-roll the numbers
+function regenerate() {
+    if (!generatedWorksheet) return;
+    const { message, title, letterTopics } = generatedWorksheet;
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const targets = shuffle([...Array(26)].map((_, i) => i + 1));
+    const letterMap = {};
+
+    for (let i = 0; i < 26; i++) {
+        const letter = alphabet[i];
+        const target = targets[i];
+        const { subcategory, level } = letterTopics[letter];
+        const eq = generateEquation(target, [{ subcategory, levelNum: level }]);
+        letterMap[letter] = { equation: eq.latex, answer: eq.answer };
+    }
+
+    generatedWorksheet = { letterMap, message, title, letterTopics };
+    renderWorksheet();
+}
+
+function renderWorksheet() {
+    if (!generatedWorksheet) return;
+    const { letterMap, message, title } = generatedWorksheet;
+
+    document.getElementById('ws-title').textContent = title;
+
+    // Code sequence
+    const seqContainer = document.getElementById('code-sequence');
+    seqContainer.innerHTML = '';
+    const words = message.split(/\s+/);
+    words.forEach((word) => {
+        const group = document.createElement('div');
+        group.className = 'code-group';
+        for (const ch of word) {
+            if (letterMap[ch]) {
+                const cell = document.createElement('div');
+                cell.className = 'code-cell';
+                cell.innerHTML = `<div class="code-letter-line"></div><div class="code-number">${letterMap[ch].answer}</div>`;
+                group.appendChild(cell);
+            }
+        }
+        seqContainer.appendChild(group);
+    });
+
+    // Key: 3 columns of 9, 9, 8
+    const keyGrid = document.getElementById('key-grid');
+    keyGrid.innerHTML = '';
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const columns = [alphabet.slice(0, 13), alphabet.slice(13, 26)];
+
+    columns.forEach(col => {
+        const colDiv = document.createElement('div');
+        for (const letter of col) {
+            const row = document.createElement('div');
+            row.className = 'key-row';
+
+            const letterSpan = document.createElement('span');
+            letterSpan.className = 'key-letter';
+            letterSpan.textContent = letter;
+
+            const eqSpan = document.createElement('span');
+            eqSpan.className = 'key-equation';
+
+            const eqEquals = document.createElement('span');
+            eqEquals.className = 'key-equals';
+            eqEquals.textContent = '= ___';
+
+            row.appendChild(letterSpan);
+            row.appendChild(eqSpan);
+            row.appendChild(eqEquals);
+            colDiv.appendChild(row);
+
+            katex.render(letterMap[letter].equation, eqSpan, { throwOnError: false });
+        }
+        keyGrid.appendChild(colDiv);
+    });
+
+    document.getElementById('print-preview-scroll').style.display = 'block';
+    document.getElementById('save-btn').style.display = '';
+    document.getElementById('print-btn').style.display = '';
+    document.getElementById('reset-btn').style.display = '';
+    document.getElementById('regen-btn').style.display = '';
+}
+
+// ── Save / Reset ──
+function saveWorksheet() {
+    if (!generatedWorksheet) return;
+    const saved = JSON.parse(localStorage.getItem('kryptic_worksheets') || '[]');
+    saved.push({ ...generatedWorksheet, savedAt: new Date().toISOString() });
+    localStorage.setItem('kryptic_worksheets', JSON.stringify(saved));
+    alert('Worksheet saved!');
+}
+
+function resetWorksheet() {
+    generatedWorksheet = null;
+    currentPreset = null;
+    currentCustomId = null;
+    document.getElementById('print-preview-scroll').style.display = 'none';
+    document.getElementById('save-btn').style.display = 'none';
+    document.getElementById('print-btn').style.display = 'none';
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('regen-btn').style.display = 'none';
+    document.getElementById('worksheet-title').value = '';
+    document.getElementById('secret-message').value = '';
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.saved-sel-btn').forEach(b => b.classList.remove('active'));
+    updateEncodeBtn();
+}
+
+// ── Init ──
+renderSavedSelections();
+</script>
+
+</body>
+</html>

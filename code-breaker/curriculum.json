@@ -1,0 +1,112 @@
+{
+    "Number_Curriculum_NZ_Year_9_10": {
+        "A_Number_Sense_and_Operations": {
+            "Place_Value_Rounding_Estimation": {
+                "Level_1": "Whole numbers to 10,000; identify place value; round to nearest 10, 100, 1000",
+                "Level_2": "Large whole numbers; decimals to 2dp; rounding decimals",
+                "Level_3": "Decimals to 4dp; significant figures",
+                "Level_4": "Upper and lower bounds from rounding; interval notation for bounds",
+                "Level_5": "Error intervals and rounding within calculations"
+            },
+            "Addition_Subtraction": {
+                "Level_1": "Single and multi-digit whole numbers with regrouping",
+                "Level_2": "Decimals to 2dp; mixed whole and decimal numbers",
+                "Level_3": "Integers including negatives; subtracting negatives; sign rules",
+                "Level_4": "Mixed integers, decimals, and fractions in expressions",
+                "Level_5": "Real numbers including indices and signed values"
+            },
+            "Multiplication_Division": {
+                "Level_1": "Single-digit multiplication; exact division",
+                "Level_2": "Multi-digit multiplication; division with remainder",
+                "Level_3": "Decimal multiplication and division",
+                "Level_4": "Integers with negatives; long division with decimals",
+                "Level_5": "Real numbers including standard form"
+            },
+            "Order_of_Operations": {
+                "Level_1": "BODMAS with whole numbers",
+                "Level_2": "Include brackets and mixed operations",
+                "Level_3": "Include squares and cubes",
+                "Level_4": "Nested brackets and fractional components",
+                "Level_5": "Expressions including indices and negative values"
+            },
+            "Factors_and_Multiples": {
+                "Level_1": "List factors and factor pairs",
+                "Level_2": "Identify prime and composite numbers",
+                "Level_3": "Prime factorisation",
+                "Level_4": "Use prime factorisation to find HCF and LCM",
+                "Level_5": "LCM and HCF in applied contexts"
+            }
+        },
+        "B_Fractions_Decimals_Percentages": {
+            "Fractions": {
+                "Level_1": "Equivalent fractions; simplify; common denominators",
+                "Level_2": "Add and subtract fractions",
+                "Level_3": "Multiply and divide fractions including mixed numbers",
+                "Level_4": "Fraction of a fraction; proportional fraction reasoning",
+                "Level_5": "Midpoint (mean) of two fractions; fraction scaling with unknowns"
+            },
+            "Decimals": {
+                "Level_1": "Convert between fractions and terminating decimals",
+                "Level_2": "Recurring decimals to fractions (simple cases)",
+                "Level_3": "Operations with decimals to 3dp",
+                "Level_4": "Decimal expressions with indices and standard form",
+                "Level_5": "Decimal reasoning within proportional contexts"
+            },
+            "Percentages": {
+                "Level_1": "Convert between fraction, decimal and percentage",
+                "Level_2": "Find percentage of a quantity",
+                "Level_3": "Percentage increase and decrease",
+                "Level_4": "Reverse percentages using multipliers",
+                "Level_5": "Successive percentage change using multiplicative factors"
+            }
+        },
+        "C_Ratios_Rates_Proportion": {
+            "Ratios": {
+                "Level_1": "Simplify ratios",
+                "Level_2": "Divide quantities in a given ratio",
+                "Level_3": "Equivalent ratios and scaling",
+                "Level_4": "Solve missing value in ratio",
+                "Level_5": "Ratios with mixed number systems (fractions/percentages)"
+            },
+            "Rates_and_Unit_Rates": {
+                "Level_1": "Calculate simple rates",
+                "Level_2": "Unit rate calculations",
+                "Level_3": "Compare value using common unit rate",
+                "Level_4": "Convert between units (e.g., km/h to m/s)",
+                "Level_5": "Rates expressed using algebraic reasoning"
+            },
+            "Proportion": {
+                "Level_1": "Direct proportion",
+                "Level_2": "Solve proportions with cross multiplication",
+                "Level_3": "Solve for total from fractional or percentage parts",
+                "Level_4": "Equivalent fractions with unknown multiplier",
+                "Level_5": "Combined proportional reasoning"
+            }
+        },
+        "D_Indices_and_Standard_Form": {
+            "Index_Laws": {
+                "Level_1": "Positive integer powers; squares and cubes",
+                "Level_2": "Product and quotient laws",
+                "Level_3": "Power of a power; zero index",
+                "Level_4": "Negative indices",
+                "Level_5": "Fractional indices (numeric only)"
+            },
+            "Standard_Form": {
+                "Level_1": "Write numbers in scientific notation",
+                "Level_2": "Convert from scientific notation",
+                "Level_3": "Multiply and divide in standard form",
+                "Level_4": "Add and subtract in standard form",
+                "Level_5": "Standard form within rounding constraints"
+            }
+        },
+        "E_Integers_and_Number_Line": {
+            "Ordering_and_Absolute_Value": {
+                "Level_1": "Order integers on a number line",
+                "Level_2": "Absolute value",
+                "Level_3": "Operations with signed integers",
+                "Level_4": "Signed decimals and fractions",
+                "Level_5": "Expressions with multiple signed operations"
+            }
+        }
+    }
+}

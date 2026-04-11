@@ -1,0 +1,2178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Brief History · From the Big Bang to the End of Time</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&family=Syne:wght@700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --era-bg: #050008;
+      --era-primary: #c084fc;
+      --era-secondary: #e9d5ff;
+      --era-accent: rgba(192, 132, 252, 0.12);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: auto;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--era-bg);
+      color: #f8fafc;
+      overflow-x: hidden;
+      transition: background-color 1.4s ease;
+    }
+
+    /* ═══════════════════════════════════════
+       TIMELINE BAR
+    ═══════════════════════════════════════ */
+    #timeline-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      z-index: 100;
+      background: rgba(4, 0, 12, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+    }
+
+    #timeline-start-label,
+    #timeline-end-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.28);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #timeline-track-wrap {
+      flex: 1;
+      position: relative;
+      height: 24px;
+      /* tall enough to contain the now-marker label */
+      display: flex;
+      align-items: center;
+    }
+
+    #timeline-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      overflow: hidden;
+      /* only clips the fill bars, not dot/marker */
+    }
+
+    #timeline-past-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 90%;
+      background: linear-gradient(to right,
+          #7c3aed 0%, #1d4ed8 10%, #0284c7 22%,
+          #c2410c 38%, #059669 50%, #16a34a 62%,
+          #a3e635 68%, #ca8a04 74%, #d97706 80%,
+          #3b82f6 87%, #6366f1 90%);
+      opacity: 0.55;
+    }
+
+    #timeline-future-fill {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(to right, #4c1d95, #0f0a2a);
+      opacity: 0.45;
+    }
+
+    /* NOW marker — sibling to track, not inside it */
+    #timeline-now-marker {
+      position: absolute;
+      left: 90%;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 6;
+      gap: 1px;
+    }
+
+    #timeline-now-marker .now-line {
+      width: 1.5px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+
+    #timeline-now-marker .now-tag {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      white-space: nowrap;
+    }
+
+    /* Dot — also a sibling to track */
+    #timeline-dot {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--era-primary);
+      border: 2.5px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 8px var(--era-primary);
+      transition: left 0.35s ease, background-color 1.2s ease, box-shadow 1.2s ease;
+      z-index: 7;
+      cursor: pointer;
+    }
+
+    @keyframes dot-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px var(--era-primary), 0 0 0 0 rgba(192, 132, 252, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 6px var(--era-primary), 0 0 0 6px rgba(192, 132, 252, 0);
+      }
+    }
+
+    #timeline-dot {
+      animation: dot-pulse 3s ease-in-out infinite;
+    }
+
+    #timeline-section-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      white-space: nowrap;
+      flex-shrink: 0;
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #timeline-tooltip {
+      position: fixed;
+      top: 58px;
+      background: rgba(4, 0, 12, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.85);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 200;
+      white-space: nowrap;
+      transform: translateX(-50%);
+    }
+
+    #timeline-tooltip.show {
+      opacity: 1;
+    }
+
+    /* ═══════════════════════════════════════
+       TABLE OF CONTENTS — DESKTOP (perma-open, transparent)
+    ═══════════════════════════════════════ */
+    #toc-panel {
+      position: fixed;
+      top: 54px;
+      right: 0;
+      z-index: 90;
+      width: 210px;
+      max-height: calc(100vh - 54px);
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Strip removed — menu opened via top-nav button on mobile */
+    #toc-strip {
+      display: none !important;
+    }
+
+    /* Desktop toggle button — hidden; perma-open on desktop */
+    #toc-toggle-btn {
+      display: none;
+    }
+
+    /* Mobile menu button in the timeline bar */
+    #mobile-menu-btn {
+      display: none;
+    }
+
+    .toc-inner-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 10px 20px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    }
+
+    .toc-inner-wrap::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .toc-inner-wrap::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .toc-head {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.2);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .toc-item {
+      display: block;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 1px;
+      text-decoration: none;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .toc-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .toc-item.active {
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .toc-item.visited .toc-item-title {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .toc-item.active .toc-item-title {
+      color: #fff;
+    }
+
+    .toc-item-time {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--era-primary);
+      display: block;
+      margin-bottom: 1px;
+      transition: color 1.2s ease;
+    }
+
+    .toc-item-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5);
+      display: block;
+      line-height: 1.3;
+    }
+
+    .toc-item.active .toc-item-time::before {
+      content: '▸ ';
+    }
+
+    /* Mobile TOC — fullscreen overlay triggered by top-nav button */
+    @media (max-width: 768px) {
+      #toc-panel {
+        display: none;
+      }
+
+      .toc-inner-wrap {
+        opacity: 1;
+      }
+
+      #mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1.5px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0;
+        margin-left: auto;
+      }
+
+      #mobile-menu-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      /* Fullscreen overlay on mobile */
+      #toc-panel.mobile-open {
+        display: flex;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: none;
+        height: 100%;
+        background: rgba(4, 0, 10, 0.97);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 200;
+        flex-direction: column;
+        align-items: stretch;
+        overflow-y: auto;
+      }
+
+      #toc-panel.mobile-open .toc-inner-wrap {
+        width: 100%;
+        padding: 72px 28px 48px;
+        flex: 1;
+      }
+
+      #toc-panel.mobile-open .toc-head {
+        font-size: 10px;
+        margin-bottom: 20px;
+      }
+
+      #toc-panel.mobile-open .toc-item {
+        padding: 12px 14px;
+      }
+
+      #toc-panel.mobile-open .toc-item-title {
+        font-size: 15px;
+      }
+
+      #toc-panel.mobile-open .toc-item-time {
+        font-size: 9px;
+      }
+
+      #toc-toggle-btn {
+        display: block;
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        font-size: 13px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 600;
+        padding: 6px 14px;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       NAV BUTTONS — Mechanical Keyboard Style
+    ═══════════════════════════════════════ */
+    .nav-key {
+      position: fixed;
+      right: 22px;
+      z-index: 90;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+
+    #nav-down {
+      bottom: 22px;
+    }
+
+    #nav-up {
+      bottom: 96px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #nav-up.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .key-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.28);
+      text-align: center;
+    }
+
+    /* Pixel game key */
+    .pixel-key {
+      width: 42px;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.5px solid rgba(255, 255, 255, 0.22);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .pixel-key svg {
+      width: 13px;
+      height: 13px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .nav-key:hover .pixel-key {
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .nav-key:active .pixel-key {
+      transform: translateY(1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+    }
+
+    /* ═══════════════════════════════════════
+       SECTIONS
+    ═══════════════════════════════════════ */
+    .era-section {
+      min-height: 100vh;
+      padding: 90px 0 70px;
+      position: relative;
+    }
+
+    .section-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    @media (min-width: 769px) {
+      .section-inner {
+        padding-right: 234px;
+      }
+    }
+
+    /* Section name — small eyebrow label */
+    .section-heading {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--era-primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 1.2s ease;
+    }
+
+    .heading-line {
+      display: block;
+      width: 24px;
+      height: 1.5px;
+      background: var(--era-primary);
+      opacity: 0.55;
+      flex-shrink: 0;
+      transition: background-color 1.2s ease;
+    }
+
+    /* Time period — the big display hero text */
+    .era-stamp {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 7vw, 4.8rem);
+      font-weight: 800;
+      line-height: 1.05;
+      padding-bottom: 0.06em;
+      /* prevent gradient clip */
+      margin-bottom: 10px;
+      background: linear-gradient(140deg, #fff 0%, var(--era-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* The "→ TO" subtext under the big timestamp */
+    .era-stamp-to {
+      display: block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(0.8rem, 1.8vw, 1rem);
+      font-weight: 500;
+      font-style: italic;
+      line-height: 1.4;
+      margin-top: 2px;
+      letter-spacing: 0.01em;
+      /* override the parent gradient clip */
+      -webkit-text-fill-color: rgba(255, 255, 255, 0.32);
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+    }
+
+    /* The "FROM →" supertext above the big timestamp (future sections) */
+    .era-stamp-from {
+      display: block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(0.8rem, 1.8vw, 1rem);
+      font-weight: 500;
+      font-style: italic;
+      line-height: 1.4;
+      margin-bottom: 2px;
+      letter-spacing: 0.01em;
+      /* override the parent gradient clip */
+      -webkit-text-fill-color: rgba(255, 255, 255, 0.32);
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+    }
+
+    .section-tagline {
+      font-size: clamp(0.95rem, 2vw, 1.05rem);
+      color: rgba(255, 255, 255, 0.42);
+      font-style: italic;
+      margin-bottom: 44px;
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* Content items */
+    .content-items {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .content-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 15px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .content-item:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .item-tag {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--era-primary);
+      background: var(--era-accent);
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-top: 2px;
+      transition: color 1.2s ease, background-color 1.2s ease;
+    }
+
+    .item-text {
+      font-size: 0.93rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .item-text strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Brainsplosion fact blocks */
+    .wow-fact {
+      margin: 36px 0;
+      padding: 24px 28px;
+      background: var(--era-accent);
+      border-left: 3.5px solid var(--era-primary);
+      border-radius: 0 12px 12px 0;
+      transition: background-color 1.2s ease, border-color 1.2s ease;
+    }
+
+    .wow-eyebrow {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--era-primary);
+      margin-bottom: 9px;
+      transition: color 1.2s ease;
+    }
+
+    .wow-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.55;
+    }
+
+    /* Subsection divider */
+    .subsection {
+      margin-top: 52px;
+    }
+
+    .subsection-rule {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .subsection-rule::before,
+    .subsection-rule::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .subsection-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.2);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════
+       ASIDES
+    ═══════════════════════════════════════ */
+    .aside-trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--era-primary);
+      margin: 28px 0 0;
+      transition: background 0.2s, border-color 0.2s, transform 0.12s;
+    }
+
+    .aside-trigger-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--era-primary);
+      transform: translateY(-1px);
+    }
+
+    .aside-trigger-btn .aside-arrow {
+      transition: transform 0.22s ease;
+    }
+
+    .aside-trigger-btn.open .aside-arrow {
+      transform: rotate(180deg);
+    }
+
+    .aside-trigger-btn .aside-icon {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .aside-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .aside-body {
+      margin: 16px 0 8px;
+      padding: 28px 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 16px;
+      position: relative;
+    }
+
+    .aside-body::before {
+      content: 'TANGENT';
+      position: absolute;
+      top: -8px;
+      left: 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: rgba(255, 255, 255, 0.2);
+      background: var(--era-bg, #050008);
+      padding: 0 8px;
+    }
+
+    .aside-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.3rem, 3.5vw, 1.9rem);
+      font-weight: 800;
+      color: var(--era-primary);
+      margin-bottom: 4px;
+      transition: color 1.2s ease;
+    }
+
+    .aside-subtitle {
+      font-size: 0.87rem;
+      color: rgba(255, 255, 255, 0.38);
+      font-style: italic;
+      margin-bottom: 24px;
+    }
+
+    .aside-close-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 28px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .aside-close-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .aside-h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 22px 0 10px;
+    }
+
+    /* ═══════════════════════════════════════
+       SPECIAL SECTIONS
+    ═══════════════════════════════════════ */
+    #genesis {
+      background-image:
+        radial-gradient(circle at 15% 25%, rgba(120, 40, 200, 0.25) 0%, transparent 50%),
+        radial-gradient(circle at 85% 75%, rgba(60, 20, 140, 0.2) 0%, transparent 50%);
+    }
+
+    #genesis::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 8% 15%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 22% 60%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 37% 32%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 53% 78%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 67% 18%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 79% 55%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 91% 40%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 90%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 85%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 70% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    #now {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #end-of-universe {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+    }
+
+    .closing-quote p {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight: 500;
+      line-height: 1.95;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 0.4em;
+    }
+
+    .closing-quote p.final {
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      font-weight: 700;
+      color: #fff;
+      margin-top: 28px;
+    }
+
+    #end-of-universe .section-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+
+    /* ═══════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════ */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.09);
+      border-radius: 3px;
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .era-section {
+        padding: 76px 0 60px;
+      }
+
+      .nav-key {
+        right: 14px;
+      }
+
+      #nav-down {
+        bottom: 16px;
+      }
+
+      #nav-up {
+        bottom: 100px;
+      }
+
+      #timeline-section-label {
+        display: none;
+      }
+
+      #timeline-start-label {
+        font-size: 7px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .section-inner {
+        padding: 0 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════
+       TIMELINE BAR
+  ═══════════════════════════════════════ -->
+  <div id="timeline-bar" role="navigation" aria-label="Cosmic timeline">
+    <span id="timeline-start-label">t = 0</span>
+    <div id="timeline-track-wrap">
+      <div id="timeline-track">
+        <div id="timeline-past-fill"></div>
+        <div id="timeline-future-fill"></div>
+      </div>
+      <!-- Now marker and dot are outside #timeline-track so they aren't clipped -->
+      <div id="timeline-now-marker">
+        <div class="now-line"></div>
+        <span class="now-tag">now</span>
+      </div>
+      <div id="timeline-dot" role="img" aria-label="Current position in cosmic history"></div>
+    </div>
+    <span id="timeline-section-label">Genesis</span>
+    <span id="timeline-end-label">10¹⁰⁰ yr</span>
+    <button id="mobile-menu-btn" aria-label="Open navigation menu">
+      <svg viewBox="0 0 16 16">
+        <line x1="2" y1="4" x2="14" y2="4" />
+        <line x1="2" y1="8" x2="14" y2="8" />
+        <line x1="2" y1="12" x2="14" y2="12" />
+      </svg>
+    </button>
+  </div>
+  <div id="timeline-tooltip"></div>
+
+  <!-- ═══════════════════════════════════════
+       TABLE OF CONTENTS
+  ═══════════════════════════════════════ -->
+  <nav id="toc-panel" aria-label="Table of contents">
+    <div class="toc-inner-wrap">
+      <div class="toc-head">A Brief History</div>
+      <div id="toc-list"></div>
+    </div>
+    <button id="toc-toggle-btn" aria-label="Close menu">✕ Close</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       NAV BUTTONS
+  ═══════════════════════════════════════ -->
+  <button class="nav-key" id="nav-up" aria-label="Previous section">
+    <div class="pixel-key">
+      <svg viewBox="0 0 14 12" fill="currentColor">
+        <polygon points="7,1 13,11 1,11" />
+      </svg>
+    </div>
+    <span class="key-label">prev</span>
+  </button>
+
+  <button class="nav-key" id="nav-down" aria-label="Next section">
+    <span class="key-label">next slide</span>
+    <div class="pixel-key">
+      <svg viewBox="0 0 14 12" fill="currentColor">
+        <polygon points="7,11 13,1 1,1" />
+      </svg>
+    </div>
+  </button>
+
+  <!-- ═══════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════ -->
+  <main>
+
+    <!-- ─── SECTION 1: GENESIS ─────────────── -->
+    <section class="era-section" id="genesis" data-index="0" data-title="Genesis" data-time-label="0 → 380,000 yr"
+      data-dot-pos="2" data-era-bg="#050008" data-era-primary="#c084fc" data-era-secondary="#e9d5ff"
+      data-era-accent="rgba(192,132,252,0.12)">
+      <div class="section-inner">
+        <h1 class="section-heading"><span class="heading-line"></span>Genesis</h1>
+        <div class="era-stamp">0<span class="era-stamp-to">→ 380,000 yr</span></div>
+        <p class="section-tagline">There was no "before." No space. No time. No nothing. </p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">t = 10⁻⁴³s</span>
+            <p class="item-text"><strong>The Planck Epoch.</strong><br /> Physics breaks down completely here.<br />The
+              universe is smaller than an atom by an almost infinite margin, hotter than 10³² degrees, and exists as
+              pure, undifferentiated energy.<br />All four fundamental forces are unified into one.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">t = 10⁻³⁶s</span>
+            <p class="item-text"><strong>Inflation.</strong> <br />The universe doubles in size at least 90 times in a
+              fraction of a nanosecond — expanding from sub-atomic to roughly the size of a grapefruit. <br />This is
+              not an explosion <em>into</em> space. It is space itself expanding, faster than light, carrying everything
+              with it.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">t &lt; 1 second</span>
+            <p class="item-text"><strong>The Forces Split.</strong> <br />As the universe cools, the unified force
+              separates into the four we know today. <br />Quarks form. <br />Matter and antimatter are created in
+              almost equal amounts and annihilate each other furiously. </p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">t = 3 minutes</span>
+            <p class="item-text"><strong>Nucleosynthesis.</strong> <br />The universe cools enough for quarks to bind
+              into protons and neutrons, then fuse into the first atomic nuclei: hydrogen, helium, and trace lithium.
+              <br />In roughly 17 minutes, the universe mints all the hydrogen and helium it will ever have — 75%
+              hydrogen, 25% helium by mass.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">t = 380,000 yr</span>
+            <p class="item-text"><strong>Recombination &amp; First Light.</strong> <br />The universe cools to ~3,000°C
+              — cool enough for electrons to settle into stable atoms. <br />For the first time, light can travel
+              freely. The universe becomes transparent. <br />That first flash of light still exists today (CMB),
+              washing over Earth right now as a faint microwave glow in every direction.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">For every billion antimatter particles created in the Big Bang, there were one billion and
+            <em>one</em> matter particles. Matter and antimatter collide and annihilate each other — turning back into
+            pure energy, leaving absolutely nothing behind. The billion pairs wiped each other out. But that one
+            leftover matter particle had nothing to annihilate with. It survived. Every atom in every star, planet, and
+            person is made from those survivors. We are the rounding error.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 2: THE FIRST LIGHT ────── -->
+    <section class="era-section" id="first-stars" data-index="1" data-title="The First Light"
+      data-time-label="380,000 yr → 9.2b yr" data-dot-pos="12" data-era-bg="#000610" data-era-primary="#fbbf24"
+      data-era-secondary="#bfdbfe" data-era-accent="rgba(251,191,36,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>The First Light</h2>
+        <div class="era-stamp">380,000 yr<span class="era-stamp-to">→ 9.2b yr</span></div>
+        <p class="section-tagline">The universe is transparent but completely dark. 150 million years of silence before
+          the first star ignites.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">150M years</span>
+            <p class="item-text"><strong>The Cosmic Dark Ages.</strong><br />For roughly 150 million years, the universe
+              is completely dark.<br />No stars, no light — just vast cold clouds of hydrogen and helium gas drifting in the
+              dark, slowly being pulled together by gravity's patient, inexorable tug. </p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">200M years</span>
+            <p class="item-text"><strong>Population III Stars.</strong><br />The first stars ignite — and they are nothing
+              like our Sun. Hundreds or even thousands of times more massive, burning a million times brighter,
+              blue-white and savage.<br />They contain only hydrogen and helium. The periodic table past lithium does not yet
+              exist.<br />These monsters live only a few million years before destroying themselves.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Supernovae</span>
+            <p class="item-text"><strong>The First Stellar Deaths.</strong> When those massive first stars die, they
+              explode with unimaginable violence — forging every heavier element in the periodic table in the final
+              moments of collapse. <br />Carbon, oxygen, nitrogen, iron, gold. The universe's chemistry is born in stellar
+              death.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">400M–1B years</span>
+            <p class="item-text"><strong>The First Galaxies.</strong><br />Gravity herds stars, gas, and dark matter — an
+              invisible scaffolding we still don't understand — into the first galaxies. Small and irregular at first,
+              they collide, merge, and grow into the majestic spirals we know today. The Milky Way assembles over
+              billions of years.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">Every atom in your body heavier than helium — the carbon in your DNA, the oxygen you're
+            breathing, the iron in your blood, the calcium in your bones — was forged inside a dying star billions of
+            years ago. We are, quite literally, made of stardust.</p>
+        </div>
+        <button class="aside-trigger-btn" data-aside="aside-stars" aria-expanded="false">
+          <span class="aside-icon">✦</span>
+          Dive deeper: The Life Cycle of Stars
+          <span class="aside-arrow">▾</span>
+        </button>
+        <div class="aside-content" id="aside-stars">
+          <div class="aside-body">
+            <h3 class="aside-title">The Life Cycle of Stars</h3>
+            <p class="aside-subtitle">How stars are born, how they burn, and why their deaths matter more than their
+              lives.</p>
+            <h4 class="aside-h3">Birth — Inside a Nebula</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">Collapse</span>
+                <p class="item-text">Stars form inside giant molecular clouds — vast cold regions of gas and dust
+                  spanning hundreds of light-years. A shockwave triggers gravitational collapse. As the cloud collapses,
+                  it heats up and spins faster (like an ice skater pulling their arms in).</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">Ignition</span>
+                <p class="item-text">When the core reaches ~10 million °C, hydrogen fusion ignites and a star is born.
+                  The Sun has been fusing 600 million tonnes of hydrogen into helium every single second for 4.6 billion
+                  years.</p>
+              </div>
+            </div>
+            <h4 class="aside-h3">Life — The Main Sequence</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">Balance</span>
+                <p class="item-text">Stars spend most of their lives in a stable balance: gravity pulling in, fusion
+                  pressure pushing out. Bigger stars burn brighter and die faster. A star 10× the Sun's mass burns
+                  10,000× brighter and lives only ~30 million years. Our Sun will live ~10 billion years total.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">Iron</span>
+                <p class="item-text">Stars fuse hydrogen → helium → carbon → neon → oxygen → silicon → iron. Iron is the
+                  end of the road. Fusing iron absorbs energy rather than releases it. When an iron core builds up,
+                  fusion stops and gravity wins instantly.</p>
+              </div>
+            </div>
+            <h4 class="aside-h3">Death — Three Paths</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">Like our Sun</span>
+                <p class="item-text"><strong>White Dwarf.</strong> The outer layers expand into a red giant, then drift
+                  away as a planetary nebula. The core remains as a white dwarf — Earth-sized, incredibly dense. A
+                  teaspoon of white dwarf material weighs about 5 tonnes.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">8–20× Sun</span>
+                <p class="item-text"><strong>Neutron Star.</strong> The iron core implodes in less than a second into a
+                  neutron star — city-sized but heavier than our Sun. The outer layers bounce off and explode as a
+                  core-collapse supernova, briefly outshining entire galaxies. In the final fraction of a second, more
+                  energy is released than the Sun will emit in its entire lifetime.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">&gt;20× Sun</span>
+                <p class="item-text"><strong>Black Hole.</strong> The collapse is so extreme that not even neutrons can
+                  stop it. A region of spacetime forms where gravity is so intense that not even light escapes. The
+                  supermassive black hole at the centre of the Milky Way — Sagittarius A* — has the mass of 4 million
+                  Suns.</p>
+              </div>
+            </div>
+            <div class="wow-fact" style="margin-top: 24px;">
+              <div class="wow-eyebrow">★ The Punchline</div>
+              <p class="wow-text">You are made of atoms that have been through at least one star — probably several.
+                Every heavy element in your body was created in stellar fusion, then scattered across space in a stellar
+                death, then re-incorporated into the gas cloud that became our Solar System. You are a graveyard of
+                ancient stars.</p>
+            </div>
+            <button class="aside-close-btn" data-aside="aside-stars">↑ Close — return to the story</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 3: OUR SOLAR SYSTEM ─────── -->
+    <section class="era-section" id="solar-system" data-index="2" data-title="Our Solar System"
+      data-time-label="9.2 → 10b yr" data-dot-pos="40" data-era-bg="#0f0800" data-era-primary="#fb923c"
+      data-era-secondary="#fde68a" data-era-accent="rgba(251,146,60,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Our Solar System</h2>
+        <div class="era-stamp">9.2b yr<span class="era-stamp-to">→ 10b yr</span></div>
+        <p class="section-tagline">A quiet corner of the Milky Way. A cloud of gas and dust — enriched by generations of
+          dead stars — begins to collapse.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">4.6 bya</span>
+            <p class="item-text"><strong>The Solar Nebula Collapses.</strong><br />A shockwave — possibly from a nearby
+              supernova — triggers collapse of a molecular cloud. The Sun forms from 99.86% of the mass.<br />Everything else
+              — all 8 planets, every moon, every asteroid, every comet — is the leftover 0.14%.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">4.57 bya</span>
+            <p class="item-text"><strong>The Sun Ignites.</strong><br />The collapsing core reaches fusion temperature. A
+              star switches on. The remaining material forms a spinning protoplanetary disk. Close to the Sun where it's
+              hot, only rock and metal survive. Far out, ice and gas accumulate — the gas giants.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">4.5 bya</span>
+            <p class="item-text"><strong>The Moon-Forming Impact.</strong><br />A Mars-sized protoplanet called Theia slams
+              into proto-Earth. The impact is so energetic it partially vaporises both bodies.<br />The debris ring coalesces
+              into the Moon — our large, stabilising companion. Without this impact, Earth might not have a stable axial
+              tilt, and without that, stable seasons may never have existed.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">4.4–3.8 bya</span>
+            <p class="item-text"><strong>The Hadean Eon.</strong><br />Earth is hellish: a magma ocean, constant asteroid
+              bombardment, no breathable atmosphere. The Late Heavy Bombardment pelts Earth and the Moon with a
+              concentrated wave of asteroids.<br />Paradoxically, this catastrophe likely delivered much of Earth's water,
+              carbon, and organic molecules — the raw ingredients for life.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">The craters on the Moon from the Late Heavy Bombardment are still visible today. Earth had
+            the same scars — but plate tectonics erased them. The Moon is our geological memory, preserved in rock for 4
+            billion years.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 4: LIFE BEGINS ────────── -->
+    <section class="era-section" id="life-begins" data-index="3" data-title="Life Begins"
+      data-time-label="10 → 10.3b yr" data-dot-pos="53" data-era-bg="#001408" data-era-primary="#4ade80"
+      data-era-secondary="#a7f3d0" data-era-accent="rgba(74,222,128,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Life Begins</h2>
+        <div class="era-stamp">10b yr<span class="era-stamp-to">→ 10.3b yr</span></div>
+        <p class="section-tagline">Earth is just over a billion years old, covered in oceans, with no oxygen. Somewhere,
+          chemistry crosses a line and becomes biology.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">3.8 bya</span>
+            <p class="item-text"><strong>The Window Opens.</strong><br />The Late Heavy Bombardment ends and evidence of life
+              appears within tens of millions of years — a geological eyeblink. Life didn't wait around. The gap between
+              "Earth becomes habitable" and "first life" may be as short as a few tens of millions of years.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">LUCA</span>
+            <p class="item-text"><strong>The Last Universal Common Ancestor.</strong><br />All life on Earth today descends
+              from a single common ancestor — probably a single-celled organism living near deep-sea hydrothermal vents,
+              surviving on chemical reactions in hot, mineral-rich water. It already had DNA, ribosomes, and cell
+              membranes. Extraordinarily sophisticated machinery.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">3.8–2 bya</span>
+            <p class="item-text"><strong>Prokaryotes Rule.</strong> For roughly 2 billion years, life on Earth consists
+              entirely of single-celled prokaryotes. Wildly diverse in metabolism — they invent fermentation, sulfur
+              respiration, nitrogen fixation. But tiny, and invisible to any naked eye that might exist.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">3.4 bya</span>
+            <p class="item-text"><strong>Photosynthesis.</strong> Cyanobacteria develop the ability to use sunlight to
+              split water molecules, releasing oxygen as a waste product. A chemical reaction that changes everything.
+              The planet will never be the same.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">Every living thing on Earth — every bacterium, every mushroom, every whale, every blade of
+            grass, every human — is descended from the same single ancestor. We are all cousins. The entire tree of life
+            grew from one seed.</p>
+        </div>
+        <button class="aside-trigger-btn" data-aside="aside-abiogenesis" aria-expanded="false">
+          <span class="aside-icon">✦</span>
+          Dive deeper: How did life actually start?
+          <span class="aside-arrow">▾</span>
+        </button>
+        <div class="aside-content" id="aside-abiogenesis">
+          <div class="aside-body">
+            <h3 class="aside-title">How Did Life Actually Start?</h3>
+            <p class="aside-subtitle">Abiogenesis — the transition from chemistry to biology — is one of the deepest
+              unsolved questions in science.</p>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">The Problem</span>
+                <p class="item-text">Life requires DNA to make proteins. But proteins are needed to replicate DNA.
+                  Neither works without the other. How did this chicken-and-egg system ever get started from scratch?
+                </p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">RNA World</span>
+                <p class="item-text">The leading hypothesis: RNA can both carry genetic information <em>and</em> act as
+                  a catalyst — like DNA and protein combined. Perhaps self-replicating RNA molecules came first,
+                  gradually building more complex chemistry around themselves. Lab experiments show RNA can
+                  spontaneously self-replicate under certain conditions.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">Miller-Urey, 1953</span>
+                <p class="item-text">Stanley Miller ran an electrical discharge through a flask of water, methane,
+                  ammonia, and hydrogen — simulating early Earth's atmosphere and lightning. Within a week, the flask
+                  was full of amino acids. The chemistry of life can arise spontaneously from simple ingredients. We've
+                  since found amino acids in meteorites — they form throughout the universe.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">Where?</span>
+                <p class="item-text"><strong>Deep-sea hydrothermal vents</strong> are the leading candidate — hot,
+                  mineral-rich, no UV damage. <strong>Tidal pools</strong> offer repeated wet-dry cycles that
+                  concentrate molecules. <strong>Panspermia</strong> proposes life or its precursors arrived from space
+                  — organic molecules are abundant in meteorites, and bacteria can survive inside a rock thrown between
+                  planets.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">The Threshold</span>
+                <p class="item-text">At some point, a self-replicating molecule became enclosed in a membrane — a
+                  proto-cell. Once you have a self-replicating system inside a membrane, you have Darwinian evolution.
+                  And from there, natural selection takes over entirely.</p>
+              </div>
+            </div>
+            <div class="wow-fact" style="margin-top: 24px;">
+              <div class="wow-eyebrow">★ The Honest Answer</div>
+              <p class="wow-text">We don't know exactly how it happened. But we know it happened at least once — in the
+                geological equivalent of an afternoon — on an otherwise hostile, volcanic, asteroid-bombarded planet.
+                Life found a way, almost immediately. That's either incredibly encouraging or incredibly humbling,
+                depending on your mood.</p>
+            </div>
+            <button class="aside-close-btn" data-aside="aside-abiogenesis">↑ Close — return to the story</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 5: THE LONG WAIT ──────── -->
+    <section class="era-section" id="long-wait" data-index="4" data-title="The Long Wait"
+      data-time-label="10.3 → 13.2b yr" data-dot-pos="63" data-era-bg="#001410" data-era-primary="#34d399"
+      data-era-secondary="#99f6e4" data-era-accent="rgba(52,211,153,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>The Long Wait</h2>
+        <div class="era-stamp">10.3b yr<span class="era-stamp-to">→ 13.2b yr</span></div>
+        <p class="section-tagline">Life exists. And for an almost incomprehensible stretch of time, it stays stubbornly,
+          infuriatingly simple.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">2.4 bya</span>
+            <p class="item-text"><strong>The Great Oxidation Event.</strong> Cyanobacteria have been pumping oxygen into
+              the oceans for a billion years. Eventually the iron that was soaking it up runs out — and oxygen floods
+              the atmosphere. For the anaerobic microbes that dominated Earth, oxygen is a deadly poison. The first mass
+              extinction, caused by life itself.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Snowball Earth</span>
+            <p class="item-text"><strong>The Planet Freezes.</strong> The altered atmosphere triggers catastrophic
+              glaciation. The entire planet may have frozen pole-to-equator — ice sheets hundreds of metres thick
+              covering the oceans. Life survives near hydrothermal vents. Volcanic CO₂ eventually breaks each freeze
+              with a violent greenhouse rebound.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Boring Billion</span>
+            <p class="item-text"><strong>1.8–0.8 billion years.</strong> Evolutionary near-stagnation. Life has the
+              recipe for complexity — but barely uses it. More time passed between the first cells and the first animals
+              than has passed since animals first appeared. The universe sat on an idea for a billion years.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">~2 bya</span>
+            <p class="item-text"><strong>Eukaryotes — The Power of Partnership.</strong> A prokaryote engulfs another
+              prokaryote and — instead of digesting it — keeps it alive as an internal energy factory. The guest becomes
+              the mitochondrion. Every cell in your body contains these ancient bacteria, still with their own DNA,
+              still dividing independently.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">~600 mya</span>
+            <p class="item-text"><strong>Multicellular Life.</strong> Cells begin cooperating — dividing labour,
+              specialising, sticking together. This transition has happened independently at least 25 times in
+              evolutionary history. Every animal, plant, and fungus on Earth is a coalition of cells that agreed to work
+              together. Cancer is what happens when one defects.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">You have mitochondria in almost every cell in your body — ancient bacteria with their own
+            separate DNA, reproducing independently. You are not a single organism. You are a symbiosis. A city, not a
+            person.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 6: EXPLOSION OF LIFE ──── -->
+    <section class="era-section" id="explosion" data-index="5" data-title="Explosion of Life"
+      data-time-label="13.2 → 13.55b yr" data-dot-pos="73" data-era-bg="#041400" data-era-primary="#a3e635"
+      data-era-secondary="#d9f99d" data-era-accent="rgba(163,230,53,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Explosion of Life</h2>
+        <div class="era-stamp">13.2b yr<span class="era-stamp-to">→ 13.55b yr</span></div>
+        <p class="section-tagline">Something changes. In a geological instant, the diversity of life on Earth detonates.
+        </p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">541 mya</span>
+            <p class="item-text"><strong>The Cambrian Explosion.</strong> Over roughly 25 million years, almost every
+              major animal body plan appears in the fossil record simultaneously. Eyes, shells, legs, claws,
+              segmentation, spines. Before the Cambrian, you'd need a microscope to see almost all life. After it, you'd
+              need to run.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">475 mya</span>
+            <p class="item-text"><strong>Life Invades Land.</strong> Plants colonise land first, followed by fungi, then
+              insects, then vertebrates. The first land plants transform Earth's atmosphere — massively increasing
+              oxygen and pulling CO₂ out of the air. They begin creating soil from bare rock: the foundation for all
+              terrestrial life.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">375 mya</span>
+            <p class="item-text"><strong>Tiktaalik — The Fish That Walked.</strong> A 375-million-year-old fossil fish
+              with proto-limbs, a neck, and the ability to do proto-push-ups. It bridges the gap between fish and land
+              vertebrates. You have wrist bones because a fish needed to prop itself up in shallow water.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Carboniferous</span>
+            <p class="item-text"><strong>The Age of Giant Insects.</strong> Oxygen levels spike to 35% (vs 21% today).
+              Dragonflies with 70cm wingspans patrol vast tropical forests. The dead vegetation, buried and compressed
+              over millions of years, becomes most of the coal we burn today.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">252 mya</span>
+            <p class="item-text"><strong>The Great Dying.</strong> The worst mass extinction in Earth's history. ~96% of
+              marine species and ~70% of land vertebrates gone. Cause: the Siberian Traps — volcanic eruptions releasing
+              CO₂ for roughly a million years. Runaway warming, ocean acidification, mass anoxia. Recovery takes 10
+              million years.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">96% of all species on Earth were wiped out in the Permian extinction. The planet came
+            within a geological whisker of losing complex life entirely. Everything alive today descended from the
+            survivors of that near-apocalypse.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 7: AGE OF DINOSAURS ───── -->
+    <section class="era-section" id="dinosaurs" data-index="6" data-title="Age of Dinosaurs"
+      data-time-label="13.55 → 13.734b yr" data-dot-pos="79" data-era-bg="#0a0800" data-era-primary="#ca8a04"
+      data-era-secondary="#fef08a" data-era-accent="rgba(202,138,4,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Age of Dinosaurs</h2>
+        <div class="era-stamp">13.55b yr<span class="era-stamp-to">→ 13.734b yr</span></div>
+        <p class="section-tagline">Into the wreckage of the Great Dying, a lineage we'd recognise as dinosaurs emerges
+          and dominates for longer than we can truly imagine.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">230 mya</span>
+            <p class="item-text"><strong>Dinosaurs Emerge.</strong> The first dinosaurs are modest — bipedal, a metre or
+              two long. But they have a crucial advantage: upright posture with legs directly beneath the body, allowing
+              efficient locomotion and breathing simultaneously. Most other reptiles can't run and breathe at the same
+              time.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">180–70 mya</span>
+            <p class="item-text"><strong>The Giants.</strong> Dinosaurs radiate into hundreds of species across every
+              ecological niche. Argentinosaurus may have weighed 80–100 tonnes — heavier than 15 African elephants.
+              Tyrannosaurus rex could smell prey from miles away.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">150 mya</span>
+            <p class="item-text"><strong>Birds Are Dinosaurs.</strong> Feathers evolve in theropod dinosaurs — first for
+              insulation or display, later for gliding, then powered flight. Birds are not descended from dinosaurs.
+              Birds <em>are</em> dinosaurs. When you eat a chicken, you're eating a dinosaur.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">In the shadows</span>
+            <p class="item-text"><strong>Mammals Hiding.</strong> Mammals exist throughout the Mesozoic — but for ~160
+              million years they are mostly small, nocturnal, shrew-like creatures hiding from dinosaurs. This long
+              stint in the dark may explain why mammals evolved superb hearing, smell, and warm-bloodedness. Our
+              adaptations were forged in hiding.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">66 mya</span>
+            <p class="item-text"><strong>The Chicxulub Impact.</strong> A 10–15km asteroid strikes the Yucatán Peninsula
+              at ~20km/second. Energy equivalent to a billion Hiroshima bombs. Within hours: a fireball incinerating
+              forests worldwide. Within months: a "nuclear winter" blocking sunlight for years. 76% of all species
+              extinct. The non-avian dinosaurs are gone forever.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">Non-avian dinosaurs dominated Earth for 165 million years. Mammals have existed for ~225
+            million years but only <em>dominated</em> for the last 66 million. We are the newcomers. We have existed for
+            a fraction of what they achieved.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 8: MAMMALS RISE ────────── -->
+    <section class="era-section" id="mammals" data-index="7" data-title="Mammals Rise"
+      data-time-label="13.734 → 13.796b yr" data-dot-pos="83" data-era-bg="#120800" data-era-primary="#d97706"
+      data-era-secondary="#fcd34d" data-era-accent="rgba(217,119,6,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Mammals Rise</h2>
+        <div class="era-stamp">13.734b yr<span class="era-stamp-to">→ 13.796b yr</span></div>
+        <p class="section-tagline">The asteroid clears the stage. For the first time in 160 million years, every
+          large-body ecological niche is empty. Mammals rush in.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">66–55 mya</span>
+            <p class="item-text"><strong>The Paleocene Explosion.</strong> Mammals diversify explosively. Within a few
+              million years, the ancestors of almost every modern mammal order appear — whales, bats, horses, elephants,
+              primates. The meek have inherited the Earth.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">65 mya</span>
+            <p class="item-text"><strong>Primates Emerge.</strong> Small, tree-dwelling mammals with forward-facing eyes
+              (for depth perception in the canopy) and grasping hands. The eye that judged distances between branches
+              would later let us throw a spear, thread a needle, and perform surgery.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">34 mya onward</span>
+            <p class="item-text"><strong>Climate Cools.</strong> Antarctica glaciates. Tropical forests retreat.
+              Grasslands expand — a new biome, a new pressure. The shift from forest to open savanna will shape
+              everything that follows for primates over the next 30 million years.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">6–7 mya</span>
+            <p class="item-text"><strong>The Ape Split.</strong> Our lineage diverges from chimpanzees ~6–7 million
+              years ago. We share 98.7% of our DNA with chimpanzees. The 1.3% difference contains language, agriculture,
+              mathematics, art, religion, and the ability to reflect on one's own existence.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">Humans and chimpanzees share 98.7% of their DNA. The 1.3% difference contains every
+            civilisation, every piece of music, every scientific discovery, every war, and every act of love in human
+            history.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 9: HUMANS ──────────────── -->
+    <section class="era-section" id="humans" data-index="8" data-title="Humans" data-time-label="13.796 → 13.7998b yr"
+      data-dot-pos="86" data-era-bg="#020510" data-era-primary="#60a5fa" data-era-secondary="#bfdbfe"
+      data-era-accent="rgba(96,165,250,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Humans</h2>
+        <div class="era-stamp">13.796b yr<span class="era-stamp-to">→ 13.7998b yr</span></div>
+        <p class="section-tagline">A lineage steps out of the forest and onto the savanna. Slowly, over millions of
+          years, something extraordinary accumulates.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">4 mya</span>
+            <p class="item-text"><strong>Bipedalism.</strong> Our earliest ancestors begin walking upright.
+              Australopithecus (like "Lucy," 3.2 million years ago) walks upright but still has a chimp-sized brain.
+              Legs before brains. Walking on two legs frees the hands and allows the skull to grow without the
+              constraints of knuckle-walking.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">2.8 mya</span>
+            <p class="item-text"><strong>Homo Genus &amp; Stone Tools.</strong> The genus <em>Homo</em> appears. Brain
+              size begins a rapid expansion that lasts until ~200,000 years ago. The first stone tools appear at roughly
+              the same time. Homo habilis → Homo erectus → Homo sapiens. Each step: more brain, more tool, more fire.
+            </p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">~1 mya</span>
+            <p class="item-text"><strong>Fire.</strong> Controlled fire transforms food — breaking down proteins and
+              starches, killing parasites, dramatically increasing caloric availability. Large brains require enormous
+              calories. Cooking likely drove our rapid cognitive expansion. Fire is the first technology.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">300,000 ya</span>
+            <p class="item-text"><strong>Homo Sapiens.</strong> Anatomically modern humans emerge in Africa. We begin
+              spreading globally from ~70,000 years ago. At our lowest point — possibly linked to the Toba supervolcanic
+              eruption — we may have been reduced to as few as 10,000–15,000 breeding individuals. The entire human
+              species nearly went extinct.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">50,000 ya</span>
+            <p class="item-text"><strong>The Cognitive Revolution.</strong> Cave art, musical instruments, long-distance
+              trade, complex burial rituals. For the first time, information accumulates culturally across generations.
+              We develop the ability to believe in shared fictions — gods, nations, money — that allow millions of
+              unrelated strangers to cooperate. No other animal can do this.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Neanderthals</span>
+            <p class="item-text"><strong>Our Closest Cousin.</strong> Neanderthals were intelligent, buried their dead,
+              possibly made art, and survived brutal ice-age Europe. They didn't disappear — they merged with us. Most
+              people of non-African descent carry 1–4% Neanderthal DNA. We didn't just replace them. We absorbed them.
+            </p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">At our lowest point ~70,000 years ago, every human alive today descends from a group that
+            may have been as small as 10,000 individuals. We came breathtakingly close to not existing at all.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 10: REVOLUTION ────────── -->
+    <section class="era-section" id="revolution" data-index="9" data-title="Revolution"
+      data-time-label="13.7998 → 13.8b yr" data-dot-pos="88.5" data-era-bg="#020510" data-era-primary="#818cf8"
+      data-era-secondary="#c7d2fe" data-era-accent="rgba(129,140,248,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Revolution</h2>
+        <div class="era-stamp">13.7998b yr<span class="era-stamp-to">→ 13.8b yr</span></div>
+        <p class="section-tagline">For 95% of our existence, we are hunter-gatherers. Then, in a geological instant, we
+          reinvent our species. Twice.</p>
+        <div class="subsection">
+          <div class="subsection-rule"><span class="subsection-label">Agricultural Revolution · ~10,000 BCE</span></div>
+          <div class="content-items">
+            <div class="content-item">
+              <span class="item-tag">~10,000 BCE</span>
+              <p class="item-text"><strong>The Neolithic Transition.</strong> Beginning in the Fertile Crescent — and
+                independently in China, Mesoamerica, New Guinea, and West Africa — humans begin intentionally growing
+                food and domesticating animals. Wheat, rice, maize, cattle, sheep, pigs. A global revolution with no
+                coordination.</p>
+            </div>
+            <div class="content-item">
+              <span class="item-tag">The Bargain</span>
+              <p class="item-text"><strong>A Terrible Deal, Initially.</strong> Skeletons from early agricultural
+                populations show smaller stature, more disease, worse teeth, and more malnutrition than
+                hunter-gatherers. Farmers worked harder for less nutrition. The civilisation built on that bargain is
+                extraordinary. The bargain itself was brutal.</p>
+            </div>
+            <div class="content-item">
+              <span class="item-tag">Downstream</span>
+              <p class="item-text"><strong>Everything Follows.</strong> Surplus food → stored wealth → social hierarchy
+                → specialisation → cities → writing → taxation → armies → empires. The first writing (~3400 BCE,
+                Mesopotamia) was accounting — grain records. Every institution in human civilisation is downstream from
+                someone deciding to plant a seed.</p>
+            </div>
+          </div>
+        </div>
+        <div class="subsection">
+          <div class="subsection-rule"><span class="subsection-label">Industrial Revolution · ~1760 CE</span></div>
+          <div class="content-items">
+            <div class="content-item">
+              <span class="item-tag">~1760 CE</span>
+              <p class="item-text"><strong>Ancient Sunlight Unleashed.</strong> Fossil fuels — compressed solar energy
+                from Carboniferous forests dead for 300 million years — begin powering machines. The steam engine
+                unlocks energy at a scale no civilisation had ever accessed. We are burning geological time.</p>
+            </div>
+            <div class="content-item">
+              <span class="item-tag">Exponential</span>
+              <p class="item-text"><strong>Everything Goes Vertical.</strong> Population, life expectancy, literacy, GDP
+                — all begin hockey-stick trajectories. It took 200,000 years to reach 1 billion people (around 1804).
+                The next billion took 123 years. The billion after that: 33 years. We hit 8 billion in 2022.</p>
+            </div>
+            <div class="content-item">
+              <span class="item-tag">Now</span>
+              <p class="item-text"><strong>The Anthropocene.</strong> Human activity is now the dominant force shaping
+                Earth's geology, climate, and biodiversity. The current rate of species extinction is 100–1,000 times
+                the background rate. By most definitions, we are causing the sixth mass extinction event in Earth's
+                history. We are the asteroid.</p>
+            </div>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">The Carboniferous forests that became our coal took roughly 60 million years to
+            accumulate. We have burned through a significant fraction of that geological inheritance in about 200 years.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 11: NOW ────────────────── -->
+    <section class="era-section" id="now" data-index="10" data-title="Now" data-time-label="13.8b yr" data-dot-pos="90"
+      data-era-bg="#03030a" data-era-primary="#f1f5f9" data-era-secondary="#e2e8f0"
+      data-era-accent="rgba(241,245,249,0.07)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>Now</h2>
+        <div class="era-stamp">13.8b yr</div>
+        <p class="section-tagline">13.8 billion years of physics, chemistry, geology, and evolution have been building
+          to this exact moment.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">Today</span>
+            <p class="item-text"><strong>The Inventory.</strong> 8.1 billion humans. A changing climate. A mass
+              extinction in progress. Nuclear weapons. AI systems approaching general intelligence. And the first
+              generation of people who might reach Mars within their lifetimes.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">Scale</span>
+            <p class="item-text"><strong>Where We Stand.</strong> If the entire history of the universe were compressed
+              into a single 24-hour day, the first <em>Homo sapiens</em> appear at 23:59:59. All of recorded human
+              history — every empire, every war, every scientific discovery, every piece of music ever written — takes
+              place in the final 0.17 seconds of that day.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">What's next</span>
+            <p class="item-text"><strong>The Next Chapter is Unwritten.</strong> The decisions made in the next 50–100
+              years will determine whether humans appear in the rest of this story at all — and in what form. No species
+              has ever been in this position before. It's entirely possible no species in the observable universe ever
+              has.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">If cosmic history is a 24-hour day, all of recorded human history — from the first cities
+            to right now — takes place in the final 0.17 seconds. We are not the culmination of the story. We are a very
+            recent footnote in the opening chapter.</p>
+        </div>
+        <button class="aside-trigger-btn" data-aside="aside-fermi" aria-expanded="false">
+          <span class="aside-icon">✦</span>
+          Tangent: The Fermi Paradox — where is everyone?
+          <span class="aside-arrow">▾</span>
+        </button>
+        <div class="aside-content" id="aside-fermi">
+          <div class="aside-body">
+            <h3 class="aside-title">The Fermi Paradox</h3>
+            <p class="aside-subtitle">The universe is 13.8 billion years old and contains 200 billion trillion stars. So
+              where is everyone?</p>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">The Math</span>
+                <p class="item-text">By conservative estimates, even if intelligent life is extraordinarily rare — one
+                  civilisation per million star systems — there should be millions of civilisations in our galaxy alone,
+                  many billions of years older than us. A civilisation just 1,000 years more advanced could, in
+                  principle, colonise the entire Milky Way in a few million years. And yet: silence.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">The Great Filter</span>
+                <p class="item-text">Perhaps there is some near-impossible step in the development of intelligent life —
+                  a filter that almost no species passes through. The optimistic reading: the filter is behind us
+                  (getting from chemistry to life is incredibly rare; we already passed it). The terrifying reading: the
+                  filter is ahead of us.</p>
+              </div>
+              <div class="content-item">
+                <span class="item-tag">Other Options</span>
+                <p class="item-text"><strong>Zoo Hypothesis:</strong> They're watching and not contacting. <strong>Dark
+                    Forest:</strong> Silence is survival strategy — announcing yourself is dangerous. <strong>Too
+                    Far:</strong> The universe is simply too vast; signals haven't arrived yet. <strong>Wrong
+                    Channel:</strong> They communicate in ways we haven't imagined.</p>
+              </div>
+            </div>
+            <div class="wow-fact" style="margin-top: 24px;">
+              <div class="wow-eyebrow">★ The Unsettling Option</div>
+              <p class="wow-text">The most unsettling resolution: complex, communicating intelligence is genuinely,
+                extraordinarily rare — and we might be among the first. The universe may be full of bacteria and empty
+                of minds. The silence isn't ominous. It's just empty. And we are alone in it, at least for now.</p>
+            </div>
+            <button class="aside-close-btn" data-aside="aside-fermi">↑ Close — return to the story</button>
+          </div>
+        </div>
+        <button class="aside-trigger-btn" data-aside="aside-future-near" aria-expanded="false"
+          style="margin-top: 12px;">
+          <span class="aside-icon">✦</span>
+          Tangent: What happens next? (near-term)
+          <span class="aside-arrow">▾</span>
+        </button>
+        <div class="aside-content" id="aside-future-near">
+          <div class="aside-body">
+            <h3 class="aside-title">Near-Future Milestones</h3>
+            <p class="aside-subtitle">The next 100 years — what we can say with reasonable confidence, and what remains
+              genuinely unknown.</p>
+            <h4 class="aside-h3">Population &amp; Resources</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">~2080</span>
+                <p class="item-text">UN median projection: global population peaks at ~10.4 billion around 2080–2100,
+                  then begins declining. The challenge is not just headcount but resource intensity per person —
+                  particularly for climate, food security, and freshwater. If everyone consumed at the average American
+                  rate, we'd need approximately 5 Earths.</p>
+              </div>
+            </div>
+            <h4 class="aside-h3">Artificial General Intelligence</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">Unknown</span>
+                <p class="item-text">AGI refers to a system with general problem-solving ability comparable to or
+                  exceeding humans across all domains. Timelines are genuinely contested — some researchers say years,
+                  others decades, others never. If it arrives, it would be the most transformative event in human
+                  history: a new form of intelligence joins the story of Earth.</p>
+              </div>
+            </div>
+            <h4 class="aside-h3">Space Exploration</h4>
+            <div class="content-items">
+              <div class="content-item">
+                <span class="item-tag">~2030s</span>
+                <p class="item-text">Permanent lunar bases. Crewed Mars missions. The first humans to set foot on Mars
+                  are probably alive right now — likely in school. Beyond that: asteroid mining, orbital habitats, and
+                  eventually interstellar probes. Breakthrough Starshot aims to reach Alpha Centauri at 20% the speed of
+                  light.</p>
+              </div>
+            </div>
+            <button class="aside-close-btn" data-aside="aside-future-near">↑ Close — return to the story</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 12: FAR FUTURE ─────────── -->
+    <section class="era-section" id="far-future" data-index="11" data-title="The Far Future"
+      data-time-label="13.8 → ~19b yr" data-dot-pos="94" data-era-bg="#030310" data-era-primary="#a78bfa"
+      data-era-secondary="#ddd6fe" data-era-accent="rgba(167,139,250,0.12)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>The Far Future</h2>
+        <div class="era-stamp"><span class="era-stamp-from">13.8b yr →</span>19b yr</div>
+        <p class="section-tagline">We leave the human timescale behind. What happens to Earth, the Solar System, and the
+          galaxy over the next few billion years.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">+500M years</span>
+            <p class="item-text"><strong>The Sun Gets Brighter.</strong> The Sun increases in luminosity by ~10% every
+              billion years. In ~500 million years, Earth's surface may be too hot for complex multicellular life. The
+              oceans begin to evaporate. Complex life on Earth has roughly 500 million years left — about the same
+              length of time animal life has already existed.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">+4.5B years</span>
+            <p class="item-text"><strong>The Andromeda Collision.</strong> The Milky Way and Andromeda galaxies are
+              approaching each other at ~110km/s. In ~4.5 billion years, they begin to merge over hundreds of millions
+              of years into a new galaxy sometimes called "Milkomeda." Despite being a collision of hundreds of billions
+              of stars, the odds of any two individual stars colliding are extremely low — the Solar System will likely
+              survive.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">+5B years</span>
+            <p class="item-text"><strong>The Sun Becomes a Red Giant.</strong> The Sun exhausts its hydrogen and expands
+              enormously — potentially engulfing Mercury, Venus, and possibly Earth. Even if Earth survives, it is a
+              scorched bare rock. The oceans are long gone. Life on Earth — in any form — is over.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">+5.4B years</span>
+            <p class="item-text"><strong>The Sun Becomes a White Dwarf.</strong> Our star sheds its outer layers as a
+              beautiful planetary nebula, leaving a white dwarf — a cooling ember roughly Earth-sized. Our star ends not
+              with a bang but with a long, quiet fade.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">Complex life has roughly 500 million years left on Earth — about as long as animal life
+            has already existed. We are not early in the story. We are middle-aged. The window is not infinite.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SECTION 13: END OF EVERYTHING ──── -->
+    <section class="era-section" id="end-of-universe" data-index="12" data-title="End of Everything"
+      data-time-label="~19b → 10¹⁰⁰ yr" data-dot-pos="98" data-era-bg="#010108" data-era-primary="#6b7280"
+      data-era-secondary="#9ca3af" data-era-accent="rgba(107,114,128,0.09)">
+      <div class="section-inner">
+        <h2 class="section-heading"><span class="heading-line"></span>End of Everything</h2>
+        <div class="era-stamp"><span class="era-stamp-from">19b yr →</span>10¹⁰⁰ yr</div>
+        <p class="section-tagline">We leave even the planetary timescale behind. What happens to the universe when
+          everything — even matter itself — runs out.</p>
+        <div class="content-items">
+          <div class="content-item">
+            <span class="item-tag">~100 trillion yr</span>
+            <p class="item-text"><strong>The Last Stars.</strong> Small red dwarf stars can live for 10 trillion years —
+              almost a thousand times the current age of the universe. Star formation slowly ceases as gas is used up.
+              The last stars burn cool and red in an increasingly dark universe, long after our Sun has been a cold
+              cinder for 5 trillion years.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">10³⁴–10⁴⁰ yr</span>
+            <p class="item-text"><strong>Proton Decay.</strong> After roughly 10³⁴ years, atoms themselves may begin to
+              disintegrate — protons decaying into lighter particles and radiation. Ordinary matter becomes unstable.
+              Every atom of carbon, oxygen, and iron slowly transforms into energy over timescales that make the current
+              age of the universe feel like an afternoon.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">10⁴⁰–10¹⁰⁰ yr</span>
+            <p class="item-text"><strong>The Black Hole Era.</strong> Everything is gone except black holes. They
+              dominate a cold, dark, silent universe. But even black holes are not eternal. Stephen Hawking showed they
+              slowly radiate energy through quantum effects at their event horizons. Over incomprehensible timescales,
+              they lose mass and evaporate.</p>
+          </div>
+          <div class="content-item">
+            <span class="item-tag">~10¹⁰⁰ yr</span>
+            <p class="item-text"><strong>Heat Death.</strong> The last black holes evaporate. The universe reaches
+              maximum entropy — thermodynamic equilibrium. No temperature gradients remain. No energy can flow. No work
+              can be done. No structures can form. No information can be processed. The universe does not end with a
+              bang. It ends with a whisper — a cold, dark, featureless void in which nothing happens, forever.</p>
+          </div>
+        </div>
+        <div class="wow-fact">
+          <div class="wow-eyebrow">★ Brainsplosion</div>
+          <p class="wow-text">A stellar-mass black hole takes roughly 10⁶⁷ years to evaporate. The current age of the
+            universe is 1.38 × 10¹⁰ years. Black holes will outlast everything else in the universe by a margin our
+            minds cannot hold.</p>
+        </div>
+        <div class="closing-quote" style="margin-top: 60px; padding-bottom: 40px;">
+          <p>From a single point, smaller than anything imaginable,<br>in a fraction of a second, came hydrogen.</p>
+          <p>From hydrogen, stars.<br>From dying stars, carbon.<br>From carbon, life.</p>
+          <p>From life, eyes to see —<br>and minds to wonder.</p>
+          <p class="final">You are 13.8 billion years in the making.<br>And the universe has only just noticed itself.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════
+       JAVASCRIPT
+  ═══════════════════════════════════════ -->
+  <script>
+    // ─── DATA ────────────────────────────────
+    const SECTION_NODES = Array.from(document.querySelectorAll('.era-section'));
+    const SECTIONS = SECTION_NODES.map(el => ({
+      el,
+      id: el.id,
+      index: parseInt(el.dataset.index),
+      title: el.dataset.title,
+      timeLabel: el.dataset.timeLabel,
+      dotPos: parseFloat(el.dataset.dotPos),
+      era: {
+        bg: el.getAttribute('data-era-bg'),
+        primary: el.getAttribute('data-era-primary'),
+        secondary: el.getAttribute('data-era-secondary'),
+        accent: el.getAttribute('data-era-accent'),
+      }
+    }));
+
+    // ─── STATE ───────────────────────────────
+    let currentIndex = 0;
+    let rafPending = false;
+
+    // ─── ERA THEMING ─────────────────────────
+    function applyEra(section) {
+      const r = document.documentElement;
+      r.style.setProperty('--era-bg', section.era.bg);
+      r.style.setProperty('--era-primary', section.era.primary);
+      r.style.setProperty('--era-secondary', section.era.secondary);
+      r.style.setProperty('--era-accent', section.era.accent);
+      document.body.style.backgroundColor = section.era.bg;
+
+      const dot = document.getElementById('timeline-dot');
+      dot.style.backgroundColor = section.era.primary;
+      dot.style.boxShadow = `0 0 8px ${section.era.primary}`;
+
+
+
+      document.getElementById('timeline-section-label').textContent = section.title;
+    }
+
+    // ─── TIMELINE DOT ────────────────────────
+    function updateTimelineDot(pct) {
+      document.getElementById('timeline-dot').style.left = Math.max(0, Math.min(99, pct)) + '%';
+    }
+
+    // ─── TOC ─────────────────────────────────
+    function buildTOC() {
+      const list = document.getElementById('toc-list');
+      SECTIONS.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'toc-item';
+        btn.dataset.sectionId = s.id;
+        btn.innerHTML = `
+          <span class="toc-item-time">${s.timeLabel}</span>
+          <span class="toc-item-title">${s.title}</span>
+        `;
+        btn.addEventListener('click', () => {
+          scrollToSection(s.id);
+          // Close mobile menu if open
+          document.getElementById('toc-panel').classList.remove('mobile-open');
+        });
+        list.appendChild(btn);
+      });
+    }
+
+    function updateTOC(activeId) {
+      const activeSection = SECTIONS.find(s => s.id === activeId);
+      document.querySelectorAll('.toc-item').forEach(item => {
+        const id = item.dataset.sectionId;
+        const section = SECTIONS.find(s => s.id === id);
+        const isActive = id === activeId;
+        const isPast = section && activeSection && section.index < activeSection.index;
+        item.classList.toggle('active', isActive);
+        item.classList.toggle('visited', isPast && !isActive);
+      });
+    }
+
+    // ─── SCROLL TO SECTION ───────────────────
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 54;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    // ─── NEXT / PREV ─────────────────────────
+    function nextSection() {
+      if (currentIndex < SECTIONS.length - 1) scrollToSection(SECTIONS[currentIndex + 1].id);
+    }
+    function prevSection() {
+      if (currentIndex > 0) scrollToSection(SECTIONS[currentIndex - 1].id);
+    }
+
+    // ─── SCROLL POSITION TRACKING ────────────
+    function updateScrollPosition() {
+      let bestSection = null;
+      let bestScore = -Infinity;
+      const viewH = window.innerHeight;
+
+      SECTIONS.forEach(s => {
+        const rect = s.el.getBoundingClientRect();
+        // Score = how much of the viewport the section currently occupies
+        const visible = Math.min(rect.bottom, viewH) - Math.max(rect.top, 54);
+        if (visible > bestScore) {
+          bestScore = visible;
+          bestSection = s;
+        }
+      });
+
+      if (!bestSection) return;
+
+      if (bestSection.index !== currentIndex) {
+        currentIndex = bestSection.index;
+        applyEra(bestSection);
+        updateTOC(bestSection.id);
+        updateNavVisibility();
+      }
+
+      // Interpolate dot between current and next section based on scroll progress
+      const rect = bestSection.el.getBoundingClientRect();
+      const next = SECTIONS[bestSection.index + 1];
+      if (next) {
+        const progress = Math.max(0, Math.min(1, (-rect.top + 54) / bestSection.el.offsetHeight));
+        updateTimelineDot(bestSection.dotPos + (next.dotPos - bestSection.dotPos) * progress);
+      } else {
+        updateTimelineDot(bestSection.dotPos);
+      }
+    }
+
+    // ─── NAV VISIBILITY ──────────────────────
+    function updateNavVisibility() {
+      const upBtn = document.getElementById('nav-up');
+      const downBtn = document.getElementById('nav-down');
+      upBtn.classList.toggle('visible', currentIndex > 0);
+      const atEnd = currentIndex >= SECTIONS.length - 1;
+      downBtn.style.opacity = atEnd ? '0.3' : '1';
+      downBtn.querySelector('.key-label').textContent = atEnd ? 'the end' : 'next slide';
+    }
+
+    // ─── KEYBOARD ────────────────────────────
+    function setupKeyboard() {
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); nextSection(); }
+        if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prevSection(); }
+      });
+    }
+
+    // ─── TOC TOGGLE (mobile only) ────────────
+    function setupTOCToggle() {
+      const panel = document.getElementById('toc-panel');
+      const closeBtn = document.getElementById('toc-toggle-btn');
+      const menuBtn = document.getElementById('mobile-menu-btn');
+
+      if (menuBtn) {
+        menuBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          panel.classList.add('mobile-open');
+        });
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => panel.classList.remove('mobile-open'));
+      }
+
+      // Tap outside overlay to close
+      document.addEventListener('click', e => {
+        if (panel.classList.contains('mobile-open') && !panel.contains(e.target)) {
+          panel.classList.remove('mobile-open');
+        }
+      });
+    }
+
+    // ─── ASIDES ──────────────────────────────
+    function setupAsides() {
+      document.querySelectorAll('.aside-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.aside;
+          const aside = document.getElementById(id);
+          const isOpen = parseFloat(aside.style.maxHeight) > 0;
+          isOpen ? closeAside(id, btn) : openAside(id, btn);
+        });
+      });
+
+      document.querySelectorAll('.aside-close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.aside;
+          const trigger = document.querySelector(`.aside-trigger-btn[data-aside="${id}"]`);
+          closeAside(id, trigger);
+          setTimeout(() => {
+            if (trigger) {
+              window.scrollTo({ top: trigger.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' });
+            }
+          }, 100);
+        });
+      });
+    }
+
+    function openAside(id, trigger) {
+      const aside = document.getElementById(id);
+      const body = aside.querySelector('.aside-body');
+      aside.style.maxHeight = (body.scrollHeight + 80) + 'px';
+      if (trigger) { trigger.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); }
+    }
+
+    function closeAside(id, trigger) {
+      const aside = document.getElementById(id);
+      aside.style.maxHeight = '0px';
+      if (trigger) { trigger.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); }
+    }
+
+    // ─── TIMELINE TOOLTIP ────────────────────
+    function setupTimelineTooltip() {
+      const wrap = document.getElementById('timeline-track-wrap');
+      const tooltip = document.getElementById('timeline-tooltip');
+      const ERA_LABELS = [
+        { pos: 2, label: 't = 0 · Big Bang' },
+        { pos: 12, label: '~200M yr · First Stars' },
+        { pos: 40, label: '4.6B yr · Solar System' },
+        { pos: 53, label: '3.8B yr · First Life' },
+        { pos: 63, label: '3.5B–600M yr · Long Wait' },
+        { pos: 73, label: '541M yr · Cambrian' },
+        { pos: 79, label: '252–66M yr · Dinosaurs' },
+        { pos: 83, label: '66M yr · Mammals' },
+        { pos: 86, label: '6M yr · Humans' },
+        { pos: 90, label: 'Today · Now' },
+        { pos: 94, label: '+500M yr · Far Future' },
+        { pos: 98, label: '10¹⁰⁰ yr · Heat Death' },
+      ];
+
+      wrap.addEventListener('mousemove', e => {
+        const rect = wrap.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+        let nearest = ERA_LABELS[0];
+        ERA_LABELS.forEach(l => { if (Math.abs(l.pos - pct) < Math.abs(nearest.pos - pct)) nearest = l; });
+        tooltip.textContent = nearest.label;
+        tooltip.style.left = e.clientX + 'px';
+        tooltip.classList.add('show');
+      });
+      wrap.addEventListener('mouseleave', () => tooltip.classList.remove('show'));
+
+      wrap.addEventListener('click', e => {
+        const rect = wrap.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(100, (e.clientX - rect.left) / rect.width * 100));
+        let nearest = SECTIONS[0];
+        SECTIONS.forEach(s => { if (Math.abs(s.dotPos - pct) < Math.abs(nearest.dotPos - pct)) nearest = s; });
+        scrollToSection(nearest.id);
+      });
+    }
+
+    // ─── INIT ────────────────────────────────
+    function init() {
+      buildTOC();
+      setupKeyboard();
+      setupTOCToggle();
+      setupAsides();
+      setupTimelineTooltip();
+
+      document.getElementById('nav-down').addEventListener('click', nextSection);
+      document.getElementById('nav-up').addEventListener('click', prevSection);
+
+      // Throttled scroll listener using rAF
+      window.addEventListener('scroll', () => {
+        if (!rafPending) {
+          rafPending = true;
+          requestAnimationFrame(() => {
+            updateScrollPosition();
+            rafPending = false;
+          });
+        }
+      }, { passive: true });
+
+      // Initial state
+      applyEra(SECTIONS[0]);
+      updateTimelineDot(SECTIONS[0].dotPos);
+      updateTOC(SECTIONS[0].id);
+      updateNavVisibility();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+
+</html>

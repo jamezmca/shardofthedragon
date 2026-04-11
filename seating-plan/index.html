@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Free classroom seating plan generator for teachers. Create custom seating charts with student photos, custom layouts, alphabetical sorting, and easy drag-and-drop swapping. Supports names, and images. Export as PNG for printing.">
+    <title>Sit Yo Ass Down - #1 Customizable Seating Plan Generator (Supports Images)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .controls>* {
+            margin-bottom: 10px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input[type="number"] {
+            width: 60px;
+        }
+
+        textarea {
+            width: 100%;
+            max-width: 400px;
+            height: 100px;
+        }
+
+        #seating-grid {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #seating-grid th {
+            padding: 5px 10px;
+            background: #eee;
+            border: 1px solid #ccc;
+        }
+
+        #seating-grid td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            min-width: 80px;
+            min-height: 50px;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        #seating-grid td:hover {
+            background: #f0f0f0;
+        }
+
+        #seating-grid td.selected {
+            background: #cce5ff;
+            border: 2px solid #007bff;
+        }
+
+        #seating-grid td.blacked-out {
+            background: #333;
+            cursor: not-allowed;
+        }
+
+        .first-name {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .last-name {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .student-notes {
+            font-size: 0.65em;
+            color: #aaa;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+
+        .empty-seat {
+            color: #999;
+            font-style: italic;
+        }
+
+        button {
+            margin-right: 5px;
+            margin-top: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .export-hint {
+            font-size: 0.8em;
+            color: #999;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        #browser-plans-row select {
+            padding: 4px 8px;
+            margin: 0 4px;
+        }
+
+        .generate-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .generate-cta {
+            font-size: 1.17em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #generate-btn {
+            font-size: 1.05em;
+            font-weight: bold;
+        }
+
+        .row-header {
+            background: #eee;
+            font-weight: bold;
+        }
+
+        #grid-container {
+            display: inline-block;
+            padding: 10px;
+            background: #fff;
+        }
+
+        #class-header {
+            font-size: 1.8em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        #front-label {
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        #front-label.front-top {
+            margin-bottom: 5px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+        }
+
+        #front-label.front-bottom {
+            margin-top: 5px;
+            border-top: 2px solid #333;
+            padding-top: 5px;
+        }
+
+        #class-header:empty,
+        #front-label:empty {
+            display: none;
+        }
+
+        #upload-images-row {
+            display: none;
+        }
+
+        @media (min-width: 769px) {
+            #upload-images-row {
+                display: block;
+            }
+        }
+
+        .student-image {
+            max-width: 40px;
+            max-height: 40px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        /* Modal styles */
+        #image-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        #image-modal {
+            background: #fff;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        #image-modal h2 {
+            margin-top: 0;
+        }
+
+        .modal-recommendation {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .image-entries {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .image-entry {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .image-entry img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .image-entry input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 5px;
+            font-size: 0.9em;
+        }
+
+        .modal-buttons {
+            text-align: right;
+        }
+
+        .modal-buttons button {
+            padding: 8px 16px;
+            font-size: 1em;
+        }
+
+        #modal-cancel-btn {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+
+        #modal-add-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+        }
+
+        #image-settings {
+            display: none;
+            margin-top: 8px;
+            font-size: 0.9em;
+        }
+
+        #image-count {
+            color: #28a745;
+            font-weight: 500;
+        }
+
+        #image-size-control {
+            margin-top: 6px;
+        }
+
+        #image-size-control input[type="range"] {
+            width: 120px;
+            vertical-align: middle;
+        }
+
+        #image-size-value {
+            display: inline-block;
+            width: 45px;
+            text-align: right;
+        }
+
+        #instructions {
+            color: #888;
+            font-size: 0.9em;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        #instructions h2 {
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        #instructions h3 {
+            color: #777;
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        #instructions ul {
+            margin: 5px 0 10px 20px;
+            padding: 0;
+        }
+
+        #instructions li {
+            margin-bottom: 5px;
+        }
+
+        #instructions code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.95em;
+        }
+
+        #instructions hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 30px 0 20px;
+        }
+
+        @media print {
+
+            #instructions,
+            #instructions-hr {
+                display: none;
+            }
+        }
+
+        .toggle-row {
+            margin-top: 10px;
+        }
+
+        .toggle-row label {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .toggle-row input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        .toggle-row label.disabled {
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .modal-toggle {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .modal-toggle label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-toggle input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .image-entry.no-input input {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Seating Plan Creator</h1>
+
+    <div class="controls">
+        <div>
+            <label>Class: <input type="text" id="class-code" placeholder="e.g., Math 101"></label>
+        </div>
+
+        <div>
+            <label>Rows: <input type="number" id="rows" value="4" min="1"></label>
+            <label>Columns: <input type="number" id="cols" value="5" min="1"></label>
+        </div>
+
+        <div>
+            <label>Sort by:</label>
+            <select id="sort-method">
+                <option value="first-asc">First Name (A-Z)</option>
+                <option value="first-desc">First Name (Z-A)</option>
+                <option value="last-asc">Last Name (A-Z)</option>
+                <option value="last-desc">Last Name (Z-A)</option>
+                <option value="random">Random</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Allocate:</label>
+            <select id="allocate-direction">
+                <option value="ltr">Left to Right (A &rarr; Z)</option>
+                <option value="rtl">Right to Left (Z &rarr; A)</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Front of Class:</label>
+            <select id="front-position">
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+            </select>
+        </div>
+
+        <div>
+            <label>CSV (Last, First, Note1, Note2, Note3 per line):</label><br>
+            <textarea id="csv-input" placeholder="Smith, John&#10;Doe, Jane, EAL, SEN&#10;Johnson, Bob"></textarea>
+        </div>
+
+        <div>
+            <label>Or upload CSV: <input type="file" id="csv-file" accept=".csv,.txt"></label>
+        </div>
+
+        <div id="upload-images-row">
+            <label>Or upload images: <button id="upload-images-btn">Upload Class Images</button></label>
+            <input type="file" id="image-file-input" accept="image/*" multiple style="display: none;">
+            <div id="image-settings">
+                <div id="image-count"></div>
+                <div id="image-size-control">
+                    <label>Max image size: <input type="range" id="image-size-slider" min="40" max="140" value="40">
+                        <span id="image-size-value">40px</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label>Or upload SitYoAssDown datafile: <button id="upload-datafile-btn">Upload SitYoAssDown
+                    Datafile</button></label>
+            <input type="file" id="datafile-input" accept=".json" style="display: none;">
+        </div>
+
+        <div id="browser-plans-row">
+            <label>Or load from browser:
+                <select id="browser-plan-select">
+                    <option value="">-- Select saved plan --</option>
+                </select>
+                <button id="load-browser-btn" disabled>Load</button>
+                <button id="delete-browser-btn" disabled>Delete</button>
+            </label>
+        </div>
+
+        <div class="generate-row">
+            <button id="generate-btn"> &#x2B07;&#x2B07;&#x2B07; Generate Seating Plan &#x2B07;&#x2B07;&#x2B07;</button>
+        </div>
+
+        <div>
+            <label>Blackout cells (e.g., 1,A,(B,2)): <input type="text" id="blackout-input"
+                    placeholder="1,A,(B,2)"></label>
+            <button id="apply-blackout">Apply Blackouts</button>
+            <button id="clear-blackout">Clear Blackouts</button>
+        </div>
+
+        <div class="toggle-row" id="display-toggles">
+            <label id="show-images-label"><input type="checkbox" id="show-images-toggle" checked disabled> Show
+                images</label>
+            <label id="show-names-label"><input type="checkbox" id="show-names-toggle" checked> Show names</label>
+            <label id="show-notes-label" class="disabled"><input type="checkbox" id="show-notes-toggle" disabled> Show notes</label>
+        </div>
+
+        <div>
+            <button id="export-btn" disabled>Export as PNG</button>
+            <button id="export-data-btn" disabled>Export Data</button>
+            <button id="save-browser-btn" disabled>Save to Browser</button>
+            <div id="export-hint" class="export-hint">Generate a seating plan first to enable exports</div>
+        </div>
+    </div>
+
+    <div id="grid-container">
+        <div id="class-header"></div>
+        <div id="front-label">Front of Class</div>
+        <table id="seating-grid"></table>
+    </div>
+
+    <div id="image-modal-overlay">
+        <div id="image-modal">
+            <h2>Add Students from Images</h2>
+            <div class="modal-recommendation">
+                <strong>Tip:</strong> Use the format <em>LastName, FirstName</em> for each student (e.g., "Smith, John").
+                Optionally add up to 3 notes: <em>LastName, FirstName, Note1, Note2, Note3</em>.
+            </div>
+            <div class="modal-toggle">
+                <label><input type="checkbox" id="hide-names-toggle"> Hide student names (images only, no name
+                    labels)</label>
+            </div>
+            <div id="image-entries" class="image-entries"></div>
+            <div class="modal-buttons">
+                <button id="modal-cancel-btn">Cancel</button>
+                <button id="modal-add-btn">Add Students</button>
+            </div>
+        </div>
+    </div>
+
+    <hr id="instructions-hr">
+    <div id="instructions">
+        <h2>How to Use This Seating Plan Creator</h2>
+
+        <h3>Step 1: Add Your Students</h3>
+        <p>You have three options for adding students:</p>
+        <ul>
+            <li><strong>Type or paste names directly:</strong> In the text box, enter each student on a new line using
+                the format <code>LastName, FirstName</code> (e.g., "Smith, John"). Optionally add up to 3 short notes
+                after the name: <code>LastName, FirstName, Note1, Note2, Note3</code> (max 20 characters total across
+                notes). These appear as small labels on each seat.</li>
+            <li><strong>Upload a CSV file:</strong> Click "Choose File" next to "Or upload CSV" to select a .csv or .txt
+                file from your computer. The file should have one student per line in <code>LastName, FirstName</code>
+                format (with optional notes columns).</li>
+            <li><strong>Upload student photos:</strong> Click "Upload Class Images" to select multiple student photos at
+                once. A window will appear showing each image with a text field below it (pre-filled with the filename).
+                Edit each name to match the <code>LastName, FirstName</code> format, then click "Add Students". The
+                photos will appear in the seating plan. If you need to cut up a PDF or PNG of your class into photos of
+                individual students, please check out <a href="https://www.slicendice.smoljames.com"
+                    target="_blank">slice & dice</a>.</li>
+            <li><strong>Upload a SitYoAssDown datafile:</strong> If you previously exported your seating plan data,
+                click "Upload SitYoAssDown Datafile" to load a <code>.json</code> datafile. This will restore your
+                entire seating plan including student positions, blackouts, and any uploaded photos. The plan will
+                render automatically without needing to click "Generate Seating Plan".</li>
+        </ul>
+
+        <h3>Step 2: Configure Your Grid</h3>
+        <ul>
+            <li><strong>Class name:</strong> Enter your class name (e.g., "Math 101") at the top. This will appear as a
+                header on your seating plan.</li>
+            <li><strong>Rows and Columns:</strong> Set how many rows and columns of desks you have. If you add more
+                students than will fit, extra rows are added automatically.</li>
+            <li><strong>Sort by:</strong> Choose how to sort students - by first name, last name (A-Z or Z-A), or
+                randomly.</li>
+            <li><strong>Allocate:</strong> Choose whether to fill seats from left to right (A→Z) or right to left (Z→A).
+            </li>
+        </ul>
+
+        <h3>Step 3: Generate the Plan</h3>
+        <p>Click the <strong>"Generate Seating Plan"</strong> button to create your seating arrangement. Students will
+            be placed in order according to your sort and allocation settings.</p>
+
+        <h3>Customising Your Layout with Blackouts</h3>
+        <p>Use blackouts to block off seats for walkways, teacher's desk areas, or reserved spaces:</p>
+        <ul>
+            <li><strong>Block an entire row:</strong> Type the row number (e.g., <code>2</code> blocks out all of row
+                2).</li>
+            <li><strong>Block an entire column:</strong> Type the column letter (e.g., <code>C</code> blocks out all of
+                column C).</li>
+            <li><strong>Block a single seat:</strong> Use brackets with the column letter and row number (e.g.,
+                <code>(B,3)</code> blocks only the seat at column B, row 3).
+            </li>
+            <li><strong>Block multiple areas:</strong> Separate entries with commas (e.g., <code>1, C, (B,3)</code>
+                blocks row 1, column C, and seat B3).</li>
+        </ul>
+        <p>Click <strong>"Apply Blackouts"</strong> to apply. Any students in blacked-out seats will be moved to
+            available seats. Click <strong>"Clear Blackouts"</strong> to remove all blackouts and redistribute students.
+        </p>
+
+        <h3>Swapping Students</h3>
+        <p>To move or swap students after generating the plan:</p>
+        <ul>
+            <li><strong>Click once</strong> on a student's seat to select them (the seat will highlight in blue).</li>
+            <li><strong>Click on another seat</strong> to move the selected student there. If that seat has a student,
+                they will swap places. If it's empty, the student simply moves there.</li>
+        </ul>
+        <p>You can swap as many times as you like to get the perfect arrangement.</p>
+
+        <h3>Student Photos</h3>
+        <p>If you uploaded student photos, you can adjust their display size using the <strong>"Max image size"</strong>
+            slider that appears after uploading. Drag it between 40px and 140px to make photos smaller or larger in the
+            seating plan.</p>
+
+        <h3>Exporting Your Seating Plan</h3>
+        <p>When you're happy with your arrangement, you have two export options:</p>
+        <ul>
+            <li><strong>Export as PNG:</strong> Downloads an image of your seating plan that you can print or share.
+            </li>
+            <li><strong>Export Data:</strong> Downloads a <code>.json</code> datafile containing your full seating plan
+                data (student positions, blackouts, photos, etc.). You can reload this file later using the
+                "Upload SitYoAssDown Datafile" button to pick up right where you left off.</li>
+        </ul>
+        <p>Both export buttons are disabled until you generate or load a seating plan.</p>
+
+        <h3>Saving to Browser</h3>
+        <p>For quick access, you can save seating plans without images directly to your browser's local storage:</p>
+        <ul>
+            <li><strong>Save:</strong> Click "Save to Browser" after generating a plan. You must enter a class name
+                first. Plans with images cannot be saved to the browser (use "Export Data" instead).</li>
+            <li><strong>Load:</strong> Select a previously saved plan from the "Load from Browser" dropdown and click
+                "Load".</li>
+            <li><strong>Delete:</strong> Select a saved plan and click "Delete" to remove it from browser storage.</li>
+        </ul>
+        <p><em>Note: Browser storage is local to this device and browser. Clearing browser data will remove saved
+                plans.</em></p>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        let students = [];
+        let grid = [];
+        let selectedCell = null;
+        let blackedOutCells = new Set();
+        let studentImages = {}; // Map of "lastName,firstName" -> imageDataUrl
+        let pendingImages = []; // Temporarily holds images during modal editing
+        let imageMaxSize = 40; // Default max image size in px
+        let namesHiddenOnUpload = false; // Track if user chose to hide names during upload
+        const STORAGE_PREFIX = 'sityoassdown_plan_';
+
+        function updateExportButtons() {
+            const hasGrid = grid.length > 0 && document.getElementById('seating-grid').innerHTML !== '';
+            document.getElementById('export-btn').disabled = !hasGrid;
+            document.getElementById('export-data-btn').disabled = !hasGrid;
+            document.getElementById('export-hint').style.display = hasGrid ? 'none' : 'block';
+            updateSaveBrowserButton();
+        }
+
+        function updateSaveBrowserButton() {
+            const hasGrid = grid.length > 0 && document.getElementById('seating-grid').innerHTML !== '';
+            const hasImages = Object.keys(studentImages).length > 0;
+            const btn = document.getElementById('save-browser-btn');
+            btn.disabled = !hasGrid || hasImages;
+            btn.title = hasImages ? 'Cannot save plans with images to browser storage' : '';
+        }
+
+        function updateImageSettings() {
+            const imageCount = Object.keys(studentImages).length;
+            const settingsDiv = document.getElementById('image-settings');
+            const countDiv = document.getElementById('image-count');
+
+            if (imageCount > 0) {
+                settingsDiv.style.display = 'block';
+                countDiv.textContent = `${imageCount} image${imageCount !== 1 ? 's' : ''} uploaded`;
+            } else {
+                settingsDiv.style.display = 'none';
+            }
+
+            updateDisplayToggles();
+        }
+
+        function updateDisplayToggles() {
+            const imageCount = Object.keys(studentImages).length;
+            const showImagesToggle = document.getElementById('show-images-toggle');
+            const showNamesToggle = document.getElementById('show-names-toggle');
+            const showImagesLabel = document.getElementById('show-images-label');
+            const showNamesLabel = document.getElementById('show-names-label');
+
+            // Enable/disable show images toggle based on whether images exist
+            if (imageCount > 0) {
+                showImagesToggle.disabled = false;
+                showImagesLabel.classList.remove('disabled');
+            } else {
+                showImagesToggle.disabled = true;
+                showImagesToggle.checked = false;
+                showImagesLabel.classList.add('disabled');
+            }
+
+            // Show names toggle - disable if names were hidden during upload
+            if (namesHiddenOnUpload && imageCount > 0) {
+                showNamesToggle.disabled = true;
+                showNamesLabel.classList.add('disabled');
+            } else {
+                showNamesToggle.disabled = false;
+                showNamesLabel.classList.remove('disabled');
+            }
+
+            // Show notes toggle - disable if no students have notes
+            const showNotesToggle = document.getElementById('show-notes-toggle');
+            const showNotesLabel = document.getElementById('show-notes-label');
+            if (anyStudentHasNotes()) {
+                showNotesToggle.disabled = false;
+                showNotesLabel.classList.remove('disabled');
+            } else {
+                showNotesToggle.disabled = true;
+                showNotesToggle.checked = false;
+                showNotesLabel.classList.add('disabled');
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            return lines.map(line => {
+                line = line.trim();
+                if (!line) return null;
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length >= 2 && (parts[0] || parts[1])) {
+                    const notes = parts.slice(2, 5).filter(n => n.length > 0);
+                    return { lastName: parts[0], firstName: parts[1], notes: truncateNotes(notes) };
+                }
+                return null;
+            }).filter(s => s !== null);
+        }
+
+        function truncateNotes(notes) {
+            const combined = notes.join('').length;
+            if (combined <= 20) return notes;
+            let remaining = 20;
+            const truncated = [];
+            for (const note of notes) {
+                if (remaining <= 0) break;
+                truncated.push(note.substring(0, remaining));
+                remaining -= truncated[truncated.length - 1].length;
+            }
+            return truncated;
+        }
+
+        function getStudentKey(student) {
+            return `${student.lastName.toLowerCase()},${student.firstName.toLowerCase()}`;
+        }
+
+        function studentHasNotes(student) {
+            return student && Array.isArray(student.notes) && student.notes.length > 0;
+        }
+
+        function anyStudentHasNotes() {
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < (grid[r]?.length || 0); c++) {
+                    if (studentHasNotes(grid[r][c])) return true;
+                }
+            }
+            return false;
+        }
+
+        function sortStudents(students, method) {
+            const sorted = [...students];
+            switch (method) {
+                case 'first-asc':
+                    sorted.sort((a, b) => a.firstName.localeCompare(b.firstName));
+                    break;
+                case 'first-desc':
+                    sorted.sort((a, b) => b.firstName.localeCompare(a.firstName));
+                    break;
+                case 'last-asc':
+                    sorted.sort((a, b) => a.lastName.localeCompare(b.lastName));
+                    break;
+                case 'last-desc':
+                    sorted.sort((a, b) => b.lastName.localeCompare(a.lastName));
+                    break;
+                case 'random':
+                    for (let i = sorted.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
+                    }
+                    break;
+            }
+            return sorted;
+        }
+
+        function getColumnLabel(index) {
+            let label = '';
+            while (index >= 0) {
+                label = String.fromCharCode(65 + (index % 26)) + label;
+                index = Math.floor(index / 26) - 1;
+            }
+            return label;
+        }
+
+        function colLabelToIndex(label) {
+            label = label.toUpperCase();
+            let index = 0;
+            for (let i = 0; i < label.length; i++) {
+                index = index * 26 + (label.charCodeAt(i) - 64);
+            }
+            return index - 1;
+        }
+
+        function generateGrid() {
+            let rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const sortMethod = document.getElementById('sort-method').value;
+            const allocateDir = document.getElementById('allocate-direction').value;
+            const csvText = document.getElementById('csv-input').value;
+
+            students = parseCSV(csvText);
+            students = sortStudents(students, sortMethod);
+
+            // Auto-expand rows if needed
+            const totalSeats = rows * cols;
+            if (students.length > totalSeats) {
+                rows = Math.ceil(students.length / cols);
+                document.getElementById('rows').value = rows;
+            }
+
+            // Initialize grid
+            grid = [];
+            let studentIndex = 0;
+            for (let r = 0; r < rows; r++) {
+                grid[r] = [];
+                for (let c = 0; c < cols; c++) {
+                    const colIndex = allocateDir === 'rtl' ? (cols - 1 - c) : c;
+                    if (studentIndex < students.length) {
+                        grid[r][colIndex] = students[studentIndex++];
+                    } else {
+                        grid[r][colIndex] = null;
+                    }
+                }
+            }
+
+            blackedOutCells.clear();
+            selectedCell = null;
+
+            // Update display toggles based on current state
+            updateDisplayToggles();
+
+            // Enable show-images if we have images
+            const imageCount = Object.keys(studentImages).length;
+            if (imageCount > 0) {
+                document.getElementById('show-images-toggle').checked = true;
+            }
+
+            // Enable show-notes if any student has notes
+            if (anyStudentHasNotes()) {
+                document.getElementById('show-notes-toggle').checked = true;
+            }
+
+            renderGrid();
+        }
+
+        function renderGrid() {
+            const table = document.getElementById('seating-grid');
+            const classHeader = document.getElementById('class-header');
+            const frontLabel = document.getElementById('front-label');
+            const classCode = document.getElementById('class-code').value.trim();
+
+            const rows = grid.length;
+            const cols = grid[0]?.length || 0;
+
+            classHeader.textContent = classCode;
+
+            const frontPos = document.getElementById('front-position').value;
+            const gridContainer = document.getElementById('grid-container');
+            if (rows > 0 && cols > 0) {
+                frontLabel.style.display = 'block';
+                frontLabel.className = frontPos === 'bottom' ? 'front-bottom' : 'front-top';
+                if (frontPos === 'bottom') {
+                    gridContainer.appendChild(frontLabel);
+                } else {
+                    gridContainer.insertBefore(frontLabel, table);
+                }
+            } else {
+                frontLabel.style.display = 'none';
+            }
+
+            let html = '<tr><th></th>';
+            for (let c = 0; c < cols; c++) {
+                html += `<th>${getColumnLabel(c)}</th>`;
+            }
+            html += '</tr>';
+
+            const renderOrder = [];
+            if (frontPos === 'bottom') {
+                for (let r = rows - 1; r >= 0; r--) renderOrder.push(r);
+            } else {
+                for (let r = 0; r < rows; r++) renderOrder.push(r);
+            }
+
+            for (const r of renderOrder) {
+                html += `<tr><td class="row-header">${r + 1}</td>`;
+                for (let c = 0; c < cols; c++) {
+                    const cellKey = `${r},${c}`;
+                    const isBlackedOut = blackedOutCells.has(cellKey);
+                    const isSelected = selectedCell && selectedCell.row === r && selectedCell.col === c;
+
+                    let cellClass = '';
+                    if (isBlackedOut) cellClass = 'blacked-out';
+                    else if (isSelected) cellClass = 'selected';
+
+                    html += `<td class="${cellClass}" data-row="${r}" data-col="${c}">`;
+
+                    if (!isBlackedOut) {
+                        const student = grid[r][c];
+                        if (student) {
+                            const showImages = document.getElementById('show-images-toggle').checked;
+                            const showNames = document.getElementById('show-names-toggle').checked;
+                            const imageKey = getStudentKey(student);
+                            if (showImages && studentImages[imageKey]) {
+                                html += `<img src="${studentImages[imageKey]}" class="student-image" style="max-width:${imageMaxSize}px;max-height:${imageMaxSize}px;" alt="${student.firstName}">`;
+                            }
+                            if (showNames) {
+                                html += `<div class="first-name">${student.firstName}</div>`;
+                                html += `<div class="last-name">${student.lastName}</div>`;
+                            }
+                            const showNotes = document.getElementById('show-notes-toggle').checked;
+                            if (showNotes && studentHasNotes(student)) {
+                                html += `<div class="student-notes">${student.notes.join(', ')}</div>`;
+                            }
+                        } else {
+                            html += `<div class="empty-seat">Empty</div>`;
+                        }
+                    }
+
+                    html += '</td>';
+                }
+                html += '</tr>';
+            }
+
+            table.innerHTML = html;
+
+            // Add click handlers
+            table.querySelectorAll('td:not(.row-header)').forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            updateExportButtons();
+        }
+
+        function handleCellClick(e) {
+            const cell = e.currentTarget;
+            if (cell.classList.contains('blacked-out')) return;
+
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (selectedCell === null) {
+                selectedCell = { row, col };
+                renderGrid();
+            } else {
+                // Swap
+                const temp = grid[selectedCell.row][selectedCell.col];
+                grid[selectedCell.row][selectedCell.col] = grid[row][col];
+                grid[row][col] = temp;
+                selectedCell = null;
+                renderGrid();
+            }
+        }
+
+        function applyBlackouts() {
+            const input = document.getElementById('blackout-input').value;
+
+            let rows = grid.length;
+            const cols = grid[0]?.length || 0;
+
+            if (rows === 0 || cols === 0) return;
+
+            // Collect cells to black out
+            const newBlackouts = new Set();
+            const blackedOutColumns = new Set();
+
+            // Parse input - numbers are rows, letters are columns, (col,row) or (row,col) for individual cells
+            if (input.trim()) {
+                // First extract bracketed pairs
+                const pairRegex = /\(([^)]+)\)/g;
+                let match;
+                while ((match = pairRegex.exec(input)) !== null) {
+                    const inner = match[1].split(',').map(s => s.trim());
+                    if (inner.length === 2) {
+                        let rowNum = null, colIdx = null;
+                        inner.forEach(val => {
+                            if (/^\d+$/.test(val)) {
+                                rowNum = parseInt(val) - 1;
+                            } else if (/^[a-zA-Z]+$/.test(val)) {
+                                colIdx = colLabelToIndex(val);
+                            }
+                        });
+                        if (rowNum !== null && colIdx !== null && rowNum >= 0 && rowNum < rows && colIdx >= 0 && colIdx < cols) {
+                            newBlackouts.add(`${rowNum},${colIdx}`);
+                        }
+                    }
+                }
+
+                // Remove bracketed pairs and parse remaining
+                const remaining = input.replace(pairRegex, '').split(',').map(s => s.trim()).filter(s => s);
+                remaining.forEach(part => {
+                    if (/^\d+$/.test(part)) {
+                        // It's a row number
+                        const r = parseInt(part) - 1;
+                        if (r >= 0 && r < rows) {
+                            for (let c = 0; c < cols; c++) {
+                                newBlackouts.add(`${r},${c}`);
+                            }
+                        }
+                    } else if (/^[a-zA-Z]+$/.test(part)) {
+                        // It's a column letter
+                        const c = colLabelToIndex(part);
+                        if (c >= 0 && c < cols) {
+                            blackedOutColumns.add(c);
+                            for (let r = 0; r < rows; r++) {
+                                newBlackouts.add(`${r},${c}`);
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Collect ALL students from the grid
+            const allStudents = [];
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c]) {
+                        allStudents.push(grid[r][c]);
+                        grid[r][c] = null;
+                    }
+                }
+            }
+
+            // Add new blackouts to the set
+            newBlackouts.forEach(cell => blackedOutCells.add(cell));
+
+            // Sort all students according to current sort method
+            const sortMethod = document.getElementById('sort-method').value;
+            const sortedStudents = sortStudents(allStudents, sortMethod);
+
+            // Re-place all students in sorted order
+            const allocateDir = document.getElementById('allocate-direction').value;
+            let studentIndex = 0;
+            for (let r = 0; r < grid.length && studentIndex < sortedStudents.length; r++) {
+                for (let i = 0; i < cols && studentIndex < sortedStudents.length; i++) {
+                    const c = allocateDir === 'rtl' ? (cols - 1 - i) : i;
+                    const cellKey = `${r},${c}`;
+                    if (!blackedOutCells.has(cellKey)) {
+                        grid[r][c] = sortedStudents[studentIndex++];
+                    }
+                }
+            }
+
+            // If students remain, add new rows
+            const seatsPerNewRow = cols - blackedOutColumns.size;
+            while (studentIndex < sortedStudents.length && seatsPerNewRow > 0) {
+                const newRow = [];
+                for (let c = 0; c < cols; c++) {
+                    newRow.push(null);
+                }
+                grid.push(newRow);
+                const newRowIdx = grid.length - 1;
+
+                // Apply column blackouts to the new row
+                blackedOutColumns.forEach(c => {
+                    blackedOutCells.add(`${newRowIdx},${c}`);
+                });
+
+                for (let i = 0; i < cols && studentIndex < sortedStudents.length; i++) {
+                    const c = allocateDir === 'rtl' ? (cols - 1 - i) : i;
+                    const cellKey = `${newRowIdx},${c}`;
+                    if (!blackedOutCells.has(cellKey)) {
+                        grid[newRowIdx][c] = sortedStudents[studentIndex++];
+                    }
+                }
+                document.getElementById('rows').value = grid.length;
+            }
+
+            selectedCell = null;
+            renderGrid();
+        }
+
+        function clearBlackouts() {
+            blackedOutCells.clear();
+            document.getElementById('blackout-input').value = '';
+
+            // Collect all students from the grid
+            const allStudents = [];
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    if (grid[r][c]) {
+                        allStudents.push(grid[r][c]);
+                        grid[r][c] = null;
+                    }
+                }
+            }
+
+            // Redistribute students row by row
+            const allocateDir = document.getElementById('allocate-direction').value;
+            const cols = grid[0]?.length || 0;
+            let studentIndex = 0;
+            for (let r = 0; r < grid.length && studentIndex < allStudents.length; r++) {
+                for (let i = 0; i < cols && studentIndex < allStudents.length; i++) {
+                    const c = allocateDir === 'rtl' ? (cols - 1 - i) : i;
+                    grid[r][c] = allStudents[studentIndex++];
+                }
+            }
+
+            selectedCell = null;
+            renderGrid();
+        }
+
+        async function exportAsPNG() {
+            const gridElement = document.getElementById('seating-grid');
+            if (!gridElement.innerHTML) {
+                alert('Generate a seating plan first!');
+                return;
+            }
+
+            try {
+                const canvas = await html2canvas(document.getElementById('grid-container'));
+                const link = document.createElement('a');
+                link.download = 'seating-plan.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                alert('Error exporting: ' + err.message);
+            }
+        }
+
+        function exportData() {
+            if (grid.length === 0) {
+                alert('Generate a seating plan first!');
+                return;
+            }
+
+            const data = buildPlanData();
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.download = 'seating-plan.json';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        function validatePlanData(data) {
+            if (!data || data._format !== 'sityoassdown-v1') {
+                alert('Invalid file format. Please upload a valid SitYoAssDown datafile.');
+                return false;
+            }
+            if (!Array.isArray(data.grid) || data.grid.length === 0 || !Array.isArray(data.blackedOutCells)) {
+                alert('Invalid file: missing or corrupt seating plan data.');
+                return false;
+            }
+            for (let r = 0; r < data.grid.length; r++) {
+                if (!Array.isArray(data.grid[r])) {
+                    alert('Invalid file: grid data is corrupt.');
+                    return false;
+                }
+                for (let c = 0; c < data.grid[r].length; c++) {
+                    const cell = data.grid[r][c];
+                    if (cell !== null && (typeof cell !== 'object' || typeof cell.firstName !== 'string' || typeof cell.lastName !== 'string')) {
+                        alert('Invalid file: student data is corrupt.');
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function restoreFromData(data) {
+            // Normalize: ensure all students have a notes array (backward compat)
+            for (let r = 0; r < data.grid.length; r++) {
+                for (let c = 0; c < data.grid[r].length; c++) {
+                    const cell = data.grid[r][c];
+                    if (cell !== null && !Array.isArray(cell.notes)) {
+                        cell.notes = [];
+                    }
+                }
+            }
+
+            grid = data.grid;
+            blackedOutCells = new Set(data.blackedOutCells);
+            studentImages = data.studentImages || {};
+            imageMaxSize = data.imageMaxSize || 40;
+            namesHiddenOnUpload = data.namesHiddenOnUpload || false;
+
+            document.getElementById('class-code').value = data.classCode || '';
+            document.getElementById('class-header').textContent = data.classCode || '';
+
+            const rows = grid.length;
+            const cols = grid[0]?.length || 0;
+            document.getElementById('rows').value = rows;
+            document.getElementById('cols').value = cols;
+
+            // Reconstruct CSV from grid (including notes)
+            const csvLines = [];
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < (grid[r]?.length || 0); c++) {
+                    const s = grid[r][c];
+                    if (s) {
+                        const parts = [s.lastName, s.firstName];
+                        if (s.notes && s.notes.length > 0) {
+                            parts.push(...s.notes);
+                        }
+                        csvLines.push(parts.join(', '));
+                    }
+                }
+            }
+            document.getElementById('csv-input').value = csvLines.join('\n');
+
+            const blackoutParts = Array.from(blackedOutCells).map(cell => {
+                const [r, c] = cell.split(',').map(Number);
+                return `(${getColumnLabel(c)},${r + 1})`;
+            });
+            document.getElementById('blackout-input').value = blackoutParts.join(',');
+
+            document.getElementById('image-size-slider').value = imageMaxSize;
+            document.getElementById('image-size-value').textContent = imageMaxSize + 'px';
+            updateImageSettings();
+
+            if (Object.keys(studentImages).length > 0) {
+                document.getElementById('show-images-toggle').checked = true;
+            }
+            if (namesHiddenOnUpload) {
+                document.getElementById('show-names-toggle').checked = false;
+            } else {
+                document.getElementById('show-names-toggle').checked = true;
+            }
+            if (anyStudentHasNotes()) {
+                document.getElementById('show-notes-toggle').checked = true;
+            }
+
+            if (data.frontPosition) {
+                document.getElementById('front-position').value = data.frontPosition;
+            }
+
+            selectedCell = null;
+            renderGrid();
+        }
+
+        function importData(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                let data;
+                try {
+                    data = JSON.parse(e.target.result);
+                } catch (err) {
+                    alert('Invalid file: not valid JSON.');
+                    return;
+                }
+                if (validatePlanData(data)) {
+                    restoreFromData(data);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function buildPlanData() {
+            return {
+                _format: 'sityoassdown-v1',
+                classCode: document.getElementById('class-code').value,
+                grid: grid,
+                blackedOutCells: Array.from(blackedOutCells),
+                studentImages: studentImages,
+                imageMaxSize: imageMaxSize,
+                namesHiddenOnUpload: namesHiddenOnUpload,
+                frontPosition: document.getElementById('front-position').value
+            };
+        }
+
+        function populateBrowserPlanSelect() {
+            const select = document.getElementById('browser-plan-select');
+            const loadBtn = document.getElementById('load-browser-btn');
+            const deleteBtn = document.getElementById('delete-browser-btn');
+
+            select.innerHTML = '<option value="">-- Select saved plan --</option>';
+
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(STORAGE_PREFIX)) {
+                    keys.push(key.substring(STORAGE_PREFIX.length));
+                }
+            }
+
+            keys.sort();
+            keys.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+
+            const hasSelection = select.value !== '';
+            loadBtn.disabled = !hasSelection;
+            deleteBtn.disabled = !hasSelection;
+        }
+
+        function saveToBrowser() {
+            if (grid.length === 0) {
+                alert('Generate a seating plan first!');
+                return;
+            }
+
+            if (Object.keys(studentImages).length > 0) {
+                alert('Cannot save plans with images to browser storage. Use "Export Data" instead.');
+                return;
+            }
+
+            const className = document.getElementById('class-code').value.trim();
+            if (!className) {
+                alert('Please enter a class name before saving.');
+                return;
+            }
+
+            const storageKey = STORAGE_PREFIX + className;
+
+            if (localStorage.getItem(storageKey) !== null) {
+                if (!confirm(`A plan named "${className}" already exists. Overwrite it?`)) {
+                    return;
+                }
+            }
+
+            const data = buildPlanData();
+            data.studentImages = {};
+
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(data));
+                alert(`Plan "${className}" saved to browser.`);
+                populateBrowserPlanSelect();
+            } catch (err) {
+                alert('Failed to save: ' + err.message + ' (Browser storage may be full.)');
+            }
+        }
+
+        function loadFromBrowser() {
+            const select = document.getElementById('browser-plan-select');
+            const className = select.value;
+            if (!className) {
+                alert('Please select a saved plan first.');
+                return;
+            }
+
+            const raw = localStorage.getItem(STORAGE_PREFIX + className);
+            if (!raw) {
+                alert('Plan not found in browser storage.');
+                populateBrowserPlanSelect();
+                return;
+            }
+
+            let data;
+            try {
+                data = JSON.parse(raw);
+            } catch (err) {
+                alert('Saved data is corrupt.');
+                return;
+            }
+
+            if (validatePlanData(data)) {
+                restoreFromData(data);
+            }
+        }
+
+        function deleteFromBrowser() {
+            const select = document.getElementById('browser-plan-select');
+            const className = select.value;
+            if (!className) {
+                alert('Please select a saved plan first.');
+                return;
+            }
+
+            if (!confirm(`Delete saved plan "${className}"?`)) {
+                return;
+            }
+
+            localStorage.removeItem(STORAGE_PREFIX + className);
+            populateBrowserPlanSelect();
+        }
+
+        // Event listeners
+        document.getElementById('generate-btn').addEventListener('click', generateGrid);
+        document.getElementById('apply-blackout').addEventListener('click', applyBlackouts);
+        document.getElementById('clear-blackout').addEventListener('click', clearBlackouts);
+        document.getElementById('export-btn').addEventListener('click', exportAsPNG);
+        document.getElementById('export-data-btn').addEventListener('click', exportData);
+        document.getElementById('save-browser-btn').addEventListener('click', saveToBrowser);
+        document.getElementById('load-browser-btn').addEventListener('click', loadFromBrowser);
+        document.getElementById('delete-browser-btn').addEventListener('click', deleteFromBrowser);
+
+        document.getElementById('browser-plan-select').addEventListener('change', function () {
+            const hasSelection = this.value !== '';
+            document.getElementById('load-browser-btn').disabled = !hasSelection;
+            document.getElementById('delete-browser-btn').disabled = !hasSelection;
+        });
+
+        document.getElementById('upload-datafile-btn').addEventListener('click', function () {
+            document.getElementById('datafile-input').click();
+        });
+
+        document.getElementById('datafile-input').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.name.endsWith('.json')) {
+                    alert('Please upload a .json file.');
+                    e.target.value = '';
+                    return;
+                }
+                importData(file);
+                e.target.value = '';
+            }
+        });
+
+        document.getElementById('csv-file').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('csv-input').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('class-code').addEventListener('input', function (e) {
+            document.getElementById('class-header').textContent = e.target.value.trim();
+        });
+
+        document.getElementById('image-size-slider').addEventListener('input', function (e) {
+            imageMaxSize = parseInt(e.target.value);
+            document.getElementById('image-size-value').textContent = imageMaxSize + 'px';
+            if (grid.length > 0) {
+                renderGrid();
+            }
+        });
+
+        // Display toggles
+        document.getElementById('show-images-toggle').addEventListener('change', function () {
+            if (grid.length > 0) {
+                renderGrid();
+            }
+        });
+
+        document.getElementById('show-names-toggle').addEventListener('change', function () {
+            if (grid.length > 0) {
+                renderGrid();
+            }
+        });
+
+        document.getElementById('show-notes-toggle').addEventListener('change', function () {
+            if (grid.length > 0) {
+                renderGrid();
+            }
+        });
+
+        // Modal hide names toggle
+        document.getElementById('hide-names-toggle').addEventListener('change', function () {
+            const hideNames = this.checked;
+            const entries = document.querySelectorAll('.image-entry');
+            entries.forEach(entry => {
+                if (hideNames) {
+                    entry.classList.add('no-input');
+                } else {
+                    entry.classList.remove('no-input');
+                }
+            });
+        });
+
+        // Image upload functionality
+        document.getElementById('upload-images-btn').addEventListener('click', function () {
+            document.getElementById('image-file-input').click();
+        });
+
+        document.getElementById('image-file-input').addEventListener('change', function (e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            // Reset the hide names toggle
+            document.getElementById('hide-names-toggle').checked = false;
+
+            pendingImages = [];
+            const entriesContainer = document.getElementById('image-entries');
+            entriesContainer.innerHTML = '';
+
+            let loadedCount = 0;
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const imageData = event.target.result;
+                    // Get filename without extension
+                    const fileName = file.name.replace(/\.[^/.]+$/, '');
+
+                    pendingImages[index] = { imageData, fileName };
+
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'image-entry';
+                    entryDiv.innerHTML = `
+                        <img src="${imageData}" alt="${fileName}">
+                        <input type="text" data-index="${index}" value="${fileName}" placeholder="LastName, FirstName, Notes...">
+                    `;
+                    entriesContainer.appendChild(entryDiv);
+
+                    loadedCount++;
+                    if (loadedCount === files.length) {
+                        // All images loaded, show modal
+                        document.getElementById('image-modal-overlay').style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Reset input so same files can be selected again
+            e.target.value = '';
+        });
+
+        document.getElementById('modal-cancel-btn').addEventListener('click', function () {
+            document.getElementById('image-modal-overlay').style.display = 'none';
+            document.getElementById('hide-names-toggle').checked = false;
+            pendingImages = [];
+        });
+
+        document.getElementById('image-modal-overlay').addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+                document.getElementById('hide-names-toggle').checked = false;
+                pendingImages = [];
+            }
+        });
+
+        document.getElementById('modal-add-btn').addEventListener('click', function () {
+            const hideNames = document.getElementById('hide-names-toggle').checked;
+            const newStudentLines = [];
+
+            if (hideNames) {
+                // Use filenames directly, names will be hidden in display
+                namesHiddenOnUpload = true;
+                pendingImages.forEach((img, index) => {
+                    if (img) {
+                        const fileName = img.fileName;
+                        // Parse filename as name (try to split on comma if present)
+                        const parts = fileName.split(',').map(p => p.trim());
+                        let lastName, firstName, notes = [];
+                        if (parts.length >= 2) {
+                            lastName = parts[0];
+                            firstName = parts[1];
+                            notes = truncateNotes(parts.slice(2, 5).filter(n => n.length > 0));
+                        } else {
+                            lastName = '';
+                            firstName = fileName;
+                        }
+
+                        const key = `${lastName.toLowerCase()},${firstName.toLowerCase()}`;
+                        studentImages[key] = img.imageData;
+                        newStudentLines.push([lastName, firstName, ...notes].join(', '));
+                    }
+                });
+
+                // Disable and uncheck show names toggle
+                document.getElementById('show-names-toggle').checked = false;
+            } else {
+                const inputs = document.querySelectorAll('#image-entries input[data-index]');
+                inputs.forEach(input => {
+                    const index = parseInt(input.dataset.index);
+                    const value = input.value.trim();
+                    if (value && pendingImages[index]) {
+                        // Parse the name
+                        const parts = value.split(',').map(p => p.trim());
+                        let lastName, firstName, notes = [];
+                        if (parts.length >= 2) {
+                            lastName = parts[0];
+                            firstName = parts[1];
+                            notes = truncateNotes(parts.slice(2, 5).filter(n => n.length > 0));
+                        } else {
+                            // If no comma, treat whole thing as first name
+                            lastName = '';
+                            firstName = value;
+                        }
+
+                        // Store the image
+                        const key = `${lastName.toLowerCase()},${firstName.toLowerCase()}`;
+                        studentImages[key] = pendingImages[index].imageData;
+
+                        // Add to CSV lines
+                        newStudentLines.push([lastName, firstName, ...notes].join(', '));
+                    }
+                });
+            }
+
+            // Append to existing CSV input
+            const csvInput = document.getElementById('csv-input');
+            if (csvInput.value.trim()) {
+                csvInput.value += '\n' + newStudentLines.join('\n');
+            } else {
+                csvInput.value = newStudentLines.join('\n');
+            }
+
+            // Update image settings display
+            updateImageSettings();
+
+            // Close modal and reset toggle
+            document.getElementById('image-modal-overlay').style.display = 'none';
+            document.getElementById('hide-names-toggle').checked = false;
+            pendingImages = [];
+        });
+
+        // Initialize browser plans dropdown
+        populateBrowserPlanSelect();
+    </script>
+</body>
+
+</html>

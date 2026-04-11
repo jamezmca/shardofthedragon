@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Boredscrolling | Designed to reset your attention</title>
+  <meta name="description" content="A boring scrolling activity to baseline your attention. Track how deep and how long you scroll — no distractions, no content, so style, no stimulus, just the signal.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: 'Inter', sans-serif;
+      color: #0f172a;
+      touch-action: none;
+    }
+
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
+
+    #canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .metric {
+      position: fixed;
+      z-index: 10;
+    }
+
+    #metric-depth    { left: 28px; top: 28px; }
+    #metric-duration { left: 28px; bottom: 28px; }
+
+    .metric-label {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0f172a;
+      opacity: 0.35;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 300;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div class="metric" id="metric-depth">
+    <div class="metric-label">Scroll Depth</div>
+    <div class="metric-value" id="depth-value">0 px</div>
+  </div>
+
+  <div class="metric" id="metric-duration">
+    <div class="metric-label">Scroll Duration</div>
+    <div class="metric-value" id="duration-value">0.0 s</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const depthEl = document.getElementById('depth-value');
+    const durationEl = document.getElementById('duration-value');
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let scrollDepth = parseInt(localStorage.getItem('rma_depth') || '0', 10);
+    let scrollDuration = parseFloat(localStorage.getItem('rma_duration') || '0'); // ms
+    let isScrolling = false;
+    let scrollTimeout = null;
+    let lastDurationStamp = null;
+    let velocity = 0;          // px per frame (downward = positive)
+    let lastTouchY = null;
+    let W = 0, H = 0;
+
+    // ── Pixels ───────────────────────────────────────────────────────────────
+    const NUM_PIXELS = 3;
+    let dots = [];
+
+    function makeDot(yOverride) {
+      return {
+        x: 0.1 * W + Math.random() * 0.8 * W,
+        y: yOverride !== undefined ? yOverride : Math.random() * H,
+        size: 2 + Math.random() * 2,
+        alpha: 0.35 + Math.random() * 0.25,
+      };
+    }
+
+    function initDots() {
+      dots = [];
+      for (let i = 0; i < NUM_PIXELS; i++) {
+        dots.push(makeDot());
+      }
+    }
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      initDots();
+    }
+
+    // ── Display ──────────────────────────────────────────────────────────────
+    function fmtDepth(px) {
+      if (px >= 1_000_000) return (px / 1_000_000).toFixed(2) + ' Mpx';
+      if (px >= 1_000)     return Math.floor(px / 1_000) + ' kpx';
+      return px + ' px';
+    }
+
+    function fmtDuration(ms) {
+      const total = ms / 1000;
+      if (total >= 3600) {
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        return h + 'h ' + m + 'm';
+      }
+      if (total >= 60) {
+        const m = Math.floor(total / 60);
+        const s = (total % 60).toFixed(0);
+        return m + 'm ' + s + 's';
+      }
+      return total.toFixed(1) + ' s';
+    }
+
+    function updateDisplays() {
+      depthEl.textContent    = fmtDepth(scrollDepth);
+      durationEl.textContent = fmtDuration(scrollDuration);
+    }
+
+    // ── Scroll input ─────────────────────────────────────────────────────────
+    function onScrollDelta(delta, isTouch) {
+      // normalise touch (raw finger px) up to roughly the same scale as wheel deltaY
+      const normalised = isTouch ? delta * 8 : delta;
+
+      // track net depth — increments scrolling down, decrements scrolling up
+      scrollDepth = Math.max(0, scrollDepth + Math.round(normalised));
+      localStorage.setItem('rma_depth', scrollDepth);
+
+      const visualMultiplier = isTouch ? 0.09 : 0.055;
+      const clamp = isTouch ? 18 : 8;
+
+      // touch: lerp toward current speed so it doesn't compound during long drags
+      // wheel: accumulate as before for natural momentum feel
+      if (isTouch) {
+        const target = normalised * visualMultiplier;
+        velocity = velocity * 0.3 + target * 0.7;
+      } else {
+        velocity += normalised * visualMultiplier;
+      }
+
+      velocity = Math.max(-clamp, Math.min(clamp, velocity));
+
+      if (!isScrolling) {
+        isScrolling = true;
+        lastDurationStamp = performance.now();
+      }
+
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+        lastDurationStamp = null;
+        localStorage.setItem('rma_duration', scrollDuration);
+      }, 180);
+    }
+
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      onScrollDelta(e.deltaY);
+    }, { passive: false });
+
+    window.addEventListener('touchstart', (e) => {
+      lastTouchY = e.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const y = e.touches[0].clientY;
+      const delta = lastTouchY - y;   // positive = finger moving up = scroll down
+      lastTouchY = y;
+      onScrollDelta(delta, true);
+    }, { passive: false });
+
+    window.addEventListener('touchend', () => { lastTouchY = null; });
+
+    // ── Animation loop ───────────────────────────────────────────────────────
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      // Duration timer
+      if (isScrolling && lastDurationStamp !== null) {
+        scrollDuration += now - lastDurationStamp;
+        lastDurationStamp = now;
+      }
+
+      // Velocity decay
+      velocity *= 0.88;
+      if (Math.abs(velocity) < 0.05) velocity = 0;
+
+      // Clear
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw dots
+      const move = velocity;   // pixels to shift this frame (up = negative y)
+      for (const dot of dots) {
+        dot.y -= move;
+
+        // Wrap: went above viewport → reenter from bottom
+        if (dot.y < -dot.size) {
+          dot.y = H + dot.size;
+          dot.x = 0.1 * W + Math.random() * 0.8 * W;
+          dot.alpha = 0.18 + Math.random() * 0.22;
+        }
+        // Wrap: went below viewport → reenter from top
+        if (dot.y > H + dot.size) {
+          dot.y = -dot.size;
+          dot.x = 0.1 * W + Math.random() * 0.8 * W;
+          dot.alpha = 0.18 + Math.random() * 0.22;
+        }
+
+        ctx.fillStyle = `rgba(15,23,42,${dot.alpha.toFixed(2)})`;
+        ctx.fillRect(Math.round(dot.x), Math.round(dot.y), dot.size, dot.size);
+      }
+
+      updateDisplays();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

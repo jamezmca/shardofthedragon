@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image/PDF Slicer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; padding: 20px; background: #f5f5f5; }
+
+    #editor-section { margin-bottom: 20px; }
+    #editor-toggle { display: none; margin-bottom: 15px; background: #666; font-size: 13px; padding: 6px 12px; }
+    #editor-toggle:hover { background: #888; }
+    #editor-toggle .arrow { display: inline-block; margin-right: 6px; transition: transform 0.2s; }
+    #editor-section.collapsed #editor-toggle .arrow { transform: rotate(-90deg); }
+    #editor-section.collapsed #editor-content { display: none; }
+
+    .controls { margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    .controls label { display: flex; align-items: center; gap: 5px; }
+    .controls input[type="number"] { width: 60px; padding: 5px; }
+    button { padding: 8px 16px; cursor: pointer; background: #333; color: white; border: none; }
+    button:hover { background: #555; }
+    #canvas-container { position: relative; display: inline-block; background: #fff; }
+    #source-canvas { display: block; max-width: 100%; height: auto; }
+    .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    .grid-line { position: absolute; background: rgba(255, 0, 0, 0.7); pointer-events: auto; }
+    .grid-line.horizontal { height: 3px; width: 100%; cursor: ns-resize; }
+    .grid-line.vertical { width: 3px; height: 100%; cursor: ew-resize; }
+    .grid-line:hover { background: rgba(0, 150, 255, 0.9); }
+    #slices-container { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 20px; }
+    .slice-item { display: flex; flex-direction: column; align-items: center; }
+    .slice-item img { display: block; max-width: 200px; height: auto; border-radius: 4px; border: 1px solid #ddd; }
+    .delete-btn {
+      background: none; border: none; color: #c44; cursor: pointer;
+      font-size: 13px; padding: 4px 0 0 0; display: flex; align-items: center; gap: 3px;
+    }
+    .delete-btn:hover { text-decoration: underline; }
+    #download-btn { display: none; margin-top: 20px; background: #2a6; }
+    #download-btn:hover { background: #3b7; }
+    .hidden { display: none; }
+
+    .instructions { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; color: #888; font-size: 14px; line-height: 1.8; }
+    .instructions h2 { font-size: 16px; margin-bottom: 12px; color: #999; }
+    .instructions ol { margin-left: 20px; }
+    .instructions li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Image/PDF Slicer</h1>
+
+  <div id="editor-section">
+    <button id="editor-toggle"><span class="arrow">&#9660;</span>Edit Grid</button>
+    <div id="editor-content">
+      <div class="controls">
+        <input type="file" id="file-input" accept="image/*,.pdf">
+        <label>Rows: <input type="number" id="rows" value="2" min="1" max="20"></label>
+        <label>Cols: <input type="number" id="cols" value="2" min="1" max="20"></label>
+        <button id="slice-btn" class="hidden">Slice and Dice</button>
+      </div>
+
+      <div id="canvas-container" class="hidden">
+        <canvas id="source-canvas"></canvas>
+        <div class="grid-overlay" id="grid-overlay"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="slices-container"></div>
+  <button id="download-btn">Download All as ZIP</button>
+
+  <div class="instructions">
+    <h2>How to Use This Tool</h2>
+    <ol>
+      <li><strong>Upload your file:</strong> Click the "Choose File" button at the top. You can select either an image file (PNG, JPG, etc.) or a PDF file. If you upload a PDF, only the first page will be used.</li>
+      <li><strong>Set your grid size:</strong> Use the "Rows" and "Cols" number boxes to choose how many pieces you want to cut your image into. For example, 2 rows and 3 columns will give you 6 pieces.</li>
+      <li><strong>Adjust the grid lines:</strong> You will see red lines appear on your image. These lines show where the cuts will be made. You can click and drag any red line to move it. This lets you control exactly where each cut happens. The lines turn blue when you hover over them.</li>
+      <li><strong>Slice your image:</strong> When you are happy with the grid position, click the "Slice and Dice" button. Your image will be cut into separate pieces and shown below.</li>
+      <li><strong>Remove unwanted pieces:</strong> Look at the sliced images. If you do not want a particular piece, click the red "Delete" text underneath it. That piece will be removed and will not be included in your download.</li>
+      <li><strong>Download your pieces:</strong> Click the green "Download All as ZIP" button. A ZIP file containing all your remaining image pieces will be downloaded to your computer. Each piece is saved as a PNG file.</li>
+      <li><strong>Re-edit if needed:</strong> After slicing, the editor collapses. Click the "Edit Grid" button at the top to expand it again if you want to adjust your grid and slice again.</li>
+    </ol>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const fileInput = document.getElementById('file-input');
+    const rowsInput = document.getElementById('rows');
+    const colsInput = document.getElementById('cols');
+    const sliceBtn = document.getElementById('slice-btn');
+    const canvasContainer = document.getElementById('canvas-container');
+    const sourceCanvas = document.getElementById('source-canvas');
+    const gridOverlay = document.getElementById('grid-overlay');
+    const slicesContainer = document.getElementById('slices-container');
+    const downloadBtn = document.getElementById('download-btn');
+    const editorSection = document.getElementById('editor-section');
+    const editorToggle = document.getElementById('editor-toggle');
+    const ctx = sourceCanvas.getContext('2d');
+
+    let originalImage = null;
+    let hLines = [];
+    let vLines = [];
+    let slices = [];
+
+    fileInput.addEventListener('change', handleFileUpload);
+    rowsInput.addEventListener('change', updateGrid);
+    colsInput.addEventListener('change', updateGrid);
+    sliceBtn.addEventListener('click', sliceImage);
+    downloadBtn.addEventListener('click', downloadZip);
+    editorToggle.addEventListener('click', () => {
+      editorSection.classList.toggle('collapsed');
+    });
+
+    async function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      slicesContainer.innerHTML = '';
+      slices = [];
+      downloadBtn.style.display = 'none';
+
+      if (file.type === 'application/pdf') {
+        await loadPDF(file);
+      } else {
+        await loadImage(file);
+      }
+
+      canvasContainer.classList.remove('hidden');
+      sliceBtn.classList.remove('hidden');
+      updateGrid();
+    }
+
+    async function loadPDF(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1);
+      const scale = 2;
+      const viewport = page.getViewport({ scale });
+
+      sourceCanvas.width = viewport.width;
+      sourceCanvas.height = viewport.height;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      originalImage = await createImageBitmap(sourceCanvas);
+    }
+
+    async function loadImage(file) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      await new Promise(resolve => {
+        img.onload = resolve;
+        img.src = url;
+      });
+
+      sourceCanvas.width = img.width;
+      sourceCanvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      originalImage = img;
+      URL.revokeObjectURL(url);
+    }
+
+    function updateGrid() {
+      const rows = parseInt(rowsInput.value) || 2;
+      const cols = parseInt(colsInput.value) || 2;
+
+      gridOverlay.innerHTML = '';
+      hLines = [];
+      vLines = [];
+
+      for (let i = 1; i < rows; i++) {
+        const pct = (i / rows) * 100;
+        const line = createGridLine('horizontal', pct);
+        hLines.push({ el: line, pct });
+        gridOverlay.appendChild(line);
+      }
+
+      for (let i = 1; i < cols; i++) {
+        const pct = (i / cols) * 100;
+        const line = createGridLine('vertical', pct);
+        vLines.push({ el: line, pct });
+        gridOverlay.appendChild(line);
+      }
+    }
+
+    function createGridLine(type, pct) {
+      const line = document.createElement('div');
+      line.className = `grid-line ${type}`;
+
+      if (type === 'horizontal') {
+        line.style.top = `${pct}%`;
+      } else {
+        line.style.left = `${pct}%`;
+      }
+
+      let dragging = false;
+
+      line.addEventListener('mousedown', (e) => {
+        dragging = true;
+        e.preventDefault();
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = gridOverlay.getBoundingClientRect();
+
+        if (type === 'horizontal') {
+          let newPct = ((e.clientY - rect.top) / rect.height) * 100;
+          newPct = Math.max(1, Math.min(99, newPct));
+          line.style.top = `${newPct}%`;
+          const lineData = hLines.find(l => l.el === line);
+          if (lineData) lineData.pct = newPct;
+        } else {
+          let newPct = ((e.clientX - rect.left) / rect.width) * 100;
+          newPct = Math.max(1, Math.min(99, newPct));
+          line.style.left = `${newPct}%`;
+          const lineData = vLines.find(l => l.el === line);
+          if (lineData) lineData.pct = newPct;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        dragging = false;
+      });
+
+      return line;
+    }
+
+    function sliceImage() {
+      if (!originalImage) return;
+
+      const hPositions = [0, ...hLines.map(l => l.pct).sort((a, b) => a - b), 100];
+      const vPositions = [0, ...vLines.map(l => l.pct).sort((a, b) => a - b), 100];
+
+      slicesContainer.innerHTML = '';
+      slices = [];
+
+      const w = sourceCanvas.width;
+      const h = sourceCanvas.height;
+
+      for (let row = 0; row < hPositions.length - 1; row++) {
+        for (let col = 0; col < vPositions.length - 1; col++) {
+          const x = (vPositions[col] / 100) * w;
+          const y = (hPositions[row] / 100) * h;
+          const sliceW = ((vPositions[col + 1] - vPositions[col]) / 100) * w;
+          const sliceH = ((hPositions[row + 1] - hPositions[row]) / 100) * h;
+
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = sliceW;
+          sliceCanvas.height = sliceH;
+          const sliceCtx = sliceCanvas.getContext('2d');
+          sliceCtx.drawImage(sourceCanvas, x, y, sliceW, sliceH, 0, 0, sliceW, sliceH);
+
+          const dataUrl = sliceCanvas.toDataURL('image/png');
+          const sliceId = `slice_${row}_${col}`;
+
+          slices.push({ id: sliceId, dataUrl, row, col });
+
+          const item = document.createElement('div');
+          item.className = 'slice-item';
+          item.id = sliceId;
+
+          const img = document.createElement('img');
+          img.src = dataUrl;
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete-btn';
+          delBtn.innerHTML = '&#11014; Delete';
+          delBtn.onclick = () => removeSlice(sliceId);
+
+          item.appendChild(img);
+          item.appendChild(delBtn);
+          slicesContainer.appendChild(item);
+        }
+      }
+
+      downloadBtn.style.display = slices.length > 0 ? 'block' : 'none';
+
+      editorSection.classList.add('collapsed');
+      editorToggle.style.display = 'block';
+    }
+
+    function removeSlice(id) {
+      slices = slices.filter(s => s.id !== id);
+      const el = document.getElementById(id);
+      if (el) el.remove();
+      downloadBtn.style.display = slices.length > 0 ? 'block' : 'none';
+    }
+
+    async function downloadZip() {
+      if (slices.length === 0) return;
+
+      const zip = new JSZip();
+
+      for (const slice of slices) {
+        const base64 = slice.dataUrl.split(',')[1];
+        zip.file(`${slice.id}.png`, base64, { base64: true });
+      }
+
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'slices.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

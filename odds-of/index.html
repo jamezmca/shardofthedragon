@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Probability Worksheet Generator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    body { background: white !important; }
+    #worksheet { padding: 0 !important; }
+    .ws-page { page-break-after: always; margin: 0; box-shadow: none !important; border: none !important; }
+    .ws-page:last-child { page-break-after: avoid; }
+    .question-block { page-break-inside: avoid; }
+  }
+  .ans-line {
+    border-bottom: 2px solid #374151;
+    display: inline-block;
+    min-width: 90px;
+    height: 1.4em;
+    margin: 0 3px;
+    vertical-align: bottom;
+  }
+  .ans-line-sm { min-width: 55px; }
+  .ans-line-lg { min-width: 130px; }
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.15;
+    margin: 0 2px;
+    vertical-align: middle;
+    font-size: 0.93em;
+  }
+  .frac .fn { border-bottom: 1.5px solid #111; padding: 0 3px; }
+  .frac .fd { padding: 0 3px; }
+  .svgblank rect { stroke: #9ca3af; stroke-width: 1.5; fill: white; stroke-dasharray: 5,3; }
+  .svgblank text { fill: #d1d5db; font-size: 11px; }
+  svg text { font-family: system-ui, sans-serif; }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- ===== SETTINGS PANEL ===== -->
+<div class="no-print max-w-3xl mx-auto px-4 pt-6 pb-4">
+  <h1 class="text-2xl font-bold text-slate-800 mb-1">Probability Worksheet Generator</h1>
+  <p class="text-slate-500 text-sm mb-5">Select worksheet types, difficulty, and quantity, then click Generate.</p>
+
+  <div class="space-y-3">
+
+    <!-- Type A -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+        <input type="checkbox" id="chkA" class="w-4 h-4 accent-blue-600" checked>
+        <span>A — Basic Probability</span>
+      </label>
+      <span class="text-slate-400 text-sm flex-1">Bags, dice, spinners, coins, lollies…</span>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Count:
+        <input type="number" id="cntA" value="2" min="1" max="10" class="w-14 border border-slate-300 rounded px-2 py-1 text-center">
+      </label>
+    </div>
+
+    <!-- Type B -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+        <input type="checkbox" id="chkB" class="w-4 h-4 accent-blue-600" checked>
+        <span>B — Venn Diagrams</span>
+      </label>
+      <span class="text-slate-400 text-sm flex-1">2-way with intersection</span>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Difficulty:
+        <select id="diffB" class="border border-slate-300 rounded px-2 py-1 text-sm">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate" selected>Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </label>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Count:
+        <input type="number" id="cntB" value="2" min="1" max="10" class="w-14 border border-slate-300 rounded px-2 py-1 text-center">
+      </label>
+    </div>
+
+    <!-- Type C -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+        <input type="checkbox" id="chkC" class="w-4 h-4 accent-blue-600" checked>
+        <span>C — Tree Diagrams</span>
+      </label>
+      <span class="text-slate-400 text-sm flex-1">2 tiers, up to 3 branches each</span>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Difficulty:
+        <select id="diffC" class="border border-slate-300 rounded px-2 py-1 text-sm">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate" selected>Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </label>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Count:
+        <input type="number" id="cntC" value="2" min="1" max="10" class="w-14 border border-slate-300 rounded px-2 py-1 text-center">
+      </label>
+    </div>
+
+    <!-- Type D -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+        <input type="checkbox" id="chkD" class="w-4 h-4 accent-blue-600" checked>
+        <span>D — Two-Way Tables</span>
+      </label>
+      <span class="text-slate-400 text-sm flex-1">Up to 3 rows × 5 cols</span>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Difficulty:
+        <select id="diffD" class="border border-slate-300 rounded px-2 py-1 text-sm">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate" selected>Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </label>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Count:
+        <input type="number" id="cntD" value="2" min="1" max="10" class="w-14 border border-slate-300 rounded px-2 py-1 text-center">
+      </label>
+    </div>
+
+    <!-- Type E -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-2 font-medium text-slate-700 cursor-pointer">
+        <input type="checkbox" id="chkE" class="w-4 h-4 accent-blue-600" checked>
+        <span>E — Probability Representations</span>
+      </label>
+      <span class="text-slate-400 text-sm flex-1">Fractions ↔ decimals ↔ % ↔ likelihood words</span>
+      <label class="flex items-center gap-2 text-sm text-slate-600">
+        Count:
+        <input type="number" id="cntE" value="1" min="1" max="5" class="w-14 border border-slate-300 rounded px-2 py-1 text-center">
+      </label>
+    </div>
+
+  </div>
+
+  <button id="generateBtn" onclick="generate()" class="mt-5 w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors text-base flex items-center justify-center gap-2">
+    <svg id="generateSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <span id="generateBtnText">Generate Worksheet</span>
+  </button>
+</div>
+
+<!-- ===== WORKSHEET OUTPUT ===== -->
+<div id="worksheetWrap" class="max-w-3xl mx-auto px-4 pb-8 hidden">
+  <div class="no-print flex items-center justify-between mb-3">
+    <h2 class="text-slate-700 font-semibold">Generated Worksheet</h2>
+    <button onclick="window.print()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+      🖨 Print / Save PDF
+    </button>
+  </div>
+  <div id="worksheet" class="overflow-x-auto min-w-0"></div>
+</div>
+
+<!-- ===== INSTRUCTIONS ===== -->
+<div class="no-print max-w-3xl mx-auto px-4 pb-10 mt-2">
+  <div class="border border-dashed border-slate-300 rounded-xl p-5 text-slate-400 text-sm space-y-2">
+    <p class="font-medium text-slate-500">How to use this generator</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Tick the worksheet types you want and set a count for each.</li>
+      <li>For Venn, Tree and Table worksheets, choose a difficulty level:
+        <strong>Beginner</strong> = diagram fully filled in (just answer questions),
+        <strong>Intermediate</strong> = some cells missing,
+        <strong>Advanced</strong> = all diagram values blank (fill from sentences).</li>
+      <li>Click <em>Generate Worksheet</em> to create the worksheet. Click again to regenerate with new numbers.</li>
+      <li>Use <em>Print / Save PDF</em> to print or export. In the print dialog, choose "Save as PDF" for a PDF download.</li>
+      <li>Questions include: basic probability, OR, AND (with/without replacement), and NOT questions.</li>
+      <li>Contexts shuffle each time — bags, lollies, marbles, spinners, coins, dice, tiles, fruit, lucky dips, cards.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+//  UTILITIES
+// =====================================================================
+function rInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function rPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rPickN(arr, n) {
+  const a = [...arr]; const r = [];
+  for (let i = 0; i < Math.min(n, a.length); i++) {
+    const idx = Math.floor(Math.random() * a.length); r.push(a.splice(idx,1)[0]);
+  }
+  return r;
+}
+function rShuffle(arr) {
+  const a=[...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;
+}
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function simp(n,d){const g=gcd(Math.abs(n),Math.abs(d));return[n/g,d/g];}
+function frac(n,d){
+  if(n===0) return '0';
+  const[sn,sd]=simp(n,d);
+  if(sd===1)return`${sn}`;
+  return`<span class="frac"><span class="fn">${sn}</span><span class="fd">${sd}</span></span>`;
+}
+function fracTxt(n,d){const[sn,sd]=simp(n,d);return sd===1?`${sn}`:`${sn}/${sd}`;}
+function probLbl(n,d){const[sn,sd]=simp(n,d);if(sd===1)return`${sn}`;if(Math.random()<0.5)return`${sn}/${sd}`;const dec=(n/d).toFixed(2).replace(/\.?0+$/,'');return dec||'0';}
+function pct(n,d){const v=(n/d)*100;return v===Math.floor(v)?v+'%':v.toFixed(1)+'%';}
+function decStr(n,d){const v=n/d;const s=v.toFixed(4).replace(/\.?0+$/,'');return s||'0';}
+
+function blank(w='90px'){return`<span class="ans-line" style="min-width:${w}"></span>`;}
+function blankSm(){return blank('55px');}
+function blankLg(){return blank('130px');}
+
+// SVG blank box helper (returns SVG string, needs x,y for centre)
+function svgBlankBox(cx,cy,w=40,h=26){
+  return`<g class="svgblank"><rect x="${cx-w/2}" y="${cy-h/2}" width="${w}" height="${h}" rx="4"/><text x="${cx}" y="${cy+4}" text-anchor="middle">?</text></g>`;
+}
+
+// =====================================================================
+//  CONTEXTS DATA
+// =====================================================================
+
+const BASIC_CONTEXTS = [
+  {
+    id:'counters', label:'Coloured Counters', container:'bag', unit:'counter', units:'counters',
+    gen:()=>{
+      const cols=['red','blue','green','yellow','purple','orange'];
+      const n=rInt(2,4); const sel=rPickN(cols,n);
+      return sel.map(c=>({label:c,count:rInt(2,9)}));
+    }
+  },
+  {
+    id:'lollies', label:'Lollies', container:'jar', unit:'lolly', units:'lollies',
+    gen:()=>{
+      const flavs=['strawberry','grape','orange','mint','lemon','raspberry'];
+      const n=rInt(2,4); const sel=rPickN(flavs,n);
+      return sel.map(f=>({label:f,count:rInt(2,8)}));
+    }
+  },
+  {
+    id:'marbles', label:'Marbles', container:'box', unit:'marble', units:'marbles',
+    gen:()=>{
+      const cols=['red','blue','white','black','green','yellow'];
+      const n=rInt(2,4); const sel=rPickN(cols,n);
+      return sel.map(c=>({label:c,count:rInt(1,8)}));
+    }
+  },
+  {
+    id:'fruit', label:'Fruit', container:'basket', unit:'piece of fruit', units:'pieces of fruit',
+    gen:()=>{
+      const fruits=['apple','banana','orange','mango','pear','kiwi'];
+      const n=rInt(2,4); const sel=rPickN(fruits,n);
+      return sel.map(f=>({label:f,count:rInt(1,7)}));
+    }
+  },
+  {
+    id:'tiles', label:'Letter Tiles', container:'bag', unit:'tile', units:'tiles',
+    gen:()=>{
+      const ltrs=['A','E','I','O','T','S','R','N'];
+      const n=rInt(3,5); const sel=rPickN(ltrs,n);
+      return sel.map(l=>({label:l,count:rInt(1,6)}));
+    }
+  },
+  {
+    id:'toys', label:'Lucky Dip Toys', container:'box', unit:'toy', units:'toys',
+    gen:()=>{
+      const toys=['car','doll','ball','block','robot','teddy'];
+      const n=rInt(2,4); const sel=rPickN(toys,n);
+      return sel.map(t=>({label:t,count:rInt(2,7)}));
+    }
+  },
+  {
+    id:'spinner', label:'Spinner', container:null, unit:null, units:null,
+    gen:()=>{
+      const sects=['red','blue','green','yellow','purple'];
+      const n=rInt(3,5); const sel=rPickN(sects,n);
+      const total=rInt(8,16);
+      const vals=[]; let left=total;
+      for(let i=0;i<sel.length-1;i++){const v=rInt(1,left-sel.length+i+1);vals.push(v);left-=v;}
+      vals.push(left);
+      return sel.map((s,i)=>({label:s,count:vals[i],isSpinner:true}));
+    }
+  },
+  {
+    id:'coins', label:'Coins', container:null, unit:'coin', units:'coins',
+    gen:()=>{
+      const coins=['1c','2c','5c','10c','20c','50c'];
+      const n=rInt(2,4); const sel=rPickN(coins,n);
+      return sel.map(c=>({label:c,count:rInt(1,6)}));
+    }
+  },
+  {
+    id:'cards', label:'Playing Cards', container:'deck', unit:'card', units:'cards',
+    gen:()=>{
+      const types=['hearts','diamonds','clubs','spades'];
+      // simplified: just 4 suit groups
+      return types.map(t=>({label:t,count:rInt(2,6)}));
+    }
+  },
+  {
+    id:'beads', label:'Coloured Beads', container:'bag', unit:'bead', units:'beads',
+    gen:()=>{
+      const cols=['pink','blue','white','black','gold'];
+      const n=rInt(2,4); const sel=rPickN(cols,n);
+      return sel.map(c=>({label:c,count:rInt(2,9)}));
+    }
+  },
+];
+
+const VENN_CONTEXTS = [
+  {
+    setAName:'plays sport', setBName:'plays an instrument',
+    noun:'students', ctx:'class',
+    sentenceTemplate:(total,a,b,both)=>
+      `In a class of ${total} students, ${a+both} students play sport and ${b+both} play a musical instrument. ${both} students do both.`
+  },
+  {
+    setAName:'owns a dog', setBName:'owns a cat',
+    noun:'students', ctx:'school survey',
+    sentenceTemplate:(total,a,b,both)=>
+      `In a school survey of ${total} students, ${a+both} own a dog and ${b+both} own a cat. ${both} students own both a dog and a cat.`
+  },
+  {
+    setAName:'likes pizza', setBName:'likes pasta',
+    noun:'students', ctx:'class',
+    sentenceTemplate:(total,a,b,both)=>
+      `A survey of ${total} students found that ${a+both} like pizza and ${b+both} like pasta. ${both} students like both pizza and pasta.`
+  },
+  {
+    setAName:'swims', setBName:'rides a bike',
+    noun:'children', ctx:'survey',
+    sentenceTemplate:(total,a,b,both)=>
+      `A survey of ${total} children found that ${a+both} know how to swim and ${b+both} can ride a bike. ${both} can do both.`
+  },
+  {
+    setAName:'likes maths', setBName:'likes science',
+    noun:'students', ctx:'class',
+    sentenceTemplate:(total,a,b,both)=>
+      `In a class of ${total} students, ${a+both} like maths and ${b+both} like science. ${both} students like both subjects.`
+  },
+  {
+    setAName:'has a phone', setBName:'has a tablet',
+    noun:'students', ctx:'class survey',
+    sentenceTemplate:(total,a,b,both)=>
+      `A class survey of ${total} students found ${a+both} have a phone and ${b+both} have a tablet. ${both} have both.`
+  },
+  {
+    setAName:'plays video games', setBName:'watches sports on TV',
+    noun:'students', ctx:'survey',
+    sentenceTemplate:(total,a,b,both)=>
+      `In a survey of ${total} students, ${a+both} play video games and ${b+both} watch sports on TV. ${both} do both.`
+  },
+];
+
+const TREE_CONTEXTS = [
+  {
+    id:'marbles_rep',
+    title:'Drawing Marbles (with replacement)',
+    gen:()=>{
+      const cols=['red','blue','green'];
+      const n=rInt(2,3); const sel=rPickN(cols,n);
+      const counts=sel.map(c=>({label:c,count:rInt(2,6)}));
+      const total=counts.reduce((s,c)=>s+c.count,0);
+      return{counts,total,sel,replacement:true,container:'bag',unit:'marble'};
+    }
+  },
+  {
+    id:'lollies_norep',
+    title:'Drawing Lollies (without replacement)',
+    gen:()=>{
+      const flavs=['strawberry','grape','orange'];
+      const n=rInt(2,3); const sel=rPickN(flavs,n);
+      const counts=sel.map(f=>({label:f,count:rInt(2,5)}));
+      const total=counts.reduce((s,c)=>s+c.count,0);
+      return{counts,total,sel,replacement:false,container:'jar',unit:'lolly'};
+    }
+  },
+  {
+    id:'spinner_twice',
+    title:'Spinning a Spinner Twice',
+    gen:()=>{
+      const cols=['red','blue','green','yellow'];
+      const n=rInt(2,3); const sel=rPickN(cols,n);
+      const total=rInt(6,12);
+      const vals=[]; let left=total;
+      for(let i=0;i<sel.length-1;i++){const v=rInt(1,left-sel.length+i+1);vals.push(v);left-=v;}
+      vals.push(left);
+      const counts=sel.map((s,i)=>({label:s,count:vals[i]}));
+      return{counts,total,sel,replacement:true,isSpinner:true};
+    }
+  },
+  {
+    id:'counters_rep',
+    title:'Drawing Counters (with replacement)',
+    gen:()=>{
+      const cols=['red','blue','yellow'];
+      const n=rInt(2,3); const sel=rPickN(cols,n);
+      const counts=sel.map(c=>({label:c,count:rInt(2,6)}));
+      const total=counts.reduce((s,c)=>s+c.count,0);
+      return{counts,total,sel,replacement:true,container:'bag',unit:'counter'};
+    }
+  },
+  {
+    id:'socks_norep',
+    title:'Drawing Socks (without replacement)',
+    gen:()=>{
+      const cols=['black','white','grey'];
+      const n=rInt(2,3); const sel=rPickN(cols,n);
+      const counts=sel.map(c=>({label:c,count:rInt(2,5)}));
+      const total=counts.reduce((s,c)=>s+c.count,0);
+      return{counts,total,sel,replacement:false,container:'drawer',unit:'sock'};
+    }
+  },
+];
+
+const TABLE_CONTEXTS = [
+  {
+    rowLabel:'Hair Colour', colLabel:'Eye Colour',
+    gen:()=>{
+      const rows=rPickN(['Blonde','Brown','Black','Red'],rInt(2,3));
+      const cols=rPickN(['Blue','Brown','Green','Hazel'],rInt(2,4));
+      return{rows,cols};
+    }
+  },
+  {
+    rowLabel:'Favourite Subject', colLabel:'Year Level',
+    gen:()=>{
+      const rows=rPickN(['Maths','English','Science','Art','PE'],rInt(2,3));
+      const cols=rPickN(['Year 5','Year 6','Year 7'],rInt(2,3));
+      return{rows,cols};
+    }
+  },
+  {
+    rowLabel:'After-school Activity', colLabel:'Transport to School',
+    gen:()=>{
+      const rows=rPickN(['Sport','Art','Music','Reading'],rInt(2,3));
+      const cols=rPickN(['Walk','Bus','Car','Bike'],rInt(2,4));
+      return{rows,cols};
+    }
+  },
+  {
+    rowLabel:'Favourite Sport', colLabel:'School House',
+    gen:()=>{
+      const rows=rPickN(['Swimming','Basketball','Soccer','Tennis'],rInt(2,3));
+      const cols=rPickN(['Red','Blue','Green','Yellow'],rInt(2,4));
+      return{rows,cols};
+    }
+  },
+  {
+    rowLabel:'Pet Owned', colLabel:'Housing Type',
+    gen:()=>{
+      const rows=rPickN(['Dog','Cat','Fish','Bird'],rInt(2,3));
+      const cols=rPickN(['House','Apartment','Townhouse'],rInt(2,3));
+      return{rows,cols};
+    }
+  },
+];
+
+// =====================================================================
+//  TYPE A — BASIC PROBABILITY
+// =====================================================================
+function genTypeA(qNum) {
+  const ctx = rPick(BASIC_CONTEXTS);
+  const items = ctx.gen();
+  const total = items.reduce((s,i)=>s+i.count,0);
+
+  const isSpinner = items[0].isSpinner;
+  let intro = '';
+  if(ctx.id==='spinner'){
+    intro = `A spinner has ${total} sections: `;
+    intro += items.map(i=>`${i.count} ${i.label}`).join(', ')+'.';
+  } else if(ctx.id==='coins'){
+    intro = `A piggy bank contains ${total} coins: `+items.map(i=>`${i.count} ${i.label}`).join(', ')+'.';
+  } else if(ctx.id==='cards'){
+    intro = `A pile of ${total} playing cards contains: `+items.map(i=>`${i.count} ${i.label}`).join(', ')+'. One card is chosen at random.';
+  } else {
+    const verb=ctx.container?`A ${ctx.container} contains`:'There are';
+    intro = `${verb} ${total} ${ctx.units}: `+items.map(i=>`${i.count} ${i.label}`).join(', ')+'. One is chosen at random.';
+  }
+
+  const qList = buildBasicQuestions(items, total, ctx);
+
+  return `
+<div class="question-block mb-6">
+  <div class="flex items-baseline gap-2 mb-2">
+    <span class="text-blue-700 font-bold text-base">Question ${qNum}</span>
+    <span class="text-slate-500 text-xs uppercase tracking-wide">Basic Probability</span>
+  </div>
+  <p class="text-slate-700 mb-3 leading-relaxed">${intro}</p>
+  <ol class="list-none space-y-3 pl-0">
+    ${qList.map((q,i)=>`<li class="flex gap-2"><span class="font-medium text-slate-600 w-6 shrink-0">${String.fromCharCode(97+i)})</span><span class="text-slate-700">${q}</span></li>`).join('')}
+  </ol>
+</div>`;
+}
+
+function buildBasicQuestions(items, total, ctx) {
+  const qs = [];
+  const isSpinner = ctx.id==='spinner';
+  const actionWord = isSpinner ? 'landing on' : 'choosing';
+  const s = (i) => items[i];
+
+  // Q1: simple probability
+  const i0 = rInt(0,items.length-1);
+  qs.push(`What is the probability of ${actionWord} a <strong>${s(i0).label}</strong> ${ctx.unit||'section'}? &nbsp;${blank()}`);
+
+  // Q2: NOT
+  const i1 = rInt(0,items.length-1);
+  qs.push(`What is the probability of <strong>NOT</strong> ${actionWord} a <strong>${s(i1).label}</strong>? &nbsp;${blank()}`);
+
+  // Q3: OR (two categories)
+  if(items.length>=2){
+    const pair = rPickN(items,2);
+    const orTotal = pair[0].count+pair[1].count;
+    qs.push(`What is the probability of ${actionWord} a <strong>${pair[0].label}</strong> <em>or</em> a <strong>${pair[1].label}</strong>? &nbsp;${blank()}`);
+  }
+
+  // Q4: AND (two picks with replacement)
+  if(items.length>=2){
+    const p1=rPick(items), p2=rPick(items);
+    qs.push(`Two ${ctx.units||'items'} are chosen one at a time <em>with replacement</em>. What is P(${p1.label} <strong>and</strong> then ${p2.label})? &nbsp;${blank()}`);
+  }
+
+  // Q5: NOT (word form)
+  const i5=rInt(0,items.length-1);
+  const notCount=total-s(i5).count;
+  qs.push(`How many ${ctx.units||'items'} are <strong>not</strong> ${s(i5).label}? &nbsp;${blankSm()} &nbsp; &nbsp; Write this as a probability: &nbsp;${blank()}`);
+
+  // Q6: without replacement (if not spinner/coin)
+  if(ctx.id!=='spinner'&&ctx.id!=='coins'){
+    const p=rPick(items);
+    qs.push(`Two ${ctx.units||'items'} are chosen <em>without replacement</em>. What is the probability that both are <strong>${p.label}</strong>? &nbsp;${blank()}`);
+  } else {
+    const p=rPick(items);
+    qs.push(`If you chose one item and put it back, then chose again, what is P(${p.label} both times)? &nbsp;${blank()}`);
+  }
+
+  return qs;
+}
+
+// =====================================================================
+//  TYPE B — VENN DIAGRAMS
+// =====================================================================
+function genTypeB(qNum, difficulty) {
+  const ctx = rPick(VENN_CONTEXTS);
+  // Generate valid numbers
+  let aOnly, bOnly, both, neither, total;
+  let attempts=0;
+  do {
+    total=rInt(28,55);
+    both=rInt(3,Math.floor(total*0.22));
+    aOnly=rInt(5,Math.floor(total*0.38));
+    bOnly=rInt(4,Math.floor(total*0.38));
+    neither=total-aOnly-bOnly-both;
+    attempts++;
+  } while(neither<2||neither>total*0.25||attempts>50);
+  if(neither<0)neither=2; // safety
+
+  const sentence=ctx.sentenceTemplate(total,aOnly,bOnly,both);
+  const diffLabel={'beginner':'Beginner','intermediate':'Intermediate','advanced':'Advanced'}[difficulty];
+
+  const svgVenn=makeVennSVG(ctx,aOnly,bOnly,both,neither,total,difficulty);
+  const qList=buildVennQuestions(ctx,aOnly,bOnly,both,neither,total);
+
+  const fillNote = difficulty==='beginner'
+    ? `<p class="text-xs text-slate-400 italic mb-2">The Venn diagram is complete — use it to answer the questions below.</p>`
+    : difficulty==='intermediate'
+    ? `<p class="text-xs text-slate-400 italic mb-2">Some values are missing from the Venn diagram. Fill them in first, then answer the questions.</p>`
+    : `<p class="text-xs text-slate-400 italic mb-2">Use the information above to fill in the Venn diagram, then answer the questions.</p>`;
+
+  return `
+<div class="question-block mb-8">
+  <div class="flex items-baseline gap-2 mb-2">
+    <span class="text-blue-700 font-bold text-base">Question ${qNum}</span>
+    <span class="text-slate-500 text-xs uppercase tracking-wide">Venn Diagram &middot; ${diffLabel}</span>
+  </div>
+  <p class="text-slate-700 mb-3 leading-relaxed">${sentence}</p>
+  ${fillNote}
+  ${svgVenn}
+  <ol class="list-none space-y-3 pl-0 mt-4">
+    ${qList.map((q,i)=>`<li class="flex gap-2"><span class="font-medium text-slate-600 w-6 shrink-0">${String.fromCharCode(97+i)})</span><span class="text-slate-700">${q}</span></li>`).join('')}
+  </ol>
+</div>`;
+}
+
+function makeVennSVG(ctx,aOnly,bOnly,both,neither,total,difficulty) {
+  const W=520,H=285;
+  const cxA=175,cxB=345,cy=150,r=105;
+
+  function numOrBlank(val,cx,cyp,forceBlank=false){
+    if(difficulty==='beginner'||!forceBlank){
+      return`<text x="${cx}" y="${cyp+5}" text-anchor="middle" font-size="20" font-weight="bold" fill="#1e40af">${val}</text>`;
+    }
+    return svgBlankBox(cx,cyp);
+  }
+
+  const showAll = difficulty==='beginner';
+  const showPartial = difficulty==='intermediate';
+  // For intermediate: randomly blank ~half, for advanced: blank all
+  const blanks = difficulty==='advanced'?[true,true,true,true]:
+    difficulty==='intermediate'?rShuffle([true,true,false,false]):[false,false,false,false];
+
+  return `
+<div class="flex justify-center my-3">
+<svg width="${W}" height="${H}" class="max-w-full">
+  <!-- outer box -->
+  <rect x="10" y="10" width="${W-20}" height="${H-20}" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+  <!-- Circle A -->
+  <circle cx="${cxA}" cy="${cy}" r="${r}" fill="rgba(59,130,246,0.10)" stroke="#3b82f6" stroke-width="2"/>
+  <!-- Circle B -->
+  <circle cx="${cxB}" cy="${cy}" r="${r}" fill="rgba(239,68,68,0.10)" stroke="#ef4444" stroke-width="2"/>
+  <!-- Set labels — above each circle -->
+  <text x="${cxA}" y="30" text-anchor="middle" font-size="13" fill="#2563eb" font-weight="600">${ctx.setAName}</text>
+  <text x="${cxB}" y="30" text-anchor="middle" font-size="13" fill="#dc2626" font-weight="600">${ctx.setBName}</text>
+  <!-- A only value -->
+  ${numOrBlank(aOnly, cxA-38, cy, blanks[0])}
+  <!-- Both value -->
+  ${numOrBlank(both, (cxA+cxB)/2, cy, blanks[1])}
+  <!-- B only value -->
+  ${numOrBlank(bOnly, cxB+38, cy, blanks[2])}
+  <!-- Neither (outside) value -->
+  ${numOrBlank(neither, W-40, H-58, blanks[3])}
+  <!-- Neither label -->
+  <text x="${W-40}" y="${H-40}" text-anchor="middle" font-size="11" fill="#6b7280">neither</text>
+  <!-- Total label -->
+  <text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="11" fill="#9ca3af">Total: ${total} ${ctx.noun}</text>
+</svg>
+</div>`;
+}
+
+function buildVennQuestions(ctx,aOnly,bOnly,both,neither,total) {
+  const qs=[];
+  const aTotal=aOnly+both, bTotal=bOnly+both;
+  qs.push(`How many ${ctx.noun} <strong>${ctx.setAName} only</strong> (not ${ctx.setBName})? &nbsp;${blankSm()}`);
+  qs.push(`How many ${ctx.noun} do <strong>both</strong>? &nbsp;${blankSm()}`);
+  qs.push(`How many ${ctx.noun} do <strong>neither</strong>? &nbsp;${blankSm()}`);
+  qs.push(`If one ${ctx.noun.replace(/s$/,'')} is chosen at random, what is P(${ctx.setAName})? &nbsp;${blank()}`);
+  qs.push(`What is P(<strong>NOT</strong> ${ctx.setAName})? &nbsp;${blank()}`);
+  qs.push(`What is P(${ctx.setAName} <strong>OR</strong> ${ctx.setBName})? &nbsp;${blank()}`);
+  qs.push(`What is P(${ctx.setAName} <strong>AND</strong> ${ctx.setBName})? &nbsp;${blank()}`);
+  qs.push(`What is P(neither ${ctx.setAName} nor ${ctx.setBName})? &nbsp;${blank()}`);
+  return qs;
+}
+
+// =====================================================================
+//  TYPE C — TREE DIAGRAMS
+// =====================================================================
+function genTypeC(qNum, difficulty) {
+  const treeDef = rPick(TREE_CONTEXTS);
+  const data = treeDef.gen();
+  const {counts, total, replacement} = data;
+
+  // Keep to 2-3 outcomes for clarity
+  const outcomes = counts.slice(0,Math.min(3,counts.length));
+  const b1 = outcomes.length; // branches from root
+
+  // For second tier, use same labels (drawing twice)
+  const b2 = Math.min(outcomes.length, 3);
+
+  const diffLabel={'beginner':'Beginner','intermediate':'Intermediate','advanced':'Advanced'}[difficulty];
+
+  // Build tree data
+  const l1Probs = outcomes.map(o=>({n:o.count,d:total}));
+  let l2Probs;
+  if(replacement){
+    l2Probs = outcomes.map(o=>({n:o.count,d:total})); // same each time
+  } else {
+    l2Probs = outcomes.map(o=>({n:o.count,d:total})); // we'll handle adjustment in SVG per branch
+  }
+
+  const introLines = buildTreeIntro(data, treeDef);
+  const svgTree = makeTreeSVG(outcomes, total, replacement, difficulty);
+  const qList = buildTreeQuestions(outcomes, total, replacement, data, treeDef);
+
+  const fillNote = difficulty==='beginner'
+    ? `<p class="text-xs text-slate-400 italic mb-2">The tree diagram is complete — use it to answer the questions.</p>`
+    : difficulty==='intermediate'
+    ? `<p class="text-xs text-slate-400 italic mb-2">Some probabilities are missing. Fill in the blanks on the tree, then answer the questions.</p>`
+    : `<p class="text-xs text-slate-400 italic mb-2">Complete the entire tree diagram from the information above, then answer the questions.</p>`;
+
+  return `
+<div class="question-block mb-8">
+  <div class="flex items-baseline gap-2 mb-2">
+    <span class="text-blue-700 font-bold text-base">Question ${qNum}</span>
+    <span class="text-slate-500 text-xs uppercase tracking-wide">Tree Diagram &middot; ${diffLabel}</span>
+  </div>
+  ${introLines}
+  ${fillNote}
+  ${svgTree}
+  <ol class="list-none space-y-3 pl-0 mt-3">
+    ${qList.map((q,i)=>`<li class="flex gap-2"><span class="font-medium text-slate-600 w-6 shrink-0">${String.fromCharCode(97+i)})</span><span class="text-slate-700">${q}</span></li>`).join('')}
+  </ol>
+</div>`;
+}
+
+function buildTreeIntro(data, treeDef) {
+  const {counts,total,replacement,isSpinner} = data;
+  if(isSpinner){
+    const desc=counts.map(c=>`${c.count} ${c.label}`).join(', ');
+    return `<p class="text-slate-700 mb-2 leading-relaxed">A spinner has ${total} sections: ${desc}. It is spun <strong>twice</strong>.</p>`;
+  }
+  const repl=replacement?'with replacement':'without replacement';
+  const ctxStr=data.container?`from a ${data.container}`:'';
+  const desc=counts.map(c=>`${c.count} ${c.label}`).join(', ');
+  return `<p class="text-slate-700 mb-2 leading-relaxed">A ${data.container||'bag'} contains ${total} ${data.unit||'items'}s: ${desc}. Two ${data.unit||'item'}s are drawn <em>${repl}</em>.</p>`;
+}
+
+function makeTreeSVG(outcomes, total, replacement, difficulty) {
+  const b1=outcomes.length;
+  const b2=outcomes.length; // same branches on each node (drawing from same set)
+  const leafCount=b1*b2;
+  const rowH=Math.max(62,Math.floor(340/leafCount));
+  const svgH=leafCount*rowH+50;
+  const svgW=580;
+  const rootX=40,l1X=175,l2SplitX=265,l2X=415,combX=490,combW=82;
+
+  // Y of each leaf
+  const leafYs=[];
+  for(let i=0;i<leafCount;i++){
+    leafYs.push(35+i*(svgH-70)/(leafCount-1||1));
+  }
+  // Y of each L1 node = middle of its group of leaves
+  const l1Ys=[];
+  for(let i=0;i<b1;i++){
+    const ys=leafYs.slice(i*b2,(i+1)*b2);
+    l1Ys.push(ys.reduce((a,v)=>a+v,0)/ys.length);
+  }
+  const rootY=svgH/2;
+
+  const showAll=difficulty==='beginner';
+  const hideAll=difficulty==='advanced';
+
+  // Decide which branch probs to show for intermediate
+  const branchBlanks=[];
+  for(let i=0;i<b1*(1+b2);i++) branchBlanks.push(hideAll?true:(difficulty==='intermediate'&&Math.random()<0.45));
+
+  let s='';
+
+  // root circle
+  s+=`<circle cx="${rootX}" cy="${rootY}" r="5" fill="#374151"/>`;
+
+  // Level 1 branches (root -> L1)
+  for(let i=0;i<b1;i++){
+    const o=outcomes[i];
+    const lx=(rootX+l1X)/2;
+    const ly=(rootY+l1Ys[i])/2;
+    s+=`<line x1="${rootX}" y1="${rootY}" x2="${l1X}" y2="${l1Ys[i]}" stroke="#475569" stroke-width="1.5"/>`;
+    // prob label on branch
+    const probTxt=probLbl(o.count,total);
+    if(branchBlanks[i]){
+      s+=svgBlankBox(lx,ly-3,46,24);
+    } else {
+      s+=`<text x="${lx}" y="${ly-8}" text-anchor="middle" font-size="13" fill="#1e3a5f">${probTxt}</text>`;
+    }
+    // L1 outcome label at end of branch; split dot at l2SplitX
+    if(hideAll){
+      s+=svgBlankBox(l1X+35,l1Ys[i],60,24);
+    } else {
+      s+=`<text x="${l1X+8}" y="${l1Ys[i]+5}" font-size="13" fill="#1e3a5f">${o.label}</text>`;
+    }
+    s+=`<circle cx="${l2SplitX}" cy="${l1Ys[i]}" r="4" fill="#3b82f6"/>`;
+
+  }
+
+  // Level 2 branches (L1 -> L2)
+  let leafIdx=0;
+  for(let i=0;i<b1;i++){
+    for(let j=0;j<b2;j++){
+      const o2=outcomes[j];
+      const ly=leafYs[leafIdx];
+      s+=`<line x1="${l2SplitX}" y1="${l1Ys[i]}" x2="${l2X}" y2="${ly}" stroke="#475569" stroke-width="1.5"/>`;
+      const lx2=(l2SplitX+l2X)/2;
+      const ly2=(l1Ys[i]+ly)/2;
+      // calc prob (adjust for no-replacement)
+      let pN=o2.count, pD=total;
+      if(!replacement){
+        // if same colour, one less; denominator one less
+        pD=total-1;
+        pN=(i===j)?o2.count-1:o2.count;
+        if(pN<0)pN=0;
+      }
+      const prob2Txt=probLbl(pN,pD);
+      const blankIdx=b1+i*b2+j;
+      if(branchBlanks[blankIdx]||branchBlanks[Math.min(blankIdx,branchBlanks.length-1)]){
+        s+=svgBlankBox(lx2,ly2-3,46,24);
+      } else {
+        s+=`<text x="${lx2}" y="${ly2-8}" text-anchor="middle" font-size="13" fill="#1e3a5f">${prob2Txt}</text>`;
+      }
+      // leaf node
+      s+=`<circle cx="${l2X}" cy="${ly}" r="4" fill="#6366f1"/>`;
+      // L2 branch label — just the second-draw outcome (no repeat of first-draw label)
+      if(hideAll){
+        s+=svgBlankBox(l2X+35,ly,54,24);
+      } else {
+        s+=`<text x="${l2X+8}" y="${ly+5}" font-size="13" fill="#1e3a5f">${o2.label}</text>`;
+      }
+      // Combination path: filled example on first leaf in beginner, blank underline elsewhere
+      if(leafIdx===0&&difficulty==='beginner'){
+        s+=`<text x="${combX}" y="${ly+5}" font-size="12" fill="#374151" text-decoration="underline">${outcomes[0].label}, ${o2.label}</text>`;
+      } else {
+        s+=`<line x1="${combX}" y1="${ly+7}" x2="${combX+combW}" y2="${ly+7}" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      leafIdx++;
+    }
+  }
+
+  // level labels
+  s+=`<text x="${rootX}" y="${svgH-4}" text-anchor="middle" font-size="10" fill="#94a3b8">Start</text>`;
+  s+=`<text x="${Math.round((l1X+l2SplitX)/2)}" y="${svgH-4}" text-anchor="middle" font-size="10" fill="#94a3b8">1st draw</text>`;
+  s+=`<text x="${l2X+30}" y="${svgH-4}" text-anchor="middle" font-size="10" fill="#94a3b8">2nd draw</text>`;
+  s+=`<text x="${combX+combW/2}" y="${svgH-4}" text-anchor="middle" font-size="10" fill="#94a3b8">Outcome</text>`;
+
+  return`<div class="flex justify-center my-3 overflow-x-auto"><svg width="${svgW}" height="${svgH}" class="max-w-full">${s}</svg></div>`;
+}
+
+function buildTreeQuestions(outcomes, total, replacement, data, treeDef) {
+  const qs=[];
+  const isSpinner=data.isSpinner;
+  const noun=isSpinner?'section':(data.unit||'item');
+  const verb=isSpinner?'landing on':'drawing';
+
+  const o=outcomes[0];
+  const prob1=fracTxt(o.count,total);
+  qs.push(`On the first draw, what is the probability of ${verb} a <strong>${o.label}</strong> ${noun}? &nbsp;${blank()}`);
+
+  if(outcomes.length>=2){
+    const o2=outcomes[1];
+    qs.push(`What is P(<strong>${o.label}</strong> followed by <strong>${o2.label}</strong>)? Show your working. &nbsp;${blank()} <br><span class="text-slate-400 text-xs">Working: ${blankLg()}</span>`);
+  }
+
+  // Both same
+  qs.push(`What is P(${o.label} <strong>both</strong> times)? &nbsp;${blank()}`);
+
+  // NOT
+  const o3=outcomes[outcomes.length-1];
+  qs.push(`What is P(<strong>NOT</strong> getting ${o3.label} on the first draw)? &nbsp;${blank()}`);
+
+  // OR on second draw
+  if(outcomes.length>=2){
+    const a=outcomes[0],b=outcomes[1];
+    qs.push(`On the second draw, what is P(${a.label} <em>or</em> ${b.label})?&nbsp;${blank()}`);
+  }
+
+  const replStr=replacement?'with replacement':'without replacement';
+  qs.push(`Why does it matter that the ${noun}s are drawn <em>${replStr}</em>? ${blankLg()}`);
+
+  return qs;
+}
+
+// =====================================================================
+//  TYPE D — TWO-WAY TABLES
+// =====================================================================
+function genTypeD(qNum, difficulty) {
+  const ctx = rPick(TABLE_CONTEXTS);
+  const {rows:rowLabels, cols:colLabels} = ctx.gen();
+  const nr=rowLabels.length, nc=colLabels.length;
+
+  // Generate cell values
+  const cells=[];
+  let grandTotal=0;
+  for(let r=0;r<nr;r++){
+    const row=[];
+    for(let c=0;c<nc;c++){
+      const v=rInt(2,12); row.push(v); grandTotal+=v;
+    }
+    cells.push(row);
+  }
+  const rowTotals=cells.map(row=>row.reduce((a,v)=>a+v,0));
+  const colTotals=colLabels.map((_,c)=>cells.reduce((a,row)=>a+row[c],0));
+
+  const diffLabel={'beginner':'Beginner','intermediate':'Intermediate','advanced':'Advanced'}[difficulty];
+
+  // Decide which cells to blank
+  const blankMask=[];
+  for(let r=0;r<nr;r++){
+    const row=[];
+    for(let c=0;c<nc;c++){
+      if(difficulty==='advanced') row.push(true);
+      else if(difficulty==='intermediate') row.push(Math.random()<0.4);
+      else row.push(false);
+    }
+    blankMask.push(row);
+  }
+  const blankRowTotals=difficulty==='advanced'?rowLabels.map(()=>true):
+    difficulty==='intermediate'?rowLabels.map(()=>Math.random()<0.4):rowLabels.map(()=>false);
+  const blankColTotals=difficulty==='advanced'?colLabels.map(()=>true):
+    difficulty==='intermediate'?colLabels.map(()=>Math.random()<0.4):colLabels.map(()=>false);
+  const blankGrand=difficulty!=='beginner';
+
+  const introSentence=buildTableIntro(ctx,rowLabels,colLabels,grandTotal);
+  const tableHtml=makeTableHTML(ctx,rowLabels,colLabels,cells,rowTotals,colTotals,grandTotal,blankMask,blankRowTotals,blankColTotals,blankGrand);
+  const qList=buildTableQuestions(ctx,rowLabels,colLabels,cells,rowTotals,colTotals,grandTotal);
+
+  const fillNote=difficulty==='beginner'
+    ?`<p class="text-xs text-slate-400 italic mb-2">The table is complete — use it to answer the questions.</p>`
+    :difficulty==='intermediate'
+    ?`<p class="text-xs text-slate-400 italic mb-2">Some cells are missing. Complete the table, then answer the questions.</p>`
+    :`<p class="text-xs text-slate-400 italic mb-2">Fill in the entire table from the information above, then answer the questions.</p>`;
+
+  return `
+<div class="question-block mb-8">
+  <div class="flex items-baseline gap-2 mb-2">
+    <span class="text-blue-700 font-bold text-base">Question ${qNum}</span>
+    <span class="text-slate-500 text-xs uppercase tracking-wide">Two-Way Table &middot; ${diffLabel}</span>
+  </div>
+  ${introSentence}
+  ${fillNote}
+  ${tableHtml}
+  <ol class="list-none space-y-3 pl-0 mt-4">
+    ${qList.map((q,i)=>`<li class="flex gap-2"><span class="font-medium text-slate-600 w-6 shrink-0">${String.fromCharCode(97+i)})</span><span class="text-slate-700">${q}</span></li>`).join('')}
+  </ol>
+</div>`;
+}
+
+function buildTableIntro(ctx,rowLabels,colLabels,total){
+  const r=rowLabels.join(', '), c=colLabels.join(', ');
+  return`<p class="text-slate-700 mb-3 leading-relaxed">A survey of <strong>${total} students</strong> recorded their <em>${ctx.rowLabel.toLowerCase()}</em> and <em>${ctx.colLabel.toLowerCase()}</em>. The results are shown in the table below.</p>`;
+}
+
+function makeTableHTML(ctx,rowLabels,colLabels,cells,rowTotals,colTotals,grandTotal,blankMask,blankRowTotals,blankColTotals,blankGrand){
+  const cellBox=`<span class="inline-block border border-slate-400 rounded w-12 h-6 bg-white">&nbsp;</span>`;
+  let html=`<div class="overflow-x-auto my-3"><table class="text-sm border-collapse w-full">`;
+  // header row
+  html+=`<thead><tr><th class="border border-slate-300 bg-slate-100 px-3 py-1.5 text-left text-slate-600">${ctx.rowLabel} / ${ctx.colLabel}</th>`;
+  for(const c of colLabels) html+=`<th class="border border-slate-300 bg-slate-100 px-3 py-1.5 text-slate-600">${c}</th>`;
+  html+=`<th class="border border-slate-300 bg-slate-200 px-3 py-1.5 text-slate-700 font-bold">Total</th></tr></thead><tbody>`;
+  // data rows
+  for(let r=0;r<rowLabels.length;r++){
+    html+=`<tr><td class="border border-slate-300 bg-slate-50 px-3 py-1.5 font-medium text-slate-700">${rowLabels[r]}</td>`;
+    for(let c=0;c<colLabels.length;c++){
+      html+=`<td class="border border-slate-300 px-3 py-1.5 text-center">`;
+      html+=blankMask[r][c]?cellBox:cells[r][c];
+      html+=`</td>`;
+    }
+    html+=`<td class="border border-slate-300 bg-slate-50 px-3 py-1.5 text-center font-semibold">`;
+    html+=blankRowTotals[r]?cellBox:rowTotals[r];
+    html+=`</td></tr>`;
+  }
+  // totals row
+  html+=`<tr><td class="border border-slate-300 bg-slate-200 px-3 py-1.5 font-bold text-slate-700">Total</td>`;
+  for(let c=0;c<colLabels.length;c++){
+    html+=`<td class="border border-slate-300 bg-slate-50 px-3 py-1.5 text-center font-semibold">`;
+    html+=blankColTotals[c]?cellBox:colTotals[c];
+    html+='</td>';
+  }
+  html+=`<td class="border border-slate-300 bg-slate-200 px-3 py-1.5 text-center font-bold">`;
+  html+=blankGrand?cellBox:grandTotal;
+  html+=`</td></tr></tbody></table></div>`;
+  return html;
+}
+
+function buildTableQuestions(ctx,rowLabels,colLabels,cells,rowTotals,colTotals,grandTotal){
+  const qs=[];
+  const r0=0,c0=0;
+  qs.push(`How many students have <strong>${rowLabels[r0]}</strong>? &nbsp;${blankSm()}`);
+  if(colLabels.length>1) qs.push(`How many students have <strong>${colLabels[1]}</strong>? &nbsp;${blankSm()}`);
+  qs.push(`A student is chosen at random. What is P(<strong>${rowLabels[r0]}</strong>)? &nbsp;${blank()}`);
+  const r1=Math.min(1,rowLabels.length-1);
+  qs.push(`What is P(<strong>NOT</strong> ${rowLabels[r1]})? &nbsp;${blank()}`);
+  if(rowLabels.length>=2) qs.push(`What is P(<strong>${rowLabels[0]} OR ${rowLabels[1]}</strong>)? &nbsp;${blank()}`);
+  qs.push(`What is P(<strong>${rowLabels[r0]} AND ${colLabels[c0]}</strong>)? &nbsp;${blank()}`);
+  if(colLabels.length>=2){
+    qs.push(`What is P(<strong>${colLabels[0]} OR ${colLabels[1]}</strong>)? &nbsp;${blank()}`);
+  }
+  qs.push(`What fraction of all students have <strong>${rowLabels[rowLabels.length-1]}</strong>? &nbsp;${blank()}`);
+  return qs;
+}
+
+// =====================================================================
+//  TYPE E — PROBABILITY REPRESENTATIONS
+// =====================================================================
+function genTypeE(qNum) {
+  const likelihoodScale=[
+    {word:'Impossible',range:[0,0]},
+    {word:'Very unlikely',range:[0.01,0.15]},
+    {word:'Unlikely',range:[0.16,0.40]},
+    {word:'Even chance',range:[0.49,0.51]},
+    {word:'Likely',range:[0.60,0.84]},
+    {word:'Very likely',range:[0.85,0.99]},
+    {word:'Certain',range:[1,1]},
+  ];
+  function likelihoodWord(p){
+    for(const {word,range} of likelihoodScale){
+      if(p>=range[0]&&p<=range[1]) return word;
+    }
+    if(p<0.5) return 'Unlikely'; return 'Likely';
+  }
+
+  // Generate 8 probability values spanning the range
+  const niceFracs=[
+    [0,1],[1,10],[1,5],[1,4],[3,10],[1,3],[2,5],[1,2],[3,5],[2,3],[7,10],[3,4],[4,5],[9,10],[1,1]
+  ];
+  const chosen=rPickN(niceFracs,8);
+  // Randomly decide which form is given for each row
+  const giveTypes=['fraction','decimal','percent'];
+
+  const rows=chosen.map(([n,d])=>{
+    const p=d===0?0:n/d;
+    const givenType=rPick(giveTypes);
+    return{n,d,p,givenType,
+      fracStr:d===1?(n===0?'0':'1'):`${n}/${d}`,
+      decStr:decStr(n,d),
+      pctStr:pct(n,d),
+      likelihood:likelihoodWord(p)
+    };
+  });
+
+  const tableRows=rows.map(row=>{
+    const f=row.givenType==='fraction'?`<strong>${row.fracStr}</strong>`:blank('65px');
+    const d=row.givenType==='decimal'?`<strong>${row.decStr}</strong>`:blank('65px');
+    const pe=row.givenType==='percent'?`<strong>${row.pctStr}</strong>`:blank('65px');
+    const lk=blank('110px');
+    return`<tr class="border border-slate-200">
+      <td class="border border-slate-200 px-3 py-2 text-center">${f}</td>
+      <td class="border border-slate-200 px-3 py-2 text-center">${d}</td>
+      <td class="border border-slate-200 px-3 py-2 text-center">${pe}</td>
+      <td class="border border-slate-200 px-3 py-2 text-center">${lk}</td>
+    </tr>`;
+  }).join('');
+
+  const likWords=likelihoodScale.map(l=>l.word).join(' &nbsp;·&nbsp; ');
+
+  return`
+<div class="question-block mb-8">
+  <div class="flex items-baseline gap-2 mb-2">
+    <span class="text-blue-700 font-bold text-base">Question ${qNum}</span>
+    <span class="text-slate-500 text-xs uppercase tracking-wide">Probability Representations</span>
+  </div>
+  <p class="text-slate-700 mb-1">Complete the table by filling in the missing values. Choose a likelihood word from the box below.</p>
+  <p class="text-xs text-slate-500 mb-3 bg-slate-50 border border-slate-200 rounded px-3 py-1.5">
+    <strong>Likelihood words:</strong> &nbsp;${likWords}
+  </p>
+  <div class="overflow-x-auto">
+  <table class="text-sm border-collapse w-full">
+    <thead>
+      <tr class="bg-slate-100">
+        <th class="border border-slate-300 px-3 py-2 text-slate-700">Fraction</th>
+        <th class="border border-slate-300 px-3 py-2 text-slate-700">Decimal</th>
+        <th class="border border-slate-300 px-3 py-2 text-slate-700">Percentage</th>
+        <th class="border border-slate-300 px-3 py-2 text-slate-700">Likelihood Word</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+  </div>
+  <p class="text-xs text-slate-500 mt-3">Bonus: Draw an arrow on the number line to show each probability.</p>
+  <div class="mt-2 ml-2">
+    <svg width="440" height="42">
+      <line x1="20" y1="20" x2="420" y2="20" stroke="#374151" stroke-width="2"/>
+      ${[0,0.25,0.5,0.75,1].map((v,i)=>{
+        const x=20+v*400;
+        return`<line x1="${x}" y1="14" x2="${x}" y2="26" stroke="#374151" stroke-width="1.5"/>
+               <text x="${x}" y="38" text-anchor="middle" font-size="11" fill="#374151">${v===0.5?'½':v===0.25?'¼':v===0.75?'¾':v}</text>`;
+      }).join('')}
+      <text x="20" y="10" text-anchor="middle" font-size="10" fill="#6b7280">Impossible</text>
+      <text x="420" y="10" text-anchor="middle" font-size="10" fill="#6b7280">Certain</text>
+    </svg>
+  </div>
+</div>`;
+}
+
+// =====================================================================
+//  WORKSHEET HEADER
+// =====================================================================
+function makeHeader(name, date) {
+  return`
+<div class="flex justify-between items-start mb-6 pb-4 border-b border-slate-200">
+  <div>
+    <h2 class="text-xl font-bold text-slate-800">Probability Worksheet</h2>
+    <p class="text-slate-400 text-xs mt-0.5">Show all working. Simplify all fractions where possible.</p>
+    <p class="text-slate-300 text-xs mt-1">oddsof.smoljames.com</p>
+  </div>
+  <div class="text-sm text-slate-600 space-y-1 text-right">
+    <div>Name: <span class="ans-line ans-line-lg"></span></div>
+    <div>Date: <span class="ans-line ans-line-sm"></span></div>
+  </div>
+</div>`;
+}
+
+// =====================================================================
+//  MAIN GENERATE FUNCTION
+// =====================================================================
+function generate() {
+  const btn=document.getElementById('generateBtn');
+  const spinner=document.getElementById('generateSpinner');
+  const btnText=document.getElementById('generateBtnText');
+  btn.disabled=true;
+  spinner.classList.remove('hidden');
+  btnText.textContent='Generating…';
+  setTimeout(_doGenerate, 0);
+}
+function _doGenerate() {
+  const btn=document.getElementById('generateBtn');
+  const spinner=document.getElementById('generateSpinner');
+  const btnText=document.getElementById('generateBtnText');
+  const wantA=document.getElementById('chkA').checked;
+  const wantB=document.getElementById('chkB').checked;
+  const wantC=document.getElementById('chkC').checked;
+  const wantD=document.getElementById('chkD').checked;
+  const wantE=document.getElementById('chkE').checked;
+  const cntA=parseInt(document.getElementById('cntA').value)||0;
+  const cntB=parseInt(document.getElementById('cntB').value)||0;
+  const cntC=parseInt(document.getElementById('cntC').value)||0;
+  const cntD=parseInt(document.getElementById('cntD').value)||0;
+  const cntE=parseInt(document.getElementById('cntE').value)||0;
+  const diffB=document.getElementById('diffB').value;
+  const diffC=document.getElementById('diffC').value;
+  const diffD=document.getElementById('diffD').value;
+
+  if(!wantA&&!wantB&&!wantC&&!wantD&&!wantE){
+    alert('Please select at least one worksheet type.');
+    return;
+  }
+
+  let html=makeHeader();
+  let qNum=1;
+  let sectionHtml='';
+
+  if(wantE&&cntE>0){
+    sectionHtml+=`<div class="mb-2 mt-4"><span class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-0.5">Section A — Probability Representations</span></div>`;
+    for(let i=0;i<cntE;i++) sectionHtml+=genTypeE(qNum++);
+  }
+  if(wantA&&cntA>0){
+    sectionHtml+=`<div class="mb-2 mt-4"><span class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-0.5">Section B — Basic Probability</span></div>`;
+    for(let i=0;i<cntA;i++) sectionHtml+=genTypeA(qNum++);
+  }
+  if(wantB&&cntB>0){
+    sectionHtml+=`<div class="mb-2 mt-4"><span class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-0.5">Section C — Venn Diagrams</span></div>`;
+    for(let i=0;i<cntB;i++) sectionHtml+=genTypeB(qNum++,diffB);
+  }
+  if(wantC&&cntC>0){
+    sectionHtml+=`<div class="mb-2 mt-4"><span class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-0.5">Section D — Tree Diagrams</span></div>`;
+    for(let i=0;i<cntC;i++) sectionHtml+=genTypeC(qNum++,diffC);
+  }
+  if(wantD&&cntD>0){
+    sectionHtml+=`<div class="mb-2 mt-4"><span class="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200 pb-0.5">Section E — Two-Way Tables</span></div>`;
+    for(let i=0;i<cntD;i++) sectionHtml+=genTypeD(qNum++,diffD);
+  }
+
+  html+=sectionHtml;
+
+  const out=document.getElementById('worksheet');
+  out.innerHTML=`<div class="ws-page bg-white rounded-xl shadow-sm border border-slate-200 p-8" style="min-width:600px">${html}</div>`;
+  document.getElementById('worksheetWrap').classList.remove('hidden');
+  document.getElementById('worksheetWrap').scrollIntoView({behavior:'smooth',block:'start'});
+  btn.disabled=false;
+  spinner.classList.add('hidden');
+  btnText.textContent='Generate Worksheet';
+}
+
+// Helper aliases
+function blankSm(){return blank('55px');}
+function blankLg(){return blank('130px');}
+function decStr(n,d){if(d===0)return'0';const v=n/d;const s=v.toFixed(4).replace(/\.?0+$/,'');return s||'0';}
+function pct(n,d){if(d===0)return'0%';const v=(n/d)*100;return(v===Math.floor(v)?v:v.toFixed(1))+'%';}
+</script>
+
+</body>
+</html>
