@@ -60,7 +60,7 @@ const dragon = [
 const linksHtml = apps
   .map(app => {
     const href = `/${encodeURIComponent(app.slug)}/`
-    return `<a href="${href}" data-title="${escapeHtml(app.title.toLowerCase())}" data-slug="${escapeHtml(app.slug.toLowerCase())}">${escapeHtml(app.title)}</a>`
+    return `<a href="${href}" target="_blank" data-title="${escapeHtml(app.title.toLowerCase())}" data-slug="${escapeHtml(app.slug.toLowerCase())}">${escapeHtml(app.title)}</a>`
   })
   .join('\n')
 
@@ -68,7 +68,7 @@ const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>dragon index</title>
+  <title>shardofthedragon | websites for fun</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     html, body {
