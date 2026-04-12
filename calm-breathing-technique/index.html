@@ -585,6 +585,8 @@ function onDown(e) {
   state  = 'dragging';
   dragX0 = e.clientX;
   dragY0 = e.clientY;
+  curX   = e.clientX;
+  curY   = e.clientY;
   fog    = 0;
   $beacon.style.left = e.clientX + 'px';
   $beacon.style.top  = e.clientY + 'px';
