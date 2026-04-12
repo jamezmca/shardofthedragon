@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bruh don't overthink it</title>
+    <meta name="description" content="Answer 3 questions, get a decision. No dithering.">
+    <!-- [do you want to][is it good for you][do you have the energy]=[true/false]
+
+    000=0
+    001=0
+    010=0
+    011=1
+    100=0
+    101=0
+    110=1
+    111=1 -->
+
+</head>
+
+<body>
+    <h1>bruh don't overthink it</h1>
+
+    <div id="questions">
+        <p id="question-text"></p>
+        <button onclick="answer(true)">yes</button>
+        <button onclick="answer(false)">no</button>
+        <button id="btn-back" onclick="go(-1)">&lt;</button>
+        <button id="btn-forward" onclick="go(1)">&gt;</button>
+        <button onclick="reset()">reset</button>
+    </div>
+
+    <div id="outcome" style="display:none">
+        <p id="outcome-text"></p>
+        <button onclick="reset()">reset</button>
+    </div>
+
+    <script>
+        const questions = [
+            "do you want to?",
+            "is it good for you?",
+            "do you have the energy?"
+        ];
+
+        // truth table: [want][good][energy] -> 1 = do it, 0 = don't
+        const table = {
+            "000": 0, "001": 0, "010": 0, "011": 1,
+            "100": 0, "101": 0, "110": 1, "111": 1
+        };
+
+        let current = 0;
+        let answers = [null, null, null];
+
+        function render() {
+            document.getElementById("question-text").textContent =
+                "(" + (current + 1) + "/3) " + questions[current];
+            document.getElementById("btn-back").disabled = current === 0;
+            document.getElementById("btn-forward").disabled = current === 2 || answers[current] === null;
+        }
+
+        function answer(val) {
+            answers[current] = val;
+            if (current < 2) {
+                current++;
+            } else {
+                showOutcome();
+                return;
+            }
+            render();
+        }
+
+        function go(dir) {
+            const next = current + dir;
+            if (next < 0) return;
+            if (next > 2) return;
+            // can't go forward past unanswered
+            if (dir > 0 && answers[current] === null) return;
+            current = next;
+            render();
+        }
+
+        function showOutcome() {
+            const key = answers.map(a => a ? "1" : "0").join("");
+            const result = table[key];
+            document.getElementById("questions").style.display = "none";
+            document.getElementById("outcome").style.display = "";
+            document.getElementById("outcome-text").textContent =
+                result ? "✅ do it!" : "❌ don't do it";
+        }
+
+        function reset() {
+            current = 0;
+            answers = [null, null, null];
+            document.getElementById("outcome").style.display = "none";
+            document.getElementById("questions").style.display = "";
+            render();
+        }
+
+        render();
+    </script>
+</body>
+
+</html>
