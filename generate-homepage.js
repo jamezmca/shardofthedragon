@@ -4,65 +4,65 @@ const path = require('path')
 const root = process.cwd()
 
 function escapeHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 function getTitle(html) {
-    const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
-    return match ? match[1].trim() : ''
+  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+  return match ? match[1].trim() : ''
 }
 
 function collectApps() {
-    const entries = fs.readdirSync(root, { withFileTypes: true })
+  const entries = fs.readdirSync(root, { withFileTypes: true })
 
-    return entries
-        .filter(entry => entry.isDirectory())
-        .map(entry => {
-            const slug = entry.name
-            const htmlPath = path.join(root, slug, 'index.html')
+  return entries
+    .filter(entry => entry.isDirectory())
+    .map(entry => {
+      const slug = entry.name
+      const htmlPath = path.join(root, slug, 'index.html')
 
-            if (!fs.existsSync(htmlPath)) return null
+      if (!fs.existsSync(htmlPath)) return null
 
-            const html = fs.readFileSync(htmlPath, 'utf8')
-            const title = getTitle(html) || slug
+      const html = fs.readFileSync(htmlPath, 'utf8')
+      const title = getTitle(html) || slug
 
-            return { slug, title }
-        })
-        .filter(Boolean)
-        .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
+      return { slug, title }
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }))
 }
 
 const apps = collectApps()
 
 const dragon = [
-    "                                                       / \\  //\\\\",
-    "                                        |\\___/|      /   \\//  \\\\",
-    "                                        /0  0  \\__  /    //  | \\ \\",
-    "                                       /     /  \\/_/    //   |  \\  \\",
-    "                                       @_^_@'/   \\/_   //    |   \\   \\",
-    "                                       //_^_/     \\/_ //     |    \\    \\",
-    "                                    ( //) |        \\///      |     \\     \\",
-    "                                  ( / /) _|_ /   )  //       |      \\     _\\\\",
-    "                                ( // /) '/,_ _ _/  ( ; -.    |    _ _\\\\.-~        .-~~~^-.",
-    "                          (( / / )) ,-{        _      `-.|.-~-.           .~         `.",
-    "                         (( // / ))  '/\\\\      /                 ~-. _ .-~      .-~^-.  \\",
-    "                         (( /// ))      `.   {            }                   /      \\  \\",
-    "                          (( / ))     .----~-.\\\\        \\-'                 .~         \\  `. \\^-.",
-    "                                     ///.----..>        \\             _ -~             `.  ^-`   ^-_",
-    "                                       ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~"
+  "                                                       / \\  //\\\\",
+  "                                        |\\___/|      /   \\//  \\\\",
+  "                                        /0  0  \\__  /    //  | \\ \\",
+  "                                       /     /  \\/_/    //   |  \\  \\",
+  "                                       @_^_@'/   \\/_   //    |   \\   \\",
+  "                                       //_^_/     \\/_ //     |    \\    \\",
+  "                                    ( //) |        \\///      |     \\     \\",
+  "                                  ( / /) _|_ /   )  //       |      \\     _\\\\",
+  "                                ( // /) '/,_ _ _/  ( ; -.    |    _ _\\\\.-~        .-~~~^-.",
+  "                          (( / / )) ,-{        _      `-.|.-~-.           .~         `.",
+  "                         (( // / ))  '/\\\\      /                 ~-. _ .-~      .-~^-.  \\",
+  "                         (( /// ))      `.   {            }                   /      \\  \\",
+  "                          (( / ))     .----~-.\\\\        \\-'                 .~         \\  `. \\^-.",
+  "                                     ///.----..>        \\             _ -~             `.  ^-`   ^-_",
+  "                                       ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~"
 ].join('\n')
 
 const linksHtml = apps
-    .map(app => {
-        const href = `/${encodeURIComponent(app.slug)}/`
-        return `<a href="${href}" data-title="${escapeHtml(app.title.toLowerCase())}" data-slug="${escapeHtml(app.slug.toLowerCase())}">${escapeHtml(app.title)}</a>`
-    })
-    .join('\n')
+  .map(app => {
+    const href = `/${encodeURIComponent(app.slug)}/`
+    return `<a href="${href}" data-title="${escapeHtml(app.title.toLowerCase())}" data-slug="${escapeHtml(app.slug.toLowerCase())}">${escapeHtml(app.title)}</a>`
+  })
+  .join('\n')
 
 const html = `<!doctype html>
 <html lang="en">
@@ -126,11 +126,12 @@ const html = `<!doctype html>
 </head>
 <body>
   <pre id="dragon" aria-hidden="true">${escapeHtml(dragon)}</pre>
-<a href="https://github.com/jamezmca/shardofthedragon" target="_blank">github repo ⭐️</a>
+
   <div id="ui">
     <input id="search" type="text" placeholder="search" autocomplete="off">
     <div id="count">${apps.length} total</div>
     <div id="links">
+    <a href="https://github.com/jamezmca/shardofthedragon" target="_blank">github repo ⭐️</a>
 ${linksHtml}
     </div>
   </div>
