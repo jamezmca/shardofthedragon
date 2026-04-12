@@ -153,6 +153,52 @@
     }
     #reset:hover { color: rgba(46, 40, 36, 0.58); }
 
+    /* ── drag beacon ── */
+    #beacon {
+      display: none;
+      position: fixed;
+      pointer-events: none;
+      z-index: 4;
+      transform: translate(-50%, -50%);
+    }
+    #beacon.active { display: block; }
+
+    #beacon-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(46,40,36,0.65);
+      transform: translate(-50%, -50%);
+    }
+
+    #beacon-ring {
+      position: absolute;
+      width: 96px;   /* DEAD_ZONE * 2 = 48 * 2 */
+      height: 96px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(46,40,36,0.35);
+      transform: translate(-50%, -50%);
+      transition: border-color 0.2s;
+    }
+    #beacon.unlocked #beacon-ring {
+      border-color: rgba(46,40,36,0.12);
+    }
+
+    @keyframes beacon-pulse {
+      from { transform: translate(-50%,-50%) scale(1);   opacity: 0.30; }
+      to   { transform: translate(-50%,-50%) scale(1.6); opacity: 0;    }
+    }
+    #beacon-pulse {
+      position: absolute;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(46,40,36,0.30);
+      transform: translate(-50%,-50%);
+      animation: beacon-pulse 1.4s ease-out infinite;
+    }
+
     /* ── anger tag ── */
     #tag {
       position: fixed;
@@ -178,7 +224,7 @@
 <canvas id="fog"></canvas>
 
 <div id="hint">
-  <span id="hint-head">find calm admist the storm.</span>
+  <span id="hint-head">find calm amidst the storm.</span>
   <span id="hint-body">press and hold anywhere, then drag — the further you go,<br>the longer we breathe together until the fog lifts.</span>
 </div>
 
@@ -191,6 +237,11 @@
 
 <div id="timer"></div>
 <button id="reset">begin again</button>
+<div id="beacon">
+  <div id="beacon-pulse"></div>
+  <div id="beacon-ring"></div>
+  <div id="beacon-dot"></div>
+</div>
 <div id="tag"></div>
 
 <script>
@@ -204,8 +255,9 @@ const $bui   = document.getElementById('breath-ui');
 const $bcvs  = document.getElementById('breath-canvas');
 const $phase = document.getElementById('phase-label');
 const $reset = document.getElementById('reset');
-const $tag   = document.getElementById('tag');
-const $timer = document.getElementById('timer');
+const $tag    = document.getElementById('tag');
+const $timer  = document.getElementById('timer');
+const $beacon = document.getElementById('beacon');
 
 const lc = $ls.getContext('2d');
 const fc = $fg.getContext('2d');
@@ -215,6 +267,8 @@ const bc = $bcvs.getContext('2d');
 let state   = 'idle';   // idle | dragging | breathing | done
 let dragX0  = 0;
 let dragY0  = 0;
+let curX    = 0;
+let curY    = 0;
 let anger   = 0;        // 0–1
 let fog     = 0;        // current opacity
 let fog0    = 0;        // opacity at release
@@ -409,6 +463,8 @@ function getAngerBand(level) {
   return ANGER_BANDS.find(b => level < b.max) ?? ANGER_BANDS[ANGER_BANDS.length - 1];
 }
 
+const DEAD_ZONE = 48;   // px — drag within this radius cancels on release
+
 let _ptrType = 'mouse';
 
 function showTag(e) {
@@ -530,7 +586,10 @@ function onDown(e) {
   dragX0 = e.clientX;
   dragY0 = e.clientY;
   fog    = 0;
-  showTag(e);
+  $beacon.style.left = e.clientX + 'px';
+  $beacon.style.top  = e.clientY + 'px';
+  $beacon.classList.add('active');
+  $beacon.classList.remove('unlocked');
 }
 
 function onMove(e) {
@@ -539,15 +598,31 @@ function onMove(e) {
   const dx   = e.clientX - dragX0;
   const dy   = e.clientY - dragY0;
   const dist = Math.sqrt(dx * dx + dy * dy);
-  anger = Math.max(0, Math.min(1, dist / (Math.min(innerWidth, innerHeight) * 0.70)));
+
+  curX = e.clientX;
+  curY = e.clientY;
+
+  if (dist < DEAD_ZONE) {
+    anger = 0;
+    fog   = 0;
+    $hint.style.opacity = '1';
+    hideTag();
+    $beacon.classList.remove('unlocked');
+    return;
+  }
+
+  $beacon.classList.add('unlocked');
+  anger = Math.max(0, Math.min(1, (dist - DEAD_ZONE) / (Math.min(innerWidth, innerHeight) * 0.70 - DEAD_ZONE)));
   fog   = anger * 0.92;
   $hint.style.opacity = String(Math.max(0, 1 - anger * 4));
+  showTag(e);
   moveTag(e);
 }
 
 function onUp(e) {
   if (state !== 'dragging') return;
   e.preventDefault();
+  $beacon.classList.remove('active', 'unlocked');
   hideTag();
 
   if (anger < 0.08) {
@@ -633,6 +708,17 @@ function tick(ts) {
   }
 
   drawFog();
+  if (state === 'dragging') {
+    fc.save();
+    fc.setLineDash([5, 6]);
+    fc.lineWidth   = 1.5;
+    fc.strokeStyle = 'rgba(46,40,36,0.30)';
+    fc.beginPath();
+    fc.moveTo(dragX0, dragY0);
+    fc.lineTo(curX, curY);
+    fc.stroke();
+    fc.restore();
+  }
   drawBreath();
 
   requestAnimationFrame(tick);

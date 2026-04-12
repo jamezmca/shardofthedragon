@@ -126,7 +126,7 @@ const html = `<!doctype html>
 </head>
 <body>
   <pre id="dragon" aria-hidden="true">${escapeHtml(dragon)}</pre>
-
+<a href="https://github.com/jamezmca/shardofthedragon" target="_blank">github repo ⭐️</a>
   <div id="ui">
     <input id="search" type="text" placeholder="search" autocomplete="off">
     <div id="count">${apps.length} total</div>
