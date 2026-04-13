@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Daddy Read To Me | Free Text to Speech, No Ads, No Sign Up</title>
+  <meta name="description" content="Free text to speech in your browser. Paste any text and hear it read aloud instantly — no ads, no sign up, no server. Your text never leaves your device.">
+  <meta property="og:title" content="Big Daddy Read To Me">
+  <meta property="og:description" content="Free text to speech in your browser. No ads, no sign up, no server. Your text never leaves your device.">
+</head>
+
+<body>
+
+  <h1>Big Daddy Read To Me</h1>
+
+  <p><i><strong>100%</strong> local — runs entirely in your browser, no server, no sign up</i></p>
+
+  <div>
+    <label for="voice-select">Voice: </label>
+    <select id="voice-select"></select>
+  </div>
+
+  <br>
+
+  <div>
+    <textarea id="text-input" rows="6" cols="60" placeholder="Enter text to read aloud..."></textarea>
+  </div>
+
+  <br>
+
+  <div>
+    <button id="speak-btn">Read to Me</button>
+    <button id="reset-btn" hidden>Reset</button>
+    <span id="status-text"></span>
+  </div>
+
+  <div id="output" hidden>
+    <br>
+    <audio id="audio-player" controls></audio>
+    <br>
+    <button id="download-btn">Download WAV</button>
+  </div>
+
+  <script type="module" src="./utils/app.js"></script>
+</body>
+
+</html>
