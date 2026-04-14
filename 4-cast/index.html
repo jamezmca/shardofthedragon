@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4-cast</title>
+  <meta name="description" content="Free in-browser weather with full-page animated scenes. No ads, no sign up.">
+  <link href="https://fonts.cdnfonts.com/css/recoleta" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- HOME: shown when no ?location param -->
+  <div id="home">
+    <h1 class="headline">What's the weather in...</h1>
+    <div class="search-wrap">
+      <input type="text" id="search-input" autocomplete="off" spellcheck="false" placeholder="type a city...">
+      <ul id="suggestions" hidden></ul>
+    </div>
+  </div>
+
+  <!-- WEATHER: shown when location is resolved -->
+  <div id="weather" hidden>
+    <div class="sky"></div>
+    <div class="sun-moon"></div>
+    <div class="back-landscape"></div>
+    <div class="landscape"></div>
+    <div class="clouds">
+      <div class="cloud cloud-a"></div>
+      <div class="cloud cloud-b"></div>
+      <div class="cloud cloud-c"></div>
+    </div>
+    <div class="weather-fx"></div>
+    <div class="lightning-flash"></div>
+    <div class="blizzard-fog"></div>
+    <div class="scanlines"></div>
+    <div class="ui-overlay">
+      <p class="ui-location" id="ui-location"></p>
+      <p class="ui-temp"     id="ui-temp"></p>
+      <p class="ui-rain"     id="ui-rain"></p>
+      <button id="btn-change">change location</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

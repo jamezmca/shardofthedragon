@@ -76,6 +76,8 @@ speakBtn.addEventListener('click', () => {
   speakBtn.disabled = true;
   resetBtn.hidden = false;
   outputDiv.hidden = true;
+  downloadBtn.hidden = false;
+  downloadBtn.disabled = true;
   startDots('Synthesizing');
 
   worker.postMessage({
@@ -98,6 +100,8 @@ resetBtn.addEventListener('click', () => {
   textInput.value = '';
   audioPlayer.src = '';
   outputDiv.hidden = true;
+  downloadBtn.hidden = true;
+  downloadBtn.disabled = true;
   speakBtn.disabled = false;
   resetBtn.hidden = true;
   setStatus('Model ready');
@@ -154,12 +158,15 @@ function handleResult({ audio, sampling_rate }) {
   currentAudioUrl = URL.createObjectURL(blob);
   audioPlayer.src = currentAudioUrl;
   outputDiv.hidden = false;
+  downloadBtn.disabled = false;
   speakBtn.disabled = false;
   setStatus('Done');
 }
 
 function handleError({ message }) {
   stopDots();
+  downloadBtn.hidden = true;
+  downloadBtn.disabled = true;
   setStatus('Error: ' + message);
   speakBtn.disabled = false;
 }
