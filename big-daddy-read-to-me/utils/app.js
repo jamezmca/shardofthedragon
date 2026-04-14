@@ -25,6 +25,7 @@ const VOICES = [
 
 const voiceSelect = document.getElementById('voice-select');
 const textInput = document.getElementById('text-input');
+const fileInput = document.getElementById('file-input');
 const speakBtn = document.getElementById('speak-btn');
 const resetBtn = document.getElementById('reset-btn');
 const statusText = document.getElementById('status-text');
@@ -38,6 +39,15 @@ for (const voice of VOICES) {
   opt.textContent = voice.label;
   voiceSelect.appendChild(opt);
 }
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { textInput.value = e.target.result; };
+  reader.onerror = () => { setStatus('Error reading file'); };
+  reader.readAsText(file);
+});
 
 let worker = null;
 let currentAudioUrl = null;
@@ -98,6 +108,7 @@ resetBtn.addEventListener('click', () => {
     currentAudioUrl = null;
   }
   textInput.value = '';
+  fileInput.value = '';
   audioPlayer.src = '';
   outputDiv.hidden = true;
   downloadBtn.hidden = true;
