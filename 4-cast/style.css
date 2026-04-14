@@ -364,15 +364,29 @@ html, body {
 [data-theme="overcast-showers"] .cloud-d { top: 36%; height: 88px;  width: 260px; }
 
 /*
-  Pixel raindrop: 2×10px drop in a wider 28×52px tile — fewer drops per screen,
-  gentler spacing for "light showers" feel.
+  Pixel raindrop: 2×10px drop in a 28×52px tile.
+  A drifting mask creates 2-3 soft rain "curtains" per screen that scroll
+  at roughly the same speed as the clouds, so rain appears to fall from them.
 */
 [data-theme="overcast-showers"] .weather-fx {
   background-image:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 52'%3E%3Crect x='13' y='10' width='2' height='10' fill='%23a8c8e8' opacity='.55'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 52'%3E%3Crect x='13' y='32' width='2' height='10' fill='%23a8c8e8' opacity='.38'/%3E%3C/svg%3E");
   background-size: 28px 52px, 38px 64px;
-  animation: drops-shower 1.6s linear infinite -0.8s;
+  /* Mask: two soft rain curtains separated by dry gaps in an 800px repeating tile */
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0,0,0,0.6) 6%,  black 14%, black 38%,
+    rgba(0,0,0,0.3) 46%, transparent 54%,
+    rgba(0,0,0,0.5) 60%, black 67%, black 86%,
+    rgba(0,0,0,0.3) 92%, transparent 100%
+  );
+  mask-size: 800px 100%;
+  mask-repeat: repeat-x;
+  /* drops-shower scrolls background-position; rain-patches scrolls mask-position */
+  animation: drops-shower 1.6s linear infinite -0.8s,
+             rain-patches 32s linear infinite;
 }
 
 [data-theme="overcast-showers"] .ui-location { color: #e5e7eb; }
@@ -414,6 +428,10 @@ html, body {
 [data-theme="light-rain"] #btn-change  { color: #f1f5f9; }
 
 /* ─── 6. HEAVY RAIN ──────────────────────────────────────────────────────────── */
+/* Clouds sit in front of the rain — they're the source, not a backdrop */
+[data-theme="heavy-rain"] .clouds     { z-index: 6; }
+[data-theme="heavy-rain"] .weather-fx { z-index: 5; }
+
 [data-theme="heavy-rain"] .sky {
   background: linear-gradient(180deg,
     #0f172a 0%, #1e293b 25%, #334155 55%, #475569 100%);
@@ -555,6 +573,12 @@ html, body {
 @keyframes drops-shower {
   from { background-position: 0 0,   0 0; }
   to   { background-position: 0 52px, 0 64px; }
+}
+
+/* Scrolls the rain curtain mask rightward — one full mask-size per cycle */
+@keyframes rain-patches {
+  from { mask-position: 0 0; }
+  to   { mask-position: 800px 0; }
 }
 
 @keyframes drops-light {
