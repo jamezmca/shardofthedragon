@@ -10,39 +10,26 @@ html, body {
 /* ─── DEV PANEL ────────────────────────────────────────────────────────────── */
 #dev-panel {
   position: fixed;
-  bottom: 1.25rem;
-  right: 1.25rem;
+  bottom: 1.25rem; right: 1.25rem;
   z-index: 9999;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.55);
+  display: flex; align-items: center; gap: 0.5rem;
+  background: rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
   padding: 0.45rem 0.75rem;
   border-radius: 0.6rem;
   border: 1px solid rgba(255,255,255,0.12);
 }
-
 .dev-label {
-  font-family: monospace;
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #4ade80;
+  font-family: monospace; font-size: 0.65rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #4ade80;
 }
-
 #dev-select {
-  font-family: monospace;
-  font-size: 0.8rem;
-  background: rgba(0,0,0,0.5);
-  color: #f9fafb;
+  font-family: monospace; font-size: 0.8rem;
+  background: rgba(0,0,0,0.5); color: #f9fafb;
   border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 0.35rem;
-  padding: 0.25rem 0.4rem;
-  cursor: pointer;
-  outline: none;
+  border-radius: 0.35rem; padding: 0.25rem 0.4rem;
+  cursor: pointer; outline: none;
 }
-
 #dev-select:focus { border-color: rgba(255,255,255,0.4); }
 
 /* ─── HOME SCREEN ──────────────────────────────────────────────────────────── */
@@ -83,12 +70,10 @@ html, body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 #search-input:focus {
   border-color: #b0a494;
   box-shadow: 0 2px 16px rgba(0,0,0,0.1);
 }
-
 #search-input::placeholder { color: #c0b4a8; }
 
 #suggestions {
@@ -99,11 +84,9 @@ html, body {
   list-style: none;
   z-index: 200;
   max-height: 260px;
-  overflow-y: auto;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.1);
   overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1);
 }
-
 #suggestions li {
   padding: 0.75rem 1.4rem;
   color: #3a2e24;
@@ -112,7 +95,6 @@ html, body {
   border-bottom: 1px solid #f0ece8;
   transition: background 0.12s;
 }
-
 #suggestions li:last-child { border-bottom: none; }
 #suggestions li:hover,
 #suggestions li.active { background: #f7f2ed; color: #2c2018; }
@@ -122,7 +104,6 @@ html, body {
 #weather[hidden] { display: none; }
 #home[hidden]    { display: none; }
 
-/* Scene layer stack */
 .sky, .sun-moon, .back-landscape, .landscape,
 .clouds, .weather-fx, .lightning-flash,
 .blizzard-fog, .ui-overlay {
@@ -139,57 +120,38 @@ html, body {
 .blizzard-fog   { z-index: 8; pointer-events: none; opacity: 0; }
 .ui-overlay     { z-index: 10; pointer-events: none; }
 
-/* ─── CLOUDS ───────────────────────────────────────────────────────────────── */
+/* ─── CLOUDS — pixel art clip-path, zero border-radius ──────────────────────── */
+/*
+  Pixel cloud silhouette: all turns are 90°, no curves.
+  The element has a background colour set per-theme;
+  clip-path carves the stepped cloud shape out of it.
+  Heights are set larger than "visible" so the top bumps have room.
+*/
 .cloud {
   position: absolute;
-  border-radius: 60px;
+  border-radius: 0;
+  clip-path: polygon(
+    0%   100%,
+    0%   62%,
+    8%   62%,  8%   48%,
+    18%  48%,  18%  34%,
+    30%  34%,  30%  18%,
+    44%  18%,  44%  34%,
+    56%  34%,  56%  18%,
+    70%  18%,  70%  34%,
+    82%  34%,  82%  48%,
+    92%  48%,  92%  62%,
+    100% 62%,
+    100% 100%
+  );
 }
+/* no pseudo-element roundness */
+.cloud::before, .cloud::after { content: none; }
 
-/* Fluffy bumps via pseudo-elements */
-.cloud::before,
-.cloud::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  background: inherit;
-  box-shadow: inherit;
-}
-
-.cloud::before {
-  width: 44%;
-  height: 190%;
-  top: -80%;
-  left: 12%;
-}
-
-.cloud::after {
-  width: 56%;
-  height: 220%;
-  top: -105%;
-  right: 14%;
-}
-
-.cloud-a {
-  top: 10%; height: 38px; width: 150px;
-  /* -8s → starts ~30% across the screen */
-  animation: cloud-drift 28s linear infinite -8s;
-}
-.cloud-b {
-  top: 20%; height: 50px; width: 220px;
-  /* -26s → starts ~65% across */
-  animation: cloud-drift 40s linear infinite -26s;
-}
-.cloud-c {
-  top: 5%;  height: 30px; width: 110px;
-  /* -18s → starts ~82% across */
-  animation: cloud-drift 22s linear infinite -18s;
-}
-/* 4th cloud — mid-low sky so the whole screen feels alive */
-.cloud-d {
-  top: 38%; height: 42px; width: 170px;
-  /* -5s → starts ~15% across */
-  animation: cloud-drift 34s linear infinite -5s;
-}
+.cloud-a { top: 10%; height: 72px;  width: 160px; animation: cloud-drift 28s linear infinite -8s;  }
+.cloud-b { top: 20%; height: 90px;  width: 230px; animation: cloud-drift 40s linear infinite -26s; }
+.cloud-c { top: 5%;  height: 60px;  width: 120px; animation: cloud-drift 22s linear infinite -18s; }
+.cloud-d { top: 38%; height: 76px;  width: 190px; animation: cloud-drift 34s linear infinite -5s;  }
 
 @keyframes cloud-drift {
   from { transform: translateX(-320px); }
@@ -198,8 +160,7 @@ html, body {
 
 /* ─── UI OVERLAY — top left ────────────────────────────────────────────────── */
 .ui-overlay {
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   justify-content: flex-start;
   padding: 2rem 2rem;
   pointer-events: none;
@@ -240,54 +201,84 @@ html, body {
 
 #btn-change {
   pointer-events: all;
-  display: inline-block;
-  align-self: flex-start;
+  display: inline-block; align-self: flex-start;
   padding: 0.4rem 1rem;
   background: rgba(255,255,255,0.25);
   border: 1.5px solid rgba(255,255,255,0.5);
   border-radius: 2rem;
   font-family: 'Pixelify Sans', sans-serif;
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
+  font-size: 0.8rem; letter-spacing: 0.05em;
+  cursor: pointer; backdrop-filter: blur(4px);
   transition: background 0.2s;
 }
-
 #btn-change:hover { background: rgba(255,255,255,0.4); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SHARED SVG ASSETS
+   Pixel art shapes encoded as data URIs.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* 8-bit warm sun — square core + 8 square ray segments */
+.sun-warm::after {
+  content: '';
+  position: absolute;
+  top: 9%; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 96px;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect x='24' y='24' width='32' height='32' fill='%23ffee44'/%3E%3Crect x='32' y='4' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='32' y='60' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='60' y='32' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='4' y='32' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='56' y='8' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='56' y='60' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='8' y='60' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='8' y='8' width='12' height='12' fill='%23ffee44'/%3E%3C/svg%3E");
+  background-size: 96px 96px;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 14px rgba(255,210,0,0.7)) drop-shadow(0 0 32px rgba(255,160,0,0.4));
+  animation: sun-bob 4s ease-in-out infinite;
+}
+
+/* 8-bit cold sun — same shape, cool white tone */
+.sun-cold::after {
+  content: '';
+  position: absolute;
+  top: 10%; left: 50%; transform: translateX(-50%);
+  width: 72px; height: 72px;
+  border-radius: 0;
+  background: none;
+  image-rendering: pixelated;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect x='24' y='24' width='32' height='32' fill='%23fffef0'/%3E%3Crect x='32' y='4' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='32' y='60' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='60' y='32' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='4' y='32' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='56' y='8' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='56' y='60' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='8' y='60' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='8' y='8' width='12' height='12' fill='%23fffef0'/%3E%3C/svg%3E");
+  background-size: 72px 72px;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 10px rgba(200,230,255,0.6)) drop-shadow(0 0 24px rgba(180,210,255,0.3));
+  animation: sun-bob 6s ease-in-out infinite;
+}
 
 /* ════════════════════════════════════════════════════════════════════════════
    WEATHER THEMES
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ─── 1. SUNNY HOT ─── warm golden sky ──────────────────────────────────────── */
+/* ─── 1. SUNNY HOT ──────────────────────────────────────────────────────────── */
 [data-theme="sunny-hot"] .sky {
   background: linear-gradient(180deg,
     #f97316 0%, #fb923c 20%, #fbbf24 45%, #fde68a 70%, #fef9c3 100%);
 }
+[data-theme="sunny-hot"] .sun-moon { display: block; }
+[data-theme="sunny-hot"] .sun-moon::after { content: ''; }
 
+/* inherit warm sun shape */
 [data-theme="sunny-hot"] .sun-moon::after {
-  content: '';
   position: absolute;
-  top: 12%; left: 50%; transform: translateX(-50%);
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff9c4 30%, #fde047 70%, #facc15 100%);
-  box-shadow:
-    0 0 0 12px rgba(253,224,71,0.3),
-    0 0 60px 24px rgba(251,191,36,0.5),
-    0 0 120px 60px rgba(251,146,60,0.25);
-  animation: sun-pulse 4s ease-in-out infinite;
+  top: 9%; left: 50%; transform: translateX(-50%);
+  width: 96px; height: 96px;
+  border-radius: 0; background: none; image-rendering: pixelated;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect x='24' y='24' width='32' height='32' fill='%23ffee44'/%3E%3Crect x='32' y='4' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='32' y='60' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='60' y='32' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='4' y='32' width='16' height='16' fill='%23ffee44'/%3E%3Crect x='56' y='8' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='56' y='60' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='8' y='60' width='12' height='12' fill='%23ffee44'/%3E%3Crect x='8' y='8' width='12' height='12' fill='%23ffee44'/%3E%3C/svg%3E");
+  background-size: 96px 96px; background-repeat: no-repeat;
+  filter: drop-shadow(0 0 14px rgba(255,210,0,0.7)) drop-shadow(0 0 32px rgba(255,160,0,0.4));
+  animation: sun-bob 4s ease-in-out infinite;
 }
 
 [data-theme="sunny-hot"] .clouds { display: none; }
 
 [data-theme="sunny-hot"] .weather-fx {
-  background: linear-gradient(
-    180deg,
-    transparent 0%, transparent 60%,
-    rgba(255,200,100,0.08) 80%, rgba(255,200,100,0.15) 100%
-  );
+  background: linear-gradient(180deg,
+    transparent 50%, rgba(255,200,80,0.06) 80%, rgba(255,200,80,0.12) 100%);
   animation: heat-shimmer 5s ease-in-out infinite;
 }
 
@@ -295,13 +286,11 @@ html, body {
 [data-theme="sunny-hot"] .ui-temp     { color: #7c2d12; }
 [data-theme="sunny-hot"] .ui-rain     { color: #b45309; }
 [data-theme="sunny-hot"] #btn-change  {
-  border-color: rgba(120,40,0,0.3);
-  color: #7c2d12;
+  border-color: rgba(120,40,0,0.3); color: #7c2d12;
   background: rgba(255,255,255,0.3);
 }
 
-
-/* ─── 2. SUNNY COLD ─── crisp blue sky ──────────────────────────────────────── */
+/* ─── 2. SUNNY COLD ─────────────────────────────────────────────────────────── */
 [data-theme="sunny-cold"] .sky {
   background: linear-gradient(180deg,
     #1e40af 0%, #2563eb 20%, #3b82f6 45%, #93c5fd 75%, #dbeafe 100%);
@@ -311,92 +300,79 @@ html, body {
   content: '';
   position: absolute;
   top: 10%; left: 50%; transform: translateX(-50%);
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 40%, #fef9c3 80%);
-  box-shadow:
-    0 0 0 8px rgba(255,255,240,0.35),
-    0 0 40px 16px rgba(219,234,254,0.5),
-    0 0 80px 40px rgba(147,197,253,0.2);
-  animation: sun-pulse 6s ease-in-out infinite;
+  width: 72px; height: 72px;
+  border-radius: 0; background: none; image-rendering: pixelated;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect x='24' y='24' width='32' height='32' fill='%23fffef0'/%3E%3Crect x='32' y='4' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='32' y='60' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='60' y='32' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='4' y='32' width='16' height='16' fill='%23fffef0'/%3E%3Crect x='56' y='8' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='56' y='60' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='8' y='60' width='12' height='12' fill='%23fffef0'/%3E%3Crect x='8' y='8' width='12' height='12' fill='%23fffef0'/%3E%3C/svg%3E");
+  background-size: 72px 72px; background-repeat: no-repeat;
+  filter: drop-shadow(0 0 10px rgba(200,230,255,0.7)) drop-shadow(0 0 24px rgba(180,210,255,0.35));
+  animation: sun-bob-cold 6s ease-in-out infinite;
 }
 
 [data-theme="sunny-cold"] .cloud-a,
 [data-theme="sunny-cold"] .cloud-b,
 [data-theme="sunny-cold"] .cloud-c,
-[data-theme="sunny-cold"] .cloud-d {
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 6px 18px rgba(147,197,253,0.3);
-}
+[data-theme="sunny-cold"] .cloud-d { background: rgba(255,255,255,0.82); }
 
 [data-theme="sunny-cold"] .ui-location { color: #1e3a5f; }
 [data-theme="sunny-cold"] .ui-temp     { color: #1e3a5f; }
 [data-theme="sunny-cold"] .ui-rain     { color: #2563eb; }
 [data-theme="sunny-cold"] #btn-change  {
-  border-color: rgba(30,58,95,0.3);
-  color: #1e3a5f;
+  border-color: rgba(30,58,95,0.3); color: #1e3a5f;
   background: rgba(255,255,255,0.3);
 }
 
-
-/* ─── 3. OVERCAST ─── soft grey sky ─────────────────────────────────────────── */
+/* ─── 3. OVERCAST ───────────────────────────────────────────────────────────── */
 [data-theme="overcast"] .sky {
   background: linear-gradient(180deg,
     #6b7280 0%, #9ca3af 30%, #d1d5db 65%, #e5e7eb 100%);
 }
-
 [data-theme="overcast"] .sun-moon { display: none; }
 
 [data-theme="overcast"] .cloud-a,
 [data-theme="overcast"] .cloud-b,
 [data-theme="overcast"] .cloud-c,
-[data-theme="overcast"] .cloud-d {
-  background: rgba(229,231,235,0.9);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
+[data-theme="overcast"] .cloud-d { background: rgba(229,231,235,0.92); }
 
-[data-theme="overcast"] .cloud-a { top: 8%;  height: 48px; width: 260px; }
-[data-theme="overcast"] .cloud-b { top: 18%; height: 60px; width: 340px; }
-[data-theme="overcast"] .cloud-c { top: 2%;  height: 36px; width: 180px; }
-[data-theme="overcast"] .cloud-d { top: 40%; height: 44px; width: 220px; }
+[data-theme="overcast"] .cloud-a { top: 8%;  height: 88px;  width: 300px; }
+[data-theme="overcast"] .cloud-b { top: 18%; height: 108px; width: 380px; }
+[data-theme="overcast"] .cloud-c { top: 2%;  height: 68px;  width: 210px; }
+[data-theme="overcast"] .cloud-d { top: 40%; height: 80px;  width: 260px; }
 
 [data-theme="overcast"] .ui-location { color: #374151; }
 [data-theme="overcast"] .ui-temp     { color: #374151; }
 [data-theme="overcast"] .ui-rain     { color: #4b5563; }
 [data-theme="overcast"] #btn-change  {
-  border-color: rgba(55,65,81,0.3);
-  color: #374151;
+  border-color: rgba(55,65,81,0.3); color: #374151;
   background: rgba(255,255,255,0.35);
 }
 
-
-/* ─── 4. OVERCAST + SHOWERS ─── soft rainy sky ───────────────────────────────── */
+/* ─── 4. OVERCAST + SHOWERS ─────────────────────────────────────────────────── */
 [data-theme="overcast-showers"] .sky {
   background: linear-gradient(180deg,
     #374151 0%, #4b5563 25%, #6b7280 55%, #9ca3af 100%);
 }
-
 [data-theme="overcast-showers"] .sun-moon { display: none; }
 
 [data-theme="overcast-showers"] .cloud-a,
 [data-theme="overcast-showers"] .cloud-b,
 [data-theme="overcast-showers"] .cloud-c,
-[data-theme="overcast-showers"] .cloud-d {
-  background: rgba(209,213,219,0.85);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-}
+[data-theme="overcast-showers"] .cloud-d { background: rgba(209,213,219,0.88); }
 
-[data-theme="overcast-showers"] .cloud-a { top: 5%;  height: 52px; width: 280px; }
-[data-theme="overcast-showers"] .cloud-b { top: 14%; height: 68px; width: 360px; }
-[data-theme="overcast-showers"] .cloud-c { top: 0%;  height: 40px; width: 200px; }
-[data-theme="overcast-showers"] .cloud-d { top: 36%; height: 50px; width: 240px; }
+[data-theme="overcast-showers"] .cloud-a { top: 5%;  height: 92px;  width: 300px; }
+[data-theme="overcast-showers"] .cloud-b { top: 14%; height: 116px; width: 390px; }
+[data-theme="overcast-showers"] .cloud-c { top: 0%;  height: 72px;  width: 220px; }
+[data-theme="overcast-showers"] .cloud-d { top: 36%; height: 88px;  width: 260px; }
 
+/*
+  Pixel raindrop: 2×10px drop in a wider 28×52px tile — fewer drops per screen,
+  gentler spacing for "light showers" feel.
+*/
 [data-theme="overcast-showers"] .weather-fx {
   background-image:
-    repeating-linear-gradient(176deg, transparent 0, transparent 5px, rgba(186,218,240,0.28) 5px, rgba(186,218,240,0.28) 6px, transparent 6px, transparent 14px),
-    repeating-linear-gradient(176deg, transparent 0, transparent 4px, rgba(186,218,240,0.18) 4px, rgba(186,218,240,0.18) 5px, transparent 5px, transparent 22px);
-  background-size: 14px 100vh, 22px 100vh;
-  animation: rain-fall 0.8s linear infinite -0.4s;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 52'%3E%3Crect x='13' y='10' width='2' height='10' fill='%23a8c8e8' opacity='.55'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 52'%3E%3Crect x='13' y='32' width='2' height='10' fill='%23a8c8e8' opacity='.38'/%3E%3C/svg%3E");
+  background-size: 28px 52px, 38px 64px;
+  animation: drops-shower 1.6s linear infinite -0.8s;
 }
 
 [data-theme="overcast-showers"] .ui-location { color: #e5e7eb; }
@@ -404,33 +380,32 @@ html, body {
 [data-theme="overcast-showers"] .ui-rain     { color: #bfdbfe; }
 [data-theme="overcast-showers"] #btn-change  { color: #f3f4f6; }
 
-
-/* ─── 5. LIGHT RAIN ─── gentle blue-grey sky ─────────────────────────────────── */
+/* ─── 5. LIGHT RAIN ──────────────────────────────────────────────────────────── */
 [data-theme="light-rain"] .sky {
   background: linear-gradient(180deg,
     #334155 0%, #475569 30%, #64748b 60%, #94a3b8 100%);
 }
-
 [data-theme="light-rain"] .sun-moon { display: none; }
 
 [data-theme="light-rain"] .cloud-a,
 [data-theme="light-rain"] .cloud-b,
 [data-theme="light-rain"] .cloud-c,
-[data-theme="light-rain"] .cloud-d {
-  background: rgba(148,163,184,0.7);
-}
+[data-theme="light-rain"] .cloud-d { background: rgba(148,163,184,0.72); }
 
-[data-theme="light-rain"] .cloud-a { top: 8%;  height: 44px; width: 220px; }
-[data-theme="light-rain"] .cloud-b { top: 16%; height: 54px; width: 300px; }
-[data-theme="light-rain"] .cloud-c { top: 2%;  height: 32px; width: 160px; }
-[data-theme="light-rain"] .cloud-d { top: 38%; height: 46px; width: 200px; }
+[data-theme="light-rain"] .cloud-a { top: 8%;  height: 80px;  width: 240px; }
+[data-theme="light-rain"] .cloud-b { top: 16%; height: 96px;  width: 320px; }
+[data-theme="light-rain"] .cloud-c { top: 2%;  height: 64px;  width: 175px; }
+[data-theme="light-rain"] .cloud-d { top: 38%; height: 80px;  width: 220px; }
 
+/*
+  Pixel raindrop: 2×12px drop in a roomy 32×64px tile — lazy, drifting drops.
+*/
 [data-theme="light-rain"] .weather-fx {
   background-image:
-    repeating-linear-gradient(178deg, transparent 0, transparent 6px, rgba(186,218,240,0.2) 6px, rgba(186,218,240,0.2) 7px, transparent 7px, transparent 18px),
-    repeating-linear-gradient(178deg, transparent 0, transparent 5px, rgba(186,218,240,0.13) 5px, rgba(186,218,240,0.13) 6px, transparent 6px, transparent 28px);
-  background-size: 18px 100vh, 28px 100vh;
-  animation: rain-fall 1.1s linear infinite -0.55s;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 64'%3E%3Crect x='15' y='12' width='2' height='12' fill='%23b8d4ee' opacity='.5'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 64'%3E%3Crect x='15' y='42' width='2' height='12' fill='%23b8d4ee' opacity='.34'/%3E%3C/svg%3E");
+  background-size: 32px 64px, 46px 80px;
+  animation: drops-light 2.2s linear infinite -1.1s;
 }
 
 [data-theme="light-rain"] .ui-location { color: #e2e8f0; }
@@ -438,33 +413,32 @@ html, body {
 [data-theme="light-rain"] .ui-rain     { color: #bae6fd; }
 [data-theme="light-rain"] #btn-change  { color: #f1f5f9; }
 
-
-/* ─── 6. HEAVY RAIN ─── stormy deep sky ─────────────────────────────────────── */
+/* ─── 6. HEAVY RAIN ──────────────────────────────────────────────────────────── */
 [data-theme="heavy-rain"] .sky {
   background: linear-gradient(180deg,
     #0f172a 0%, #1e293b 25%, #334155 55%, #475569 100%);
 }
-
 [data-theme="heavy-rain"] .sun-moon { display: none; }
 
 [data-theme="heavy-rain"] .cloud-a,
 [data-theme="heavy-rain"] .cloud-b,
 [data-theme="heavy-rain"] .cloud-c,
-[data-theme="heavy-rain"] .cloud-d {
-  background: rgba(30,41,59,0.95);
-}
+[data-theme="heavy-rain"] .cloud-d { background: rgba(30,41,59,0.97); }
 
-[data-theme="heavy-rain"] .cloud-a { top: 0%;  height: 80px;  width: 400px; }
-[data-theme="heavy-rain"] .cloud-b { top: 5%;  height: 100px; width: 500px; }
-[data-theme="heavy-rain"] .cloud-c { top: 10%; height: 60px;  width: 300px; }
-[data-theme="heavy-rain"] .cloud-d { top: 28%; height: 70px;  width: 380px; }
+[data-theme="heavy-rain"] .cloud-a { top: 0%;  height: 130px; width: 420px; }
+[data-theme="heavy-rain"] .cloud-b { top: 5%;  height: 160px; width: 520px; }
+[data-theme="heavy-rain"] .cloud-c { top: 10%; height: 108px; width: 320px; }
+[data-theme="heavy-rain"] .cloud-d { top: 28%; height: 120px; width: 400px; }
 
+/*
+  Heavy drops: 2×18px tall in a 16×44px tile — still dense but readable.
+*/
 [data-theme="heavy-rain"] .weather-fx {
   background-image:
-    repeating-linear-gradient(173deg, transparent 0, transparent 2px, rgba(148,196,230,0.55) 2px, rgba(148,196,230,0.55) 3px, transparent 3px, transparent 8px),
-    repeating-linear-gradient(173deg, transparent 0, transparent 3px, rgba(148,196,230,0.3)  3px, rgba(148,196,230,0.3)  4px, transparent 4px, transparent 12px);
-  background-size: 8px 100vh, 14px 100vh;
-  animation: rain-fall 0.3s linear infinite -0.15s;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 44'%3E%3Crect x='7' y='6' width='2' height='18' fill='%2394c4e6' opacity='.72'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 44'%3E%3Crect x='7' y='28' width='2' height='18' fill='%2394c4e6' opacity='.52'/%3E%3C/svg%3E");
+  background-size: 16px 44px, 22px 56px;
+  animation: drops-heavy 0.85s linear infinite -0.42s;
 }
 
 [data-theme="heavy-rain"] .lightning-flash {
@@ -476,76 +450,68 @@ html, body {
 [data-theme="heavy-rain"] .ui-rain     { color: #7dd3fc; }
 [data-theme="heavy-rain"] #btn-change  { color: #cbd5e1; }
 
-
-/* ─── 7. SNOWING ─── soft lavender sky ─────────────────────────────────────── */
+/* ─── 7. SNOWING ─────────────────────────────────────────────────────────────── */
 [data-theme="snowing"] .sky {
   background: linear-gradient(180deg,
     #5b5ea6 0%, #8b8ec4 25%, #b8bce0 55%, #dde0f0 80%, #f0f2fa 100%);
 }
-
 [data-theme="snowing"] .sun-moon { display: none; }
 
 [data-theme="snowing"] .cloud-a,
 [data-theme="snowing"] .cloud-b,
 [data-theme="snowing"] .cloud-c,
-[data-theme="snowing"] .cloud-d {
-  background: rgba(240,242,250,0.8);
-  box-shadow: 0 4px 16px rgba(91,94,166,0.15);
-}
+[data-theme="snowing"] .cloud-d { background: rgba(240,242,250,0.82); }
 
-[data-theme="snowing"] .cloud-a { top: 10%; height: 44px; width: 220px; }
-[data-theme="snowing"] .cloud-b { top: 18%; height: 56px; width: 300px; }
-[data-theme="snowing"] .cloud-c { top: 4%;  height: 32px; width: 160px; }
-[data-theme="snowing"] .cloud-d { top: 40%; height: 42px; width: 190px; }
+[data-theme="snowing"] .cloud-a { top: 10%; height: 80px;  width: 240px; }
+[data-theme="snowing"] .cloud-b { top: 18%; height: 100px; width: 320px; }
+[data-theme="snowing"] .cloud-c { top: 4%;  height: 64px;  width: 175px; }
+[data-theme="snowing"] .cloud-d { top: 40%; height: 76px;  width: 210px; }
 
+/*
+  Pixel snowflake: cross shape (2px stem, 2px arms) + 4 diagonal corner dots.
+  Each flake in a 24×28px tile.
+*/
 [data-theme="snowing"] .weather-fx {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.9) 2px,   transparent 2px),
-    radial-gradient(circle, rgba(255,255,255,0.7) 1.5px, transparent 1.5px),
-    radial-gradient(circle, rgba(255,255,255,0.55) 2.5px, transparent 2.5px),
-    radial-gradient(circle, rgba(255,255,255,0.4) 1px,   transparent 1px);
-  background-size: 55px 70px, 80px 95px, 38px 50px, 110px 130px;
-  animation: snow-fall 4s linear infinite -2s;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Crect x='11' y='4' width='2' height='20' fill='white' opacity='.8'/%3E%3Crect x='4' y='11' width='16' height='2' fill='white' opacity='.8'/%3E%3Crect x='5' y='5' width='2' height='2' fill='white' opacity='.55'/%3E%3Crect x='17' y='5' width='2' height='2' fill='white' opacity='.55'/%3E%3Crect x='5' y='19' width='2' height='2' fill='white' opacity='.55'/%3E%3Crect x='17' y='19' width='2' height='2' fill='white' opacity='.55'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Crect x='11' y='4' width='2' height='20' fill='white' opacity='.6'/%3E%3Crect x='4' y='11' width='16' height='2' fill='white' opacity='.6'/%3E%3C/svg%3E");
+  background-size: 60px 80px, 90px 110px;
+  animation: snow-drift 4s linear infinite -2s;
 }
 
 [data-theme="snowing"] .ui-location { color: #3b3d78; }
 [data-theme="snowing"] .ui-temp     { color: #2e3070; }
 [data-theme="snowing"] .ui-rain     { color: #6366f1; }
 [data-theme="snowing"] #btn-change  {
-  border-color: rgba(60,60,120,0.3);
-  color: #3b3d78;
+  border-color: rgba(60,60,120,0.3); color: #3b3d78;
   background: rgba(255,255,255,0.35);
 }
 
-
-/* ─── 8. BLIZZARD ─── near-whiteout sky ────────────────────────────────────── */
+/* ─── 8. BLIZZARD ────────────────────────────────────────────────────────────── */
 [data-theme="blizzard"] .sky {
   background: linear-gradient(180deg,
     #374151 0%, #6b7280 25%, #9ca3af 55%, #d1d5db 80%, #f3f4f6 100%);
 }
-
 [data-theme="blizzard"] .sun-moon { display: none; }
 
 [data-theme="blizzard"] .cloud-a,
 [data-theme="blizzard"] .cloud-b,
 [data-theme="blizzard"] .cloud-c,
-[data-theme="blizzard"] .cloud-d {
-  background: rgba(243,244,246,0.7);
-}
+[data-theme="blizzard"] .cloud-d { background: rgba(243,244,246,0.72); }
 
-[data-theme="blizzard"] .cloud-a { top: 0%;  height: 90px;  width: 500px; }
-[data-theme="blizzard"] .cloud-b { top: 8%;  height: 110px; width: 600px; }
-[data-theme="blizzard"] .cloud-c { top: 15%; height: 70px;  width: 400px; }
-[data-theme="blizzard"] .cloud-d { top: 32%; height: 80px;  width: 460px; }
+[data-theme="blizzard"] .cloud-a { top: 0%;  height: 148px; width: 520px; }
+[data-theme="blizzard"] .cloud-b { top: 8%;  height: 172px; width: 620px; }
+[data-theme="blizzard"] .cloud-c { top: 15%; height: 116px; width: 420px; }
+[data-theme="blizzard"] .cloud-d { top: 32%; height: 132px; width: 480px; }
 
+/* Denser, smaller snowflakes — blizzard chaos */
 [data-theme="blizzard"] .weather-fx {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.95) 2px,   transparent 2px),
-    radial-gradient(circle, rgba(255,255,255,0.8)  2.5px, transparent 2.5px),
-    radial-gradient(circle, rgba(255,255,255,0.65) 1.5px, transparent 1.5px),
-    radial-gradient(circle, rgba(255,255,255,0.5)  1px,   transparent 1px);
-  background-size: 24px 30px, 38px 46px, 16px 20px, 50px 60px;
-  animation: blizzard-blow 0.35s linear infinite -0.17s;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16'%3E%3Crect x='6' y='2' width='2' height='12' fill='white' opacity='.9'/%3E%3Crect x='2' y='6' width='10' height='2' fill='white' opacity='.9'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16'%3E%3Crect x='6' y='2' width='2' height='12' fill='white' opacity='.65'/%3E%3Crect x='2' y='6' width='10' height='2' fill='white' opacity='.65'/%3E%3Crect x='3' y='3' width='2' height='2' fill='white' opacity='.45'/%3E%3Crect x='9' y='3' width='2' height='2' fill='white' opacity='.45'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16'%3E%3Crect x='6' y='2' width='2' height='12' fill='white' opacity='.45'/%3E%3Crect x='2' y='6' width='10' height='2' fill='white' opacity='.45'/%3E%3C/svg%3E");
+  background-size: 28px 36px, 42px 50px, 20px 26px;
+  animation: blizzard-blow 1.4s linear infinite -0.7s;
 }
 
 [data-theme="blizzard"] .blizzard-fog {
@@ -558,19 +524,22 @@ html, body {
 [data-theme="blizzard"] .ui-temp     { color: #1f2937; }
 [data-theme="blizzard"] .ui-rain     { color: #4b5563; }
 [data-theme="blizzard"] #btn-change  {
-  border-color: rgba(55,65,81,0.3);
-  color: #374151;
+  border-color: rgba(55,65,81,0.3); color: #374151;
   background: rgba(255,255,255,0.4);
 }
-
 
 /* ════════════════════════════════════════════════════════════════════════════
    KEYFRAME ANIMATIONS
    ════════════════════════════════════════════════════════════════════════════ */
 
-@keyframes sun-pulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50%       { transform: translateX(-50%) scale(1.05); }
+@keyframes sun-bob {
+  0%, 100% { filter: drop-shadow(0 0 14px rgba(255,210,0,0.7))  drop-shadow(0 0 32px rgba(255,160,0,0.4)); }
+  50%       { filter: drop-shadow(0 0 22px rgba(255,220,0,0.85)) drop-shadow(0 0 48px rgba(255,180,0,0.5)); }
+}
+
+@keyframes sun-bob-cold {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(200,230,255,0.7))  drop-shadow(0 0 24px rgba(180,210,255,0.35)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(210,240,255,0.85)) drop-shadow(0 0 38px rgba(190,220,255,0.5)); }
 }
 
 @keyframes heat-shimmer {
@@ -578,19 +547,43 @@ html, body {
   50%       { opacity: 1; }
 }
 
-@keyframes rain-fall {
-  from { background-position: 0 0, 0 0; }
-  to   { background-position: -12px 100vh, -12px 100vh; }
+/*
+  Each rain keyframe moves exactly one tile height per layer,
+  so the loop is seamless (no position snap on restart).
+  Tile heights: shower=52/64, light=64/80, heavy=44/56
+*/
+@keyframes drops-shower {
+  from { background-position: 0 0,   0 0; }
+  to   { background-position: 0 52px, 0 64px; }
 }
 
-@keyframes snow-fall {
-  from { background-position: 0 0,    0 0,    0 0,    0 0; }
-  to   { background-position: 15px 100vh, -20px 130vh, 8px 70vh, -10px 90vh; }
+@keyframes drops-light {
+  from { background-position: 0 0,   0 0; }
+  to   { background-position: 0 64px, 0 80px; }
 }
 
+@keyframes drops-heavy {
+  from { background-position: 0 0,   0 0; }
+  to   { background-position: 0 44px, 0 56px; }
+}
+
+/*
+  Snow drifts slightly sideways — moves exactly one tile (width + height)
+  so both axes loop seamlessly. Tile sizes: 60×80, 90×110.
+*/
+@keyframes snow-drift {
+  from { background-position: 0 0,    0 0; }
+  to   { background-position: 60px 80px, 90px 110px; }
+}
+
+/*
+  Blizzard: strong horizontal blow + vertical fall.
+  Each layer moves exactly one tile so there's no seam.
+  Tile sizes: 28×36, 42×50, 20×26.
+*/
 @keyframes blizzard-blow {
-  from { background-position: 0 0,    0 0,    0 0,    0 0; }
-  to   { background-position: 80px 55vh, 60px 70vh, 40px 35vh, 50px 60vh; }
+  from { background-position: 0 0,     0 0,     0 0; }
+  to   { background-position: 28px 36px, 42px 50px, 20px 26px; }
 }
 
 @keyframes lightning-strike {
