@@ -7,6 +7,44 @@ html, body {
   font-family: 'Pixelify Sans', sans-serif;
 }
 
+/* ─── DEV PANEL ────────────────────────────────────────────────────────────── */
+#dev-panel {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.dev-label {
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4ade80;
+}
+
+#dev-select {
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: rgba(0,0,0,0.5);
+  color: #f9fafb;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 0.35rem;
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  outline: none;
+}
+
+#dev-select:focus { border-color: rgba(255,255,255,0.4); }
+
 /* ─── HOME SCREEN ──────────────────────────────────────────────────────────── */
 #home {
   position: fixed; inset: 0;
@@ -104,21 +142,53 @@ html, body {
 /* ─── CLOUDS ───────────────────────────────────────────────────────────────── */
 .cloud {
   position: absolute;
-  border-radius: 50px;
+  border-radius: 60px;
 }
 
-/* Default cloud shape: main body + bumps via box-shadow */
+/* Fluffy bumps via pseudo-elements */
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: inherit;
+  box-shadow: inherit;
+}
+
+.cloud::before {
+  width: 44%;
+  height: 190%;
+  top: -80%;
+  left: 12%;
+}
+
+.cloud::after {
+  width: 56%;
+  height: 220%;
+  top: -105%;
+  right: 14%;
+}
+
 .cloud-a {
-  top: 12%; height: 36px; width: 140px;
-  animation: cloud-drift 28s linear infinite;
+  top: 10%; height: 38px; width: 150px;
+  /* -8s → starts ~30% across the screen */
+  animation: cloud-drift 28s linear infinite -8s;
 }
 .cloud-b {
-  top: 22%; height: 44px; width: 200px;
-  animation: cloud-drift 38s linear infinite 10s;
+  top: 20%; height: 50px; width: 220px;
+  /* -26s → starts ~65% across */
+  animation: cloud-drift 40s linear infinite -26s;
 }
 .cloud-c {
-  top: 8%;  height: 28px; width: 100px;
-  animation: cloud-drift 22s linear infinite 5s;
+  top: 5%;  height: 30px; width: 110px;
+  /* -18s → starts ~82% across */
+  animation: cloud-drift 22s linear infinite -18s;
+}
+/* 4th cloud — mid-low sky so the whole screen feels alive */
+.cloud-d {
+  top: 38%; height: 42px; width: 170px;
+  /* -5s → starts ~15% across */
+  animation: cloud-drift 34s linear infinite -5s;
 }
 
 @keyframes cloud-drift {
@@ -149,6 +219,16 @@ html, body {
   font-size: clamp(3rem, 10vw, 7rem);
   line-height: 1;
   margin-bottom: 0.15rem;
+}
+
+.ui-temp-unit {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.32em;
+  font-weight: 400;
+  vertical-align: super;
+  letter-spacing: 0;
+  margin-left: 0.05em;
+  opacity: 0.75;
 }
 
 .ui-rain {
@@ -243,7 +323,8 @@ html, body {
 
 [data-theme="sunny-cold"] .cloud-a,
 [data-theme="sunny-cold"] .cloud-b,
-[data-theme="sunny-cold"] .cloud-c {
+[data-theme="sunny-cold"] .cloud-c,
+[data-theme="sunny-cold"] .cloud-d {
   background: rgba(255,255,255,0.85);
   box-shadow: 0 6px 18px rgba(147,197,253,0.3);
 }
@@ -268,7 +349,8 @@ html, body {
 
 [data-theme="overcast"] .cloud-a,
 [data-theme="overcast"] .cloud-b,
-[data-theme="overcast"] .cloud-c {
+[data-theme="overcast"] .cloud-c,
+[data-theme="overcast"] .cloud-d {
   background: rgba(229,231,235,0.9);
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
@@ -276,6 +358,7 @@ html, body {
 [data-theme="overcast"] .cloud-a { top: 8%;  height: 48px; width: 260px; }
 [data-theme="overcast"] .cloud-b { top: 18%; height: 60px; width: 340px; }
 [data-theme="overcast"] .cloud-c { top: 2%;  height: 36px; width: 180px; }
+[data-theme="overcast"] .cloud-d { top: 40%; height: 44px; width: 220px; }
 
 [data-theme="overcast"] .ui-location { color: #374151; }
 [data-theme="overcast"] .ui-temp     { color: #374151; }
@@ -297,7 +380,8 @@ html, body {
 
 [data-theme="overcast-showers"] .cloud-a,
 [data-theme="overcast-showers"] .cloud-b,
-[data-theme="overcast-showers"] .cloud-c {
+[data-theme="overcast-showers"] .cloud-c,
+[data-theme="overcast-showers"] .cloud-d {
   background: rgba(209,213,219,0.85);
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
@@ -305,16 +389,14 @@ html, body {
 [data-theme="overcast-showers"] .cloud-a { top: 5%;  height: 52px; width: 280px; }
 [data-theme="overcast-showers"] .cloud-b { top: 14%; height: 68px; width: 360px; }
 [data-theme="overcast-showers"] .cloud-c { top: 0%;  height: 40px; width: 200px; }
+[data-theme="overcast-showers"] .cloud-d { top: 36%; height: 50px; width: 240px; }
 
 [data-theme="overcast-showers"] .weather-fx {
-  background-image: repeating-linear-gradient(
-    176deg,
-    transparent 0px, transparent 4px,
-    rgba(186,218,240,0.3) 4px, rgba(186,218,240,0.3) 5px,
-    transparent 5px, transparent 12px
-  );
-  background-size: 12px 60px;
-  animation: rain-fall 0.8s linear infinite;
+  background-image:
+    repeating-linear-gradient(176deg, transparent 0, transparent 5px, rgba(186,218,240,0.28) 5px, rgba(186,218,240,0.28) 6px, transparent 6px, transparent 14px),
+    repeating-linear-gradient(176deg, transparent 0, transparent 4px, rgba(186,218,240,0.18) 4px, rgba(186,218,240,0.18) 5px, transparent 5px, transparent 22px);
+  background-size: 14px 100vh, 22px 100vh;
+  animation: rain-fall 0.8s linear infinite -0.4s;
 }
 
 [data-theme="overcast-showers"] .ui-location { color: #e5e7eb; }
@@ -333,23 +415,22 @@ html, body {
 
 [data-theme="light-rain"] .cloud-a,
 [data-theme="light-rain"] .cloud-b,
-[data-theme="light-rain"] .cloud-c {
+[data-theme="light-rain"] .cloud-c,
+[data-theme="light-rain"] .cloud-d {
   background: rgba(148,163,184,0.7);
 }
 
 [data-theme="light-rain"] .cloud-a { top: 8%;  height: 44px; width: 220px; }
 [data-theme="light-rain"] .cloud-b { top: 16%; height: 54px; width: 300px; }
 [data-theme="light-rain"] .cloud-c { top: 2%;  height: 32px; width: 160px; }
+[data-theme="light-rain"] .cloud-d { top: 38%; height: 46px; width: 200px; }
 
 [data-theme="light-rain"] .weather-fx {
-  background-image: repeating-linear-gradient(
-    178deg,
-    transparent 0px, transparent 5px,
-    rgba(186,218,240,0.22) 5px, rgba(186,218,240,0.22) 6px,
-    transparent 6px, transparent 16px
-  );
-  background-size: 12px 80px;
-  animation: rain-fall 1.1s linear infinite;
+  background-image:
+    repeating-linear-gradient(178deg, transparent 0, transparent 6px, rgba(186,218,240,0.2) 6px, rgba(186,218,240,0.2) 7px, transparent 7px, transparent 18px),
+    repeating-linear-gradient(178deg, transparent 0, transparent 5px, rgba(186,218,240,0.13) 5px, rgba(186,218,240,0.13) 6px, transparent 6px, transparent 28px);
+  background-size: 18px 100vh, 28px 100vh;
+  animation: rain-fall 1.1s linear infinite -0.55s;
 }
 
 [data-theme="light-rain"] .ui-location { color: #e2e8f0; }
@@ -368,23 +449,22 @@ html, body {
 
 [data-theme="heavy-rain"] .cloud-a,
 [data-theme="heavy-rain"] .cloud-b,
-[data-theme="heavy-rain"] .cloud-c {
+[data-theme="heavy-rain"] .cloud-c,
+[data-theme="heavy-rain"] .cloud-d {
   background: rgba(30,41,59,0.95);
 }
 
-[data-theme="heavy-rain"] .cloud-a { top: 0%;  height: 80px; width: 400px; }
+[data-theme="heavy-rain"] .cloud-a { top: 0%;  height: 80px;  width: 400px; }
 [data-theme="heavy-rain"] .cloud-b { top: 5%;  height: 100px; width: 500px; }
-[data-theme="heavy-rain"] .cloud-c { top: 10%; height: 60px; width: 300px; }
+[data-theme="heavy-rain"] .cloud-c { top: 10%; height: 60px;  width: 300px; }
+[data-theme="heavy-rain"] .cloud-d { top: 28%; height: 70px;  width: 380px; }
 
 [data-theme="heavy-rain"] .weather-fx {
-  background-image: repeating-linear-gradient(
-    173deg,
-    transparent 0px, transparent 2px,
-    rgba(148,196,230,0.5) 2px, rgba(148,196,230,0.5) 3px,
-    transparent 3px, transparent 8px
-  );
-  background-size: 8px 50px;
-  animation: rain-fall 0.3s linear infinite;
+  background-image:
+    repeating-linear-gradient(173deg, transparent 0, transparent 2px, rgba(148,196,230,0.55) 2px, rgba(148,196,230,0.55) 3px, transparent 3px, transparent 8px),
+    repeating-linear-gradient(173deg, transparent 0, transparent 3px, rgba(148,196,230,0.3)  3px, rgba(148,196,230,0.3)  4px, transparent 4px, transparent 12px);
+  background-size: 8px 100vh, 14px 100vh;
+  animation: rain-fall 0.3s linear infinite -0.15s;
 }
 
 [data-theme="heavy-rain"] .lightning-flash {
@@ -407,7 +487,8 @@ html, body {
 
 [data-theme="snowing"] .cloud-a,
 [data-theme="snowing"] .cloud-b,
-[data-theme="snowing"] .cloud-c {
+[data-theme="snowing"] .cloud-c,
+[data-theme="snowing"] .cloud-d {
   background: rgba(240,242,250,0.8);
   box-shadow: 0 4px 16px rgba(91,94,166,0.15);
 }
@@ -415,14 +496,16 @@ html, body {
 [data-theme="snowing"] .cloud-a { top: 10%; height: 44px; width: 220px; }
 [data-theme="snowing"] .cloud-b { top: 18%; height: 56px; width: 300px; }
 [data-theme="snowing"] .cloud-c { top: 4%;  height: 32px; width: 160px; }
+[data-theme="snowing"] .cloud-d { top: 40%; height: 42px; width: 190px; }
 
 [data-theme="snowing"] .weather-fx {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.9) 1.5px, transparent 1.5px),
-    radial-gradient(circle, rgba(255,255,255,0.7) 1px,   transparent 1px),
-    radial-gradient(circle, rgba(255,255,255,0.5) 2px,   transparent 2px);
-  background-size: 60px 80px, 90px 100px, 40px 55px;
-  animation: snow-fall 4s linear infinite;
+    radial-gradient(circle, rgba(255,255,255,0.9) 2px,   transparent 2px),
+    radial-gradient(circle, rgba(255,255,255,0.7) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,255,255,0.55) 2.5px, transparent 2.5px),
+    radial-gradient(circle, rgba(255,255,255,0.4) 1px,   transparent 1px);
+  background-size: 55px 70px, 80px 95px, 38px 50px, 110px 130px;
+  animation: snow-fall 4s linear infinite -2s;
 }
 
 [data-theme="snowing"] .ui-location { color: #3b3d78; }
@@ -445,21 +528,24 @@ html, body {
 
 [data-theme="blizzard"] .cloud-a,
 [data-theme="blizzard"] .cloud-b,
-[data-theme="blizzard"] .cloud-c {
+[data-theme="blizzard"] .cloud-c,
+[data-theme="blizzard"] .cloud-d {
   background: rgba(243,244,246,0.7);
 }
 
 [data-theme="blizzard"] .cloud-a { top: 0%;  height: 90px;  width: 500px; }
 [data-theme="blizzard"] .cloud-b { top: 8%;  height: 110px; width: 600px; }
 [data-theme="blizzard"] .cloud-c { top: 15%; height: 70px;  width: 400px; }
+[data-theme="blizzard"] .cloud-d { top: 32%; height: 80px;  width: 460px; }
 
 [data-theme="blizzard"] .weather-fx {
   background-image:
-    radial-gradient(circle, rgba(255,255,255,0.95) 1.5px, transparent 1.5px),
-    radial-gradient(circle, rgba(255,255,255,0.8)  2px,   transparent 2px),
-    radial-gradient(circle, rgba(255,255,255,0.6)  1px,   transparent 1px);
-  background-size: 28px 36px, 44px 52px, 18px 24px;
-  animation: blizzard-blow 0.35s linear infinite;
+    radial-gradient(circle, rgba(255,255,255,0.95) 2px,   transparent 2px),
+    radial-gradient(circle, rgba(255,255,255,0.8)  2.5px, transparent 2.5px),
+    radial-gradient(circle, rgba(255,255,255,0.65) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(255,255,255,0.5)  1px,   transparent 1px);
+  background-size: 24px 30px, 38px 46px, 16px 20px, 50px 60px;
+  animation: blizzard-blow 0.35s linear infinite -0.17s;
 }
 
 [data-theme="blizzard"] .blizzard-fog {
@@ -493,18 +579,18 @@ html, body {
 }
 
 @keyframes rain-fall {
-  from { background-position: 0 0; }
-  to   { background-position: -12px 100px; }
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: -12px 100vh, -12px 100vh; }
 }
 
 @keyframes snow-fall {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to   { background-position: 15px 100px, -20px 130px, 8px 70px; }
+  from { background-position: 0 0,    0 0,    0 0,    0 0; }
+  to   { background-position: 15px 100vh, -20px 130vh, 8px 70vh, -10px 90vh; }
 }
 
 @keyframes blizzard-blow {
-  from { background-position: 0 0, 0 0, 0 0; }
-  to   { background-position: 80px 55px, 60px 70px, 40px 35px; }
+  from { background-position: 0 0,    0 0,    0 0,    0 0; }
+  to   { background-position: 80px 55vh, 60px 70vh, 40px 35vh, 50px 60vh; }
 }
 
 @keyframes lightning-strike {

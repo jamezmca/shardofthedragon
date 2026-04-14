@@ -142,7 +142,7 @@ async function showWeather(name, lat, lon) {
 
     document.body.setAttribute('data-theme', theme);
     uiLocation.textContent = name;
-    uiTemp.textContent     = `${wx.apparentTemp}°C`;
+    uiTemp.innerHTML       = `${wx.apparentTemp}<span class="ui-temp-unit">°C</span>`;
     uiRain.textContent     = `${wx.precipPct}% chance of rain`;
 
     homeEl.hidden    = true;
@@ -262,3 +262,38 @@ function init() {
 }
 
 init();
+
+/* ─── Dev panel ──────────────────────────────────────────────────────────────── */
+if (new URLSearchParams(location.search).get('dev') === 'true') {
+  const THEMES = [
+    { value: 'sunny-hot',        label: 'Sunny Hot' },
+    { value: 'sunny-cold',       label: 'Sunny Cold' },
+    { value: 'overcast',         label: 'Overcast' },
+    { value: 'overcast-showers', label: 'Overcast + Showers' },
+    { value: 'light-rain',       label: 'Light Rain' },
+    { value: 'heavy-rain',       label: 'Heavy Rain' },
+    { value: 'snowing',          label: 'Snowing' },
+    { value: 'blizzard',         label: 'Blizzard' },
+  ];
+
+  const panel = document.createElement('div');
+  panel.id = 'dev-panel';
+  panel.innerHTML =
+    `<span class="dev-label">dev</span>` +
+    `<select id="dev-select">` +
+    `<option value="">pick a theme</option>` +
+    THEMES.map(t => `<option value="${t.value}">${t.label}</option>`).join('') +
+    `</select>`;
+  document.body.appendChild(panel);
+
+  document.getElementById('dev-select').addEventListener('change', e => {
+    const theme = e.target.value;
+    if (!theme) return;
+    document.body.setAttribute('data-theme', theme);
+    uiLocation.textContent = 'Dev Mode';
+    uiTemp.innerHTML       = `21<span class="ui-temp-unit">°C</span>`;
+    uiRain.textContent     = '42% chance of rain';
+    homeEl.hidden          = true;
+    weatherEl.hidden       = false;
+  });
+}
