@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worksheet Builder | Free AI Math Worksheet Generator</title>
+    <meta name="description" content="Generate perfectly formatted math worksheets in seconds. Paste a ChatGPT-generated LaTeX document, render it instantly in the browser, and print a clean worksheet — free, no sign up.">
+    <meta name="keywords" content="math worksheet generator, LaTeX worksheet, free worksheet builder, printable math worksheets, AI math worksheets, KaTeX renderer">
+    <meta property="og:title" content="Worksheet Builder | Free AI-powered math worksheet generator">
+    <meta property="og:description" content="Generate perfectly formatted math worksheets in seconds using ChatGPT and LaTeX. Render and print instantly — free, no account needed.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Worksheet Builder | Free AI-powered math worksheet generator">
+    <meta name="twitter:description" content="Generate perfectly formatted math worksheets in seconds using ChatGPT and LaTeX. Free, no sign up required.">
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        :root {
+            --bg: white;
+            --fg: #030615;
+            --accent: #030615;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+        }
+
+        .app-shell {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+
+        header {
+            margin-bottom: 1rem;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 648px) {
+            .header-top {
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+
+            .controls-desktop {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 649px) {
+            .controls-mobile {
+                display: none !important;
+            }
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .controls-mobile {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        button {
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.9rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: white;
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1rem;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            padding: 1rem;
+        }
+
+        .panel h2 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            resize: vertical;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .output-wrapper {
+            padding: 0.5rem 1.5rem;
+            min-height: 400px;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .rendered-output {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        ol {
+            padding-left: 1.4rem;
+        }
+
+        li+li {
+            margin-top: 0.25rem;
+        }
+
+        .rendered-output h1 {
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .print-branding {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            display: none;
+        }
+
+        .katex-display {
+            width: fit-content !important;
+            margin-left: 0 !important;
+            text-align: left !important;
+            max-width: 100%;
+        }
+
+
+        @media print {
+            .print-branding {
+                display: block;
+            }
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 500px;
+        }
+
+        .toggle-icon {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .intro-text {
+            font-size: 0.9rem;
+            color: #6b7280;
+            padding: 2rem 0;
+            line-height: 1.4;
+        }
+
+        .panel.example-panel {
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            padding: 1rem;
+        }
+
+        .intro-text p {
+            margin: 0.5rem 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+
+        footer a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .panel.column-panel {
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .column-control-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .column-slider {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+        }
+
+        .column-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #030615;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .column-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #030615;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .app-shell {
+                max-width: 100%;
+                margin: 0;
+                padding: 0.5rem 1rem 0;
+            }
+
+            header,
+            .intro-text,
+            .panel.input-panel,
+            .panel.example-panel,
+            .panel.column-panel,
+            footer {
+                display: none !important;
+            }
+
+            .panel.output-panel {
+                border: none;
+                padding: 0;
+            }
+
+            .output-wrapper {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-shell">
+        <header>
+            <div class="header-top">
+                <div class="logo">shardofthedragon.com/worksheet-builder</div>
+                <div class="controls controls-desktop">
+                    <button class="primary" id="renderBtn">Render</button>
+                    <button type="button" onclick="location.reload()">Clear / Refresh</button>
+                    <button type="button" onclick="window.print()">Print</button>
+                </div>
+            </div>
+            <div class="controls-mobile">
+                <button class="primary" id="renderBtn2">Render</button>
+                <button type="button" onclick="location.reload()">Clear / Refresh</button>
+                <button type="button" onclick="window.print()">Print</button>
+            </div>
+        </header>
+
+        <div class="intro-text">
+            <p><strong>1.</strong> Edit the ChatGPT prompt below to specify your topic, number of questions, and title.
+            </p>
+            <p><strong>2.</strong> Copy the prompt and paste it into ChatGPT to generate your LaTeX document.</p>
+            <p><strong>3.</strong> Paste the generated LaTeX into the input box, render it, and print your perfectly
+                formatted worksheet.</p>
+        </div>
+
+        <main>
+            <section class="panel example-panel">
+                <div class="collapsible-header" onclick="toggleCollapsible()">
+                    <h2>1. ChatGPT Prompt</h2>
+                    <span class="toggle-icon" id="toggleIcon">▼</span>
+                </div>
+                <div class="collapsible-content collapsed" id="promptContent">
+                    <!-- v.1.1 (1.0 working) -->
+                    <textarea id="promptText"
+                        style="min-height: 120px; background: #f8f9fa; margin-left: 1rem; font-family: monospace; font-size: 0.85rem;">
+USER INPUTS (edit these):
+
+TITLE = [WRITE TITLE HERE]
+TOPIC = [WRITE TOPIC HERE]
+NUMBER_OF_QUESTIONS = [WRITE NUMBER HERE E.G. 50]
+NUM_LINES_BETWEEN_QUESTIONS = [WRITE NUMBER HERE E.G. 2]
+
+INSTRUCTIONS FOR CHATGPT (do not edit):
+
+Write a LaTeX document that follows these rules exactly:
+
+Use the article class with 12pt font:
+\documentclass[12pt]{article}
+
+Only use the amsmath and geometry packages.
+
+Use proper document structure with \begin{document} and \end{document}.
+
+Create a centered title using only:
+\begin{center}
+{\LARGE \textbf{TITLE}}\\[6pt]
+\end{center}
+
+After the main title you may optionally include subheadings, but ONLY in this exact form:
+\section*{Subheading text}
+
+Do NOT use \subsection, \subsubsection, \paragraph, \subparagraph, or any other heading commands.
+
+Then create exactly ONE enumerate environment.
+
+Create exactly NUMBER_OF_QUESTIONS questions.
+
+Each question must be a single \item inside that enumerate.
+
+Do NOT nest lists. Do NOT use itemize.
+
+After every question, add exactly NUM_LINES_BETWEEN_QUESTIONS LaTeX line breaks using:
+\\[12pt]
+
+If NUM_LINES_BETWEEN_QUESTIONS = 2, then this must appear twice:
+\\[12pt]
+\\[12pt]
+
+TEXT FORMATTING RULES (STRICT):
+
+- Do NOT use \textit{} anywhere.
+- Do NOT use \emph{} anywhere.
+- If you need emphasis, you may use \textbf{} ONLY for short plain text phrases that do NOT contain any maths, backslashes, or braces.
+- Do NOT wrap any maths, formulas, or fractions in \textbf{}.
+- Do NOT use \ldots anywhere.
+
+Do NOT use any other text environments (no section, subsection, tabular, figure, etc.), except for the optional \section* headings described above.
+
+--------------------------------
+MATH RULES (STRICT)
+--------------------------------
+
+Use LaTeX math properly and consistently:
+
+INLINE MATH:
+- Use \( ... \) ONLY.
+- NEVER use $...$ for inline math.
+
+DISPLAY MATH:
+- Use \[ ... \] ONLY.
+
+DO NOT use $...$ as a math delimiter anywhere in the entire document.
+DO NOT use standalone $ for maths under any circumstances.
+
+--------------------------------
+FRACTION RULES (CRITICAL)
+--------------------------------
+
+When using fractions:
+
+- You MUST always use the exact structure:
+  \frac{numerator}{denominator}
+
+- You MUST always include BOTH sets of braces.
+- You MUST always include the slash between them.
+- You MUST never place equals signs, commas, words, or extra braces inside \frac{}.
+
+Correct example:
+"The growth factor is \( \frac{A}{P} = 1.21 \)."
+
+Incorrect examples to avoid at all costs:
+\frac{A{P}
+\frac{A{P} = 1.21
+\frac{r{n}
+\frac{0.06{2}
+\frac{n{t}
+
+If a formula becomes complicated, rewrite it in multiple clean steps using separate inline equations.
+
+--------------------------------
+MONEY + PERCENTAGE RULES (CRITICAL)
+--------------------------------
+
+MONEY:
+- Write money using a plain dollar sign with NO backslash.
+- Example: $18,000
+- NEVER write \$18,000 anywhere.
+
+PERCENTAGES:
+- In plain text: write 10%, 4%, 15% with NO backslash.
+- ONLY use \% if the percentage is inside \( ... \).
+- Do NOT write 10\% in plain text.
+- Do NOT write "\(10\%\)" unless it is part of a symbolic expression.
+
+Correct:
+"Apply a 10% increase."
+"The rate is \(10\%\)."
+
+Incorrect:
+"Apply a 10\% increase."
+"\(10\%\) interest rate" when not part of a formula.
+
+--------------------------------
+FORMULA + HINT RULES
+--------------------------------
+
+If a hint contains a formula:
+
+- Wrap the ENTIRE formula in \( ... \).
+- Do NOT mix surrounding text inside the math.
+- Do NOT use $...$.
+
+Correct:
+"Hint: \( A = P(1 + r)^n \)."
+
+Incorrect:
+"Hint: $A = P(1+r)^n$"
+"Hint: \( A = P(1+r)^n$"
+"Hint: $\frac{A{P}"
+
+--------------------------------
+GENERAL CONTENT RULES
+--------------------------------
+
+You may use standard amsmath structures such as:
+fractions, limits, trig functions, logarithms, powers, and the cases environment.
+
+Do NOT use custom commands such as:
+\newcommand or \renewcommand.
+
+Each question should relate to TOPIC and include a mix of difficulty levels, but MUST strictly follow all formatting rules above.
+
+
+</textarea>
+                    <button id="copyPromptBtn"
+                        style="margin-top: 0.5rem; padding: 0.4rem 0.9rem; border-radius: 999px; border: 1px solid var(--border); background: var(--accent); color: white; cursor: pointer; font-size: 0.9rem;">Copy
+                        Prompt</button>
+                    <div class="hint">
+                        Edit the fields in brackets above, then copy this prompt to ChatGPT. It will generate LaTeX that
+                        you can paste into the input section below.
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel input-panel">
+                <h2>2. Paste your LaTeX document</h2>
+                <textarea id="latexInput"
+                    placeholder="Paste a full LaTeX article here, e.g. with \documentclass, \begin{document}, \begin{enumerate}, \item ..."></textarea>
+                <div class="hint">
+                    This strips the preamble, converts <code>enumerate</code> to an ordered list, and renders maths
+                    inside
+                    <code>\( ... \)</code>, <code>\[ ... \]</code>, or <code>$$...$$</code>.
+                </div>
+            </section>
+
+            <section class="panel column-panel">
+                <div class="column-control">
+                    <label class="column-control-label" for="columnSlider">Adjust the number of columns for your
+                        questions to be presented (<span id="columnValue">1</span> column)</label>
+                    <input type="range" class="column-slider" id="columnSlider" min="1" max="3" value="1">
+                </div>
+            </section>
+
+            <section class="panel output-panel">
+                <div class="output-wrapper">
+                    <div class="print-branding">shardofthedragon.com/worksheet-builder</div>
+                    <div id="output" class="rendered-output">
+                        <!-- Rendered content appears here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <a href="https://github.com/jamezmca/latexprint" target="_blank">github</a>
+        </footer>
+    </div>
+
+    <script>
+        function processLatex(input) {
+            // Grab body between \begin{document} and \end{document}
+            const match = input.match(/\\begin{document}([\s\S]*?)\\end{document}/)
+            let body = match ? match[1] : input
+
+            body = body.trim()
+
+            // 1. Escape HTML so <, >, & in maths don't break the DOM
+            body = body
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+
+            // 2. Centered title → <h1>
+            body = body.replace(/\\begin{center}([\s\S]*?)\\end{center}/, (_, inner) => {
+                let text = inner
+                    .replace(/\\LARGE/g, '')
+                    .replace(/\\Large/g, '')
+                    .replace(/\\large/g, '')
+                    .replace(/\\textbf{([^}]*)}/g, '$1')
+                    .replace(/[{}]/g, '')
+                    .replace(/\\\\/g, '')
+                    .replace(/\[\d+pt\]/g, '')
+                    .trim()
+                return `<h1>${text}</h1>`
+            })
+
+            // 3. Simple headings (optional; safe if you don’t use them)
+            body = body.replace(/\\section\*?{([^}]*)}/g, '<h2>$1</h2>')
+            body = body.replace(/\\subsection\*?{([^}]*)}/g, '<h3>$1</h3>')
+
+            // 4. Line breaks like \\[12pt] → <br><br>
+            body = body.replace(/\\\\\s*\[\s*\d+pt\s*\]/g, '<br><br>')
+            // NOTE: do NOT replace bare \\ globally – they are needed inside maths
+
+            // 5. enumerate → ordered list
+            body = body
+                .replace(/\\begin{enumerate}/g, '<ol>')
+                .replace(/\\end{enumerate}/g, '</ol>')
+                .replace(/\\item/g, '<li>')
+
+            // 6. itemize → unordered list (safe even if unused)
+            body = body
+                .replace(/\\begin{itemize}/g, '<ul>')
+                .replace(/\\end{itemize}/g, '</ul>')
+
+            // 7. Basic text formatting
+            body = body.replace(/\\textbf{([^}]*)}/g, '<strong>$1</strong>')
+            body = body.replace(/\\emph{([^}]*)}/g, '<em>$1</em>')
+            body = body.replace(/\\textit{([^}]*)}/g, '<em>$1</em>')
+
+            // 8. Paragraph-ish breaks for blank lines
+            body = body.replace(/\n\s*\n+/g, '\n\n')
+            body = body.replace(/\n\n/g, '<br><br>')
+
+            // 9. Clean up extra breaks after <h1>
+            body = body.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)(\s*<br><br>)+/g, '$1')
+
+            // 10. Clean up extra breaks immediately after <ol> before first <li>
+            body = body.replace(/(<ol[^>]*>)\s*(<br><br>\s*)+/g, '$1')
+
+            return body
+        }
+
+
+        function renderLatex() {
+            const input = document.getElementById('latexInput').value
+            const output = document.getElementById('output')
+
+            const html = processLatex(input)
+            output.innerHTML = html
+
+            // Let KaTeX render all math bits
+            renderMathInElement(output, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\[', right: '\\]', display: true },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '$', right: '$', display: false } // optional, but handy
+                ],
+                throwOnError: false
+            })
+        }
+
+        document.getElementById('renderBtn').addEventListener('click', renderLatex)
+        document.getElementById('renderBtn2')?.addEventListener('click', renderLatex)
+
+        // Copy prompt functionality
+        document.getElementById('copyPromptBtn')?.addEventListener('click', function () {
+            const promptText = document.getElementById('promptText').value
+            navigator.clipboard.writeText(promptText).then(() => {
+                this.textContent = 'Copied!'
+                setTimeout(() => {
+                    this.textContent = 'Copy Prompt'
+                }, 2000)
+            })
+        })
+
+        // date stamp in header
+        const dateStamp = document.getElementById('dateStamp')
+        if (dateStamp) {
+            const today = new Date()
+            dateStamp.textContent = today.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            })
+        }
+
+        // Collapsible functionality
+        function toggleCollapsible() {
+            const content = document.getElementById('promptContent')
+            const icon = document.getElementById('toggleIcon')
+
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed')
+                content.classList.add('expanded')
+                icon.textContent = '▲'
+                icon.classList.add('rotated')
+            } else {
+                content.classList.remove('expanded')
+                content.classList.add('collapsed')
+                icon.textContent = '▼'
+                icon.classList.remove('rotated')
+            }
+        }
+
+        // Column slider functionality
+        const columnSlider = document.getElementById('columnSlider')
+        const columnValue = document.getElementById('columnValue')
+        const output = document.getElementById('output')
+
+        columnSlider.addEventListener('input', function () {
+            const value = this.value
+            columnValue.textContent = value
+            const label = document.querySelector('.column-control-label')
+            label.innerHTML = `Adjust the number of columns for your questions to be presented (<span id="columnValue">${value}</span> column${value > 1 ? 's' : ''})`
+
+            if (value == 1) {
+                output.style.columnCount = 'auto'
+                output.style.columns = 'auto'
+            } else {
+                output.style.columnCount = value
+                output.style.columnGap = '2rem'
+                output.style.columnFill = 'balance'
+            }
+        })
+    </script>
+
+</body>
+
+</html>
