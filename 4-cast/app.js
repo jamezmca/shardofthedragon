@@ -148,10 +148,29 @@ async function showWeather(name, lat, lon) {
 
     homeEl.hidden    = true;
     weatherEl.hidden = false;
+    startRefreshTimer(name, lat, lon);
   } catch (err) {
     console.error(err);
     alert('Could not load weather. Please try again.');
   }
+}
+
+/* ─── Auto-refresh ───────────────────────────────────────────────────────────── */
+let refreshTimer = null;
+
+function startRefreshTimer(name, lat, lon) {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    const cacheKey = `wx:${lat.toFixed(2)},${lon.toFixed(2)}`;
+    if (!cacheGet(cacheKey, CACHE_WEATHER_TTL)) {
+      showWeather(name, lat, lon);
+    }
+  }, 5 * 60 * 1000);
+}
+
+function stopRefreshTimer() {
+  clearInterval(refreshTimer);
+  refreshTimer = null;
 }
 
 /* ─── Autocomplete search ────────────────────────────────────────────────────── */
@@ -239,6 +258,7 @@ searchInput.addEventListener('blur', () => {
 });
 
 btnChange.addEventListener('click', () => {
+  stopRefreshTimer();
   clearLocation();
   document.body.removeAttribute('data-theme');
   weatherEl.hidden = true;
