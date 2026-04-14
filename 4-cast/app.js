@@ -81,9 +81,10 @@ async function fetchWeather(lat, lon) {
   if (!res.ok) throw new Error('Weather request failed');
   const json = await res.json();
 
-  // Find current hour index in hourly.time array
-  const nowIso = json.current.time; // "2024-01-01T14:00"
-  const hourIndex = json.hourly.time.indexOf(nowIso);
+  // Match current hour by truncating to "YYYY-MM-DDTHH" — hourly entries are
+  // always on the hour but current.time may include minutes (e.g. "T14:30").
+  const nowHour = json.current.time.slice(0, 13);
+  const hourIndex = json.hourly.time.findIndex(t => t.slice(0, 13) === nowHour);
   const precipPct = hourIndex >= 0
     ? json.hourly.precipitation_probability[hourIndex]
     : json.hourly.precipitation_probability[0];
