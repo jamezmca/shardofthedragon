@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>browser marathon | the URL bar running game</title>
+  <meta name="description" content="A running game played entirely in your browser's URL bar. Press space to jump over obstacles and survive as long as possible. Free, no sign up.">
+  <meta property="og:title" content="browser marathon | the URL bar running game">
+  <meta property="og:description" content="A running game played entirely in your browser's URL bar. Press space to jump. Free, no sign up.">
+  <meta property="og:type" content="website">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f2ee;
+      color: #1a1a18;
+    }
+
+    .stage {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.2rem;
+    }
+
+    /* ── Mechanical spacebar ── */
+    .spacebar {
+      width: 310px;
+      height: 64px;
+      background: linear-gradient(180deg, #f9f6f0 0%, #eae4d8 100%);
+      border: 1.5px solid #c6bba8;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: lowercase;
+      color: #3d3830;
+      box-shadow:
+        0 7px 0 #a89880,
+        0 8px 1px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.75),
+        inset 0 -1px 0 rgba(0,0,0,0.06);
+      transition: box-shadow 0.07s ease, transform 0.07s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+
+    .spacebar:focus-visible {
+      outline: 2px solid #888;
+      outline-offset: 3px;
+    }
+
+    .spacebar:active,
+    .spacebar.pressed {
+      box-shadow:
+        0 2px 0 #a89880,
+        0 3px 1px rgba(0,0,0,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.75),
+        inset 0 -1px 0 rgba(0,0,0,0.06);
+      transform: translateY(5px);
+    }
+
+    /* ── Scores ── */
+    .scores {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .scores-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #b0a898;
+      margin-bottom: 0.15rem;
+    }
+
+    .score-row {
+      font-size: 0.95rem;
+      color: #5a5248;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-row .medal { margin-right: 0.4rem; }
+    .score-row .empty { color: #c8c0b4; }
+
+    /* ── Death screen ── */
+    .died-msg {
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .final-score-line {
+      font-size: 1rem;
+      color: #6b6358;
+    }
+
+    .final-score-line strong {
+      color: #1a1a18;
+      font-weight: 700;
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- IDLE + RUNNING -->
+  <div class="panel" id="panel-play">
+    <button class="spacebar" id="spaceBtn">space to jump</button>
+    <div class="scores" id="scores-display"></div>
+  </div>
+
+  <!-- DEAD -->
+  <div class="panel" id="panel-dead" hidden>
+    <p class="died-msg">you died ❌</p>
+    <p class="final-score-line">final score: <strong id="final-score-val"></strong></p>
+    <button class="spacebar" id="resetBtn">space to reset</button>
+  </div>
+
+</div>
+
+<script>
+  /* ─── Config ──────────────────────────────────────────────────────────── */
+  const TRACK_LEN   = 38;   // characters in the URL hash track
+  const RUNNER_POS  = 4;    // runner's fixed column
+  const JUMP_FRAMES = 14;   // frames the runner stays airborne
+  const BASE_MS     = 88;   // ms per tick at game start
+  const MIN_MS      = 52;   // fastest the game can get
+  const SPEED_STEP  = 6;    // ms shaved off each speed-up
+  const SPEED_EVERY = 230;  // ticks between speed-ups (~20 s at base speed)
+  const SCORE_MULT  = 2.6;
+  const SCORES_KEY  = 'bm-scores';
+
+  const RUNNER_RUN  = '🏃';
+  const RUNNER_AIR  = '🦘';
+  const GROUND      = '_';
+  const OBS_CHARS   = ['🌵', '🪨', '🚧'];
+
+  /* ─── State ───────────────────────────────────────────────────────────── */
+  let state       = 'idle';   // 'idle' | 'running' | 'dead'
+  let obstacles   = [];
+  let jumpFrames  = 0;
+  let startTime   = null;
+  let loopId      = null;
+  let tickCount   = 0;
+  let currentMs   = BASE_MS;
+  let nextSpawnAt = 0;
+
+  /* ─── Scores ──────────────────────────────────────────────────────────── */
+  function loadScores() {
+    try { return JSON.parse(localStorage.getItem(SCORES_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveScore(s) {
+    const arr = loadScores();
+    arr.push(s);
+    arr.sort((a, b) => b - a);
+    localStorage.setItem(SCORES_KEY, JSON.stringify(arr.slice(0, 3)));
+  }
+
+  function calcScore() {
+    if (!startTime) return 0;
+    return Math.round((Date.now() - startTime) / 1000 * SCORE_MULT);
+  }
+
+  /* ─── URL rendering ───────────────────────────────────────────────────── */
+  function renderURL() {
+    const track = Array(TRACK_LEN).fill(GROUND);
+    track[RUNNER_POS] = jumpFrames > 0 ? RUNNER_AIR : RUNNER_RUN;
+    for (const obs of obstacles) {
+      if (obs.pos >= 0 && obs.pos < TRACK_LEN && obs.pos !== RUNNER_POS) {
+        track[obs.pos] = obs.char;
+      }
+    }
+    history.replaceState(null, '', '#' + track.join(''));
+  }
+
+  function clearURL() {
+    history.replaceState(null, '', location.pathname);
+  }
+
+  /* ─── Game loop ───────────────────────────────────────────────────────── */
+  function tick() {
+    tickCount++;
+
+    // Move obstacles left
+    for (const obs of obstacles) obs.pos--;
+    obstacles = obstacles.filter(o => o.pos > -2);
+
+    // Jump countdown
+    if (jumpFrames > 0) jumpFrames--;
+
+    // Collision: obstacle at runner column while on ground
+    for (const obs of obstacles) {
+      if (obs.pos === RUNNER_POS && jumpFrames === 0) {
+        die();
+        return;
+      }
+    }
+
+    // Spawn next obstacle when due
+    if (tickCount >= nextSpawnAt) {
+      obstacles.push({
+        pos:  TRACK_LEN - 1,
+        char: OBS_CHARS[Math.floor(Math.random() * OBS_CHARS.length)],
+      });
+      // gap: 38–72 ticks so at most one obstacle on screen at a time
+      nextSpawnAt = tickCount + 38 + Math.floor(Math.random() * 34);
+    }
+
+    // Gradually increase speed every SPEED_EVERY ticks
+    if (tickCount % SPEED_EVERY === 0 && currentMs > MIN_MS) {
+      currentMs = Math.max(MIN_MS, currentMs - SPEED_STEP);
+      clearInterval(loopId);
+      loopId = setInterval(tick, currentMs);
+    }
+
+    renderURL();
+  }
+
+  /* ─── Actions ─────────────────────────────────────────────────────────── */
+  function startGame() {
+    state       = 'running';
+    obstacles   = [];
+    jumpFrames  = 0;
+    tickCount   = 0;
+    currentMs   = BASE_MS;
+    startTime   = Date.now();
+    nextSpawnAt = 22; // first obstacle after ~2 s
+
+    clearInterval(loopId);
+    loopId = setInterval(tick, currentMs);
+    renderURL();
+    renderUI();
+  }
+
+  function jump() {
+    if (jumpFrames === 0) jumpFrames = JUMP_FRAMES;
+  }
+
+  function die() {
+    clearInterval(loopId);
+    state = 'dead';
+    const score = calcScore();
+    saveScore(score);
+    history.replaceState(null, '', '#💀');
+    document.getElementById('final-score-val').textContent = score;
+    renderUI();
+  }
+
+  function resetGame() {
+    clearInterval(loopId);
+    state = 'idle';
+    // Show the runner parked in the URL bar so the player can see the format
+    history.replaceState(null, '', '#' + RUNNER_RUN + GROUND.repeat(TRACK_LEN - 1));
+    renderUI();
+  }
+
+  /* ─── UI ──────────────────────────────────────────────────────────────── */
+  function renderUI() {
+    const dead = state === 'dead';
+    document.getElementById('panel-play').hidden = dead;
+    document.getElementById('panel-dead').hidden = !dead;
+    if (!dead) renderScores();
+  }
+
+  function renderScores() {
+    const scores = loadScores();
+    const medals = ['🥇', '🥈', '🥉'];
+    const el = document.getElementById('scores-display');
+    el.innerHTML = '<div class="scores-label">top scores</div>';
+    for (let i = 0; i < 3; i++) {
+      const row = document.createElement('div');
+      row.className = 'score-row';
+      if (scores[i] != null) {
+        row.innerHTML = `<span class="medal">${medals[i]}</span>${scores[i]}`;
+      } else {
+        row.innerHTML = `<span class="medal">${medals[i]}</span><span class="empty">—</span>`;
+      }
+      el.appendChild(row);
+    }
+  }
+
+  /* ─── Input ───────────────────────────────────────────────────────────── */
+  function handleSpace() {
+    if      (state === 'idle')    startGame();
+    else if (state === 'running') jump();
+    else if (state === 'dead')    resetGame();
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    // Visual press on whichever button is visible
+    pressBtn(state === 'dead' ? 'resetBtn' : 'spaceBtn');
+    handleSpace();
+  });
+
+  document.addEventListener('keyup', e => {
+    if (e.code === 'Space') {
+      releaseBtn('spaceBtn');
+      releaseBtn('resetBtn');
+    }
+  });
+
+  // On-screen button
+  function setupBtn(id) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      pressBtn(id);
+      setTimeout(() => releaseBtn(id), 120);
+      handleSpace();
+    });
+  }
+
+  function pressBtn(id)   { document.getElementById(id)?.classList.add('pressed'); }
+  function releaseBtn(id) { document.getElementById(id)?.classList.remove('pressed'); }
+
+  setupBtn('spaceBtn');
+  setupBtn('resetBtn');
+
+  /* ─── Boot ────────────────────────────────────────────────────────────── */
+  renderUI();
+  // Show runner parked in URL bar on load so users see what's coming
+  history.replaceState(null, '', '#' + RUNNER_RUN + GROUND.repeat(TRACK_LEN - 1));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>go to the gym</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: #fff;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    /* ── Collage background ── */
+    #collage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-auto-rows: calc(100vh / 4);
+      grid-auto-flow: dense;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      z-index: 0;
+    }
+
+    #collage img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      filter: saturate(0.8);
+    }
+
+    /* ── Dark overlay ── */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.62);
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      z-index: 1;
+    }
+
+    /* ── Main content (above overlay) ── */
+    #content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Typing section ── */
+    #typing-section {
+      text-align: center;
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .prompt {
+      font-size: 0.85rem;
+      color: #bbb;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.6rem;
+    }
+
+    .phrase {
+      font-size: min(4.4rem, 9vw);
+      line-height: 1.25;
+      user-select: none;
+      cursor: default;
+      color: #1a1a1a;
+    }
+
+    .letter {
+      opacity: 0.12;
+      transition: opacity 0.1s ease;
+    }
+
+    .letter.typed {
+      opacity: 1;
+    }
+
+    /* ── Character section ── */
+    #char-section {
+      text-align: center;
+      max-width: 640px;
+      width: 100%;
+      animation: fadein 0.45s ease;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .char-quote {
+      font-size: clamp(1.3rem, 3vw, 1.95rem);
+      line-height: 1.5;
+      font-style: italic;
+      color: #fff;
+      margin-bottom: 1.8rem;
+    }
+
+    .char-img-wrap {
+      margin: 0 auto 1rem;
+      width: 100%;
+      max-width: min(340px, 80vw);
+      aspect-ratio: 3 / 4;
+      background: #1c1c1c;
+      overflow: hidden;
+    }
+
+    .char-img-wrap.loading {
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { background: #1c1c1c; }
+      50%       { background: #2a2a2a; }
+    }
+
+    .char-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .char-img.loaded {
+      opacity: 1;
+    }
+
+    .char-info {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-style: italic;
+      margin-bottom: 2.4rem;
+    }
+
+    .go-text {
+      font-size: clamp(2.8rem, 8vw, 5rem);
+      font-weight: bold;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .restart-hint {
+      margin-top: 1.6rem;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.25);
+      letter-spacing: 0.05em;
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div id="collage"></div>
+<div id="overlay"></div>
+
+<div id="content">
+
+  <div id="typing-section">
+    <p class="prompt">type the following</p>
+    <div class="phrase" id="phrase"></div>
+  </div>
+
+  <div id="char-section" hidden>
+    <div class="char-img-wrap loading" id="char-img-wrap">
+      <img class="char-img" id="char-img" alt="">
+    </div>
+    <p class="char-info" id="char-info"></p>
+    <p class="go-text">go to the gym.</p>
+    <p class="restart-hint">press any key to go again</p>
+  </div>
+
+</div>
+
+<script>
+  /* ─── Characters ─────────────────────────────────────────────────── */
+  const characters = [
+    // Dragon Ball
+    { name: 'Goku',                 anime: 'Dragon Ball Z' },
+    { name: 'Vegeta',               anime: 'Dragon Ball Z' },
+    { name: 'Gohan',                anime: 'Dragon Ball Z' },
+    { name: 'Piccolo',              anime: 'Dragon Ball Z' },
+    { name: 'Broly',                anime: 'Dragon Ball Super' },
+    // Naruto
+    { name: 'Rock Lee',             anime: 'Naruto' },
+    { name: 'Might Guy',            anime: 'Naruto' },
+    { name: 'Madara Uchiha',        anime: 'Naruto' },
+    // One Punch Man
+    { name: 'Saitama',              anime: 'One Punch Man' },
+    { name: 'Bang (Silver Fang)',   anime: 'One Punch Man', query: 'Bang Silver Fang' },
+    // One Piece
+    { name: 'Roronoa Zoro',         anime: 'One Piece' },
+    { name: 'Whitebeard',           anime: 'One Piece' },
+    { name: 'Shanks',               anime: 'One Piece' },
+    // Seven Deadly Sins
+    { name: 'Escanor',              anime: 'Seven Deadly Sins' },
+    // Berserk
+    { name: 'Guts',                 anime: 'Berserk' },
+    // Demon Slayer
+    { name: 'Tengen Uzui',          anime: 'Demon Slayer' },
+    { name: 'Gyomei Himejima',      anime: 'Demon Slayer' },
+    { name: 'Akaza',                anime: 'Demon Slayer' },
+    // Attack on Titan
+    { name: 'Levi Ackerman',        anime: 'Attack on Titan' },
+    // Vinland Saga
+    { name: 'Thorfinn',             anime: 'Vinland Saga' },
+    // Hunter x Hunter
+    { name: 'Netero',               anime: 'Hunter x Hunter' },
+    { name: 'Meruem',               anime: 'Hunter x Hunter' },
+    // JoJo's Bizarre Adventure
+    { name: 'Jotaro Kujo',          anime: 'JoJo\'s Bizarre Adventure' },
+    // Bleach
+    { name: 'Kenpachi Zaraki',      anime: 'Bleach' },
+    { name: 'Yamamoto Genryūsai',   anime: 'Bleach', query: 'Yamamoto Genryuusai Shigekuni' },
+    // Record of Ragnarok
+    { name: 'Heracles',             anime: 'Record of Ragnarok', query: 'Heracles Shuumatsu no Valkyrie' },
+    { name: 'Lu Bu',                anime: 'Record of Ragnarok', query: 'Lu Bu Shuumatsu no Valkyrie' },
+    // Jujutsu Kaisen
+    { name: 'Yuji Itadori',         anime: 'Jujutsu Kaisen' },
+    { name: 'Aoi Todo',             anime: 'Jujutsu Kaisen' },
+    { name: 'Toji Fushiguro',       anime: 'Jujutsu Kaisen' },
+    // Fullmetal Alchemist: Brotherhood
+    { name: 'Alex Louis Armstrong', anime: 'Fullmetal Alchemist: Brotherhood' },
+    // Solo Leveling
+    { name: 'Sung Jin-Woo',         anime: 'Solo Leveling' },
+  ];
+
+  /* ─── Slug (must match fetch-images.js) ─────────────────────────── */
+  function toSlug(name) {
+    return name
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  /* ─── Collage ────────────────────────────────────────────────────── */
+  // picks is kept module-level so showCharacter() draws from the same 20 —
+  // guaranteeing the card image is already in browser cache when the phrase completes.
+  const SIZES = [
+    { col: 1, row: 1 },
+    { col: 1, row: 1 },
+    { col: 1, row: 1 },
+    { col: 2, row: 1 },
+    { col: 1, row: 2 },
+    { col: 2, row: 2 },
+    { col: 3, row: 1 },
+    { col: 1, row: 3 },
+  ];
+
+  const collageEl = document.getElementById('collage');
+  const picks     = [...characters].sort(() => Math.random() - 0.5).slice(0, 20);
+  picks.forEach(char => {
+    const size = SIZES[Math.floor(Math.random() * SIZES.length)];
+    const img  = document.createElement('img');
+    img.src   = `img/${toSlug(char.name)}.jpg`;
+    img.alt   = '';
+    img.style.gridColumn = `span ${size.col}`;
+    img.style.gridRow    = `span ${size.row}`;
+    img.onerror = () => { img.style.opacity = '0'; };
+    collageEl.appendChild(img);
+  });
+
+  /* ─── Image loading (local → Jikan fallback) ─────────────────────── */
+  const IMG_CACHE_PREFIX = 'gtg-img-v1-';
+
+  async function fetchJikanUrl(char) {
+    const cacheKey = IMG_CACHE_PREFIX + char.name;
+    const cached   = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+    try {
+      const q    = encodeURIComponent(char.query || char.name);
+      const res  = await fetch(`https://api.jikan.moe/v4/characters?q=${q}&limit=3`);
+      if (!res.ok) throw new Error('API error');
+      const json = await res.json();
+      const url  = json.data?.[0]?.images?.jpg?.image_url;
+      if (url) { localStorage.setItem(cacheKey, url); return url; }
+    } catch { /* silently fail */ }
+    return null;
+  }
+
+  /* ─── State ─────────────────────────────────────────────────────── */
+  const TARGET = 'give me the strength to go gym';
+  let progress = 0;
+  let showing  = false;
+
+  const phraseEl      = document.getElementById('phrase');
+  const typingSection = document.getElementById('typing-section');
+  const charSection   = document.getElementById('char-section');
+  const charImgWrap   = document.getElementById('char-img-wrap');
+  const charImg       = document.getElementById('char-img');
+  const charInfo      = document.getElementById('char-info');
+
+  /* ─── Build letter spans ─────────────────────────────────────────── */
+  const spans = TARGET.split('').map(ch => {
+    const span = document.createElement('span');
+    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.className   = 'letter';
+    phraseEl.appendChild(span);
+    return { el: span, ch };
+  });
+
+  /* ─── Input ──────────────────────────────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (showing) { reset(); return; }
+    const key = e.key;
+    if (key.length !== 1) return;
+    if (key === ' ') e.preventDefault();
+    if (key === TARGET[progress]) {
+      spans[progress].el.classList.add('typed');
+      progress++;
+      if (progress === TARGET.length) showCharacter();
+    }
+  });
+
+  /* ─── Show character ─────────────────────────────────────────────── */
+  async function showCharacter() {
+    showing = true;
+    const char = picks[Math.floor(Math.random() * picks.length)];
+
+    charInfo.textContent  = `— ${char.name}, ${char.anime}`;
+    charImg.classList.remove('loaded');
+    charImgWrap.classList.add('loading');
+    charImg.src = '';
+
+    typingSection.hidden = true;
+    charSection.hidden   = false;
+    document.getElementById('collage').style.opacity = '1';
+    document.getElementById('overlay').style.opacity = '1';
+
+    // Try local file first, fall back to Jikan API
+    const localSrc = `img/${toSlug(char.name)}.jpg`;
+    charImg.onload = () => {
+      charImgWrap.classList.remove('loading');
+      charImg.classList.add('loaded');
+    };
+    charImg.onerror = async () => {
+      const url = await fetchJikanUrl(char);
+      if (url && showing) {
+        charImg.onerror = () => { charImgWrap.classList.remove('loading'); };
+        charImg.src = url;
+      } else {
+        charImgWrap.classList.remove('loading');
+      }
+    };
+    charImg.src = localSrc;
+  }
+
+  /* ─── Reset ──────────────────────────────────────────────────────── */
+  function reset() {
+    showing  = false;
+    progress = 0;
+    spans.forEach(s => s.el.classList.remove('typed'));
+    charImg.src = '';
+    charImg.classList.remove('loaded');
+    charImgWrap.classList.add('loading');
+    charSection.hidden   = true;
+    typingSection.hidden = false;
+    document.getElementById('collage').style.opacity = '0';
+    document.getElementById('overlay').style.opacity = '0';
+  }
+</script>
+
+</body>
+</html>
