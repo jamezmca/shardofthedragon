@@ -269,7 +269,9 @@
   ];
 
   const collageEl = document.getElementById('collage');
-  const picks     = [...characters].sort(() => Math.random() - 0.5).slice(0, 20);
+  const shuffled  = [...characters].sort(() => Math.random() - 0.5);
+  const picks     = shuffled.slice(0, 20);   // collage only
+  const featured  = shuffled.slice(20);       // featured card only — guaranteed no overlap
   picks.forEach(char => {
     const size = SIZES[Math.floor(Math.random() * SIZES.length)];
     const img  = document.createElement('img');
@@ -337,7 +339,8 @@
   /* ─── Show character ─────────────────────────────────────────────── */
   async function showCharacter() {
     showing = true;
-    const char = picks[Math.floor(Math.random() * picks.length)];
+    const pool = featured.length ? featured : picks;
+    const char = pool[Math.floor(Math.random() * pool.length)];
 
     charInfo.textContent  = `— ${char.name}, ${char.anime}`;
     charImg.classList.remove('loaded');
