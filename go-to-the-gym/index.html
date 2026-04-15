@@ -207,7 +207,7 @@
     { name: 'Madara Uchiha',        anime: 'Naruto' },
     // One Punch Man
     { name: 'Saitama',              anime: 'One Punch Man' },
-    { name: 'Bang (Silver Fang)',   anime: 'One Punch Man', query: 'Bang Silver Fang' },
+    { name: 'Bang (Silver Fang)',   anime: 'One Punch Man' },
     // One Piece
     { name: 'Roronoa Zoro',         anime: 'One Piece' },
     { name: 'Whitebeard',           anime: 'One Piece' },
@@ -231,10 +231,10 @@
     { name: 'Jotaro Kujo',          anime: 'JoJo\'s Bizarre Adventure' },
     // Bleach
     { name: 'Kenpachi Zaraki',      anime: 'Bleach' },
-    { name: 'Yamamoto Genryūsai',   anime: 'Bleach', query: 'Yamamoto Genryuusai Shigekuni' },
+    { name: 'Yamamoto Genryūsai',   anime: 'Bleach' },
     // Record of Ragnarok
-    { name: 'Heracles',             anime: 'Record of Ragnarok', query: 'Heracles Shuumatsu no Valkyrie' },
-    { name: 'Lu Bu',                anime: 'Record of Ragnarok', query: 'Lu Bu Shuumatsu no Valkyrie' },
+    { name: 'Heracles',             anime: 'Record of Ragnarok' },
+    { name: 'Lu Bu',                anime: 'Record of Ragnarok' },
     // Jujutsu Kaisen
     { name: 'Yuji Itadori',         anime: 'Jujutsu Kaisen' },
     { name: 'Aoi Todo',             anime: 'Jujutsu Kaisen' },
@@ -255,51 +255,52 @@
   }
 
   /* ─── Collage ────────────────────────────────────────────────────── */
-  // picks is kept module-level so showCharacter() draws from the same 20 —
-  // guaranteeing the card image is already in browser cache when the phrase completes.
-  const SIZES = [
-    { col: 1, row: 1 },
-    { col: 1, row: 1 },
-    { col: 1, row: 1 },
-    { col: 2, row: 1 },
-    { col: 1, row: 2 },
-    { col: 2, row: 2 },
-    { col: 3, row: 1 },
-    { col: 1, row: 3 },
-  ];
+  function pickSize(w, h) {
+    const ratio = w / h;
+    if (ratio > 1.3) {
+      // landscape — wide tiles
+      return [[2,1],[2,1],[3,1]][Math.floor(Math.random() * 3)];
+    } else if (ratio < 0.8) {
+      // portrait — tall tiles
+      return [[1,2],[1,2],[1,3]][Math.floor(Math.random() * 3)];
+    } else {
+      // square / near-square
+      return [[1,1],[2,2]][Math.floor(Math.random() * 2)];
+    }
+  }
 
   const collageEl = document.getElementById('collage');
   const shuffled  = [...characters].sort(() => Math.random() - 0.5);
   const picks     = shuffled.slice(0, 20);   // collage only
   const featured  = shuffled.slice(20);       // featured card only — guaranteed no overlap
   picks.forEach(char => {
-    const size = SIZES[Math.floor(Math.random() * SIZES.length)];
-    const img  = document.createElement('img');
-    img.src   = `img/${toSlug(char.name)}.jpg`;
+    const img = document.createElement('img');
     img.alt   = '';
-    img.style.gridColumn = `span ${size.col}`;
-    img.style.gridRow    = `span ${size.row}`;
+    // Start at 1×1; onload will correct span based on actual dimensions.
+    // The collage is opacity:0 until phrase completes so reflow is invisible.
+    img.style.gridColumn = 'span 1';
+    img.style.gridRow    = 'span 1';
+    img.onload = () => {
+      const [c, r] = pickSize(img.naturalWidth, img.naturalHeight);
+      img.style.gridColumn = `span ${c}`;
+      img.style.gridRow    = `span ${r}`;
+    };
     img.onerror = () => { img.style.opacity = '0'; };
+    img.src = `img/${toSlug(char.name)}.jpg`;
     collageEl.appendChild(img);
   });
 
-  /* ─── Image loading (local → Jikan fallback) ─────────────────────── */
-  const IMG_CACHE_PREFIX = 'gtg-img-v1-';
-
-  async function fetchJikanUrl(char) {
-    const cacheKey = IMG_CACHE_PREFIX + char.name;
-    const cached   = localStorage.getItem(cacheKey);
-    if (cached) return cached;
-    try {
-      const q    = encodeURIComponent(char.query || char.name);
-      const res  = await fetch(`https://api.jikan.moe/v4/characters?q=${q}&limit=3`);
-      if (!res.ok) throw new Error('API error');
-      const json = await res.json();
-      const url  = json.data?.[0]?.images?.jpg?.image_url;
-      if (url) { localStorage.setItem(cacheKey, url); return url; }
-    } catch { /* silently fail */ }
-    return null;
-  }
+  // Add filler tiles (1×1) from the same picks pool to plug any gaps left by large spans.
+  // Images are already cached so these load instantly.
+  [...picks].sort(() => Math.random() - 0.5).forEach(char => {
+    const img = document.createElement('img');
+    img.alt   = '';
+    img.style.gridColumn = 'span 1';
+    img.style.gridRow    = 'span 1';
+    img.onerror = () => { img.style.opacity = '0'; };
+    img.src = `img/${toSlug(char.name)}.jpg`;
+    collageEl.appendChild(img);
+  });
 
   /* ─── State ─────────────────────────────────────────────────────── */
   const TARGET = 'give me the strength to go gym';
@@ -337,7 +338,7 @@
   });
 
   /* ─── Show character ─────────────────────────────────────────────── */
-  async function showCharacter() {
+  function showCharacter() {
     showing = true;
     const pool = featured.length ? featured : picks;
     const char = pool[Math.floor(Math.random() * pool.length)];
@@ -352,22 +353,9 @@
     document.getElementById('collage').style.opacity = '1';
     document.getElementById('overlay').style.opacity = '1';
 
-    // Try local file first, fall back to Jikan API
-    const localSrc = `img/${toSlug(char.name)}.jpg`;
-    charImg.onload = () => {
-      charImgWrap.classList.remove('loading');
-      charImg.classList.add('loaded');
-    };
-    charImg.onerror = async () => {
-      const url = await fetchJikanUrl(char);
-      if (url && showing) {
-        charImg.onerror = () => { charImgWrap.classList.remove('loading'); };
-        charImg.src = url;
-      } else {
-        charImgWrap.classList.remove('loading');
-      }
-    };
-    charImg.src = localSrc;
+    charImg.onload  = () => { charImgWrap.classList.remove('loading'); charImg.classList.add('loaded'); };
+    charImg.onerror = () => { charImgWrap.classList.remove('loading'); };
+    charImg.src = `img/${toSlug(char.name)}.jpg`;
   }
 
   /* ─── Reset ──────────────────────────────────────────────────────── */
