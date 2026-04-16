@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#18181b"/>
+
+  <!-- Left: title text, centered in the 640px left column -->
+  <text x="320" y="228" font-family="'Courier New',Courier,monospace" font-size="80" font-weight="bold"
+        fill="#ffffff" text-anchor="middle" letter-spacing="6">URL</text>
+  <text x="320" y="324" font-family="'Courier New',Courier,monospace" font-size="80" font-weight="bold"
+        fill="#ffffff" text-anchor="middle" letter-spacing="6">CHESS</text>
+  <text x="320" y="378" font-family="'Courier New',Courier,monospace" font-size="19"
+        fill="#666666" text-anchor="middle">play chess by sharing a link</text>
+
+  <!-- Thin vertical divider -->
+  <line x1="618" y1="75" x2="618" y2="555" stroke="#2e2e2e" stroke-width="1"/>
+
+  <!-- Board border shadow -->
+  <rect x="637" y="72" width="486" height="486" fill="#111111" rx="2"/>
+
+  <!-- Board: x0=640, y0=75, sq=60 -->
+
+  <!-- Light squares (#f0d9b5) -->
+  <rect x="700" y="495" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="820" y="495" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="940" y="495" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1060" y="495" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="640" y="435" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="760" y="435" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="880" y="435" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1000" y="435" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="700" y="375" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="820" y="375" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="940" y="375" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1060" y="375" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="640" y="315" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="760" y="315" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="880" y="315" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1000" y="315" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="700" y="255" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="820" y="255" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="940" y="255" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1060" y="255" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="640" y="195" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="760" y="195" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="880" y="195" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1000" y="195" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="700" y="135" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="820" y="135" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="940" y="135" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1060" y="135" width="60" height="60" fill="#f0d9b5"/>
+  <rect x="640" y="75"  width="60" height="60" fill="#f0d9b5"/>
+  <rect x="760" y="75"  width="60" height="60" fill="#f0d9b5"/>
+  <rect x="880" y="75"  width="60" height="60" fill="#f0d9b5"/>
+  <rect x="1000" y="75" width="60" height="60" fill="#f0d9b5"/>
+
+  <!-- Dark squares (#b58863) -->
+  <rect x="640" y="495" width="60" height="60" fill="#b58863"/>
+  <rect x="760" y="495" width="60" height="60" fill="#b58863"/>
+  <rect x="880" y="495" width="60" height="60" fill="#b58863"/>
+  <rect x="1000" y="495" width="60" height="60" fill="#b58863"/>
+  <rect x="700" y="435" width="60" height="60" fill="#b58863"/>
+  <rect x="820" y="435" width="60" height="60" fill="#b58863"/>
+  <rect x="940" y="435" width="60" height="60" fill="#b58863"/>
+  <rect x="1060" y="435" width="60" height="60" fill="#b58863"/>
+  <rect x="640" y="375" width="60" height="60" fill="#b58863"/>
+  <rect x="760" y="375" width="60" height="60" fill="#b58863"/>
+  <rect x="880" y="375" width="60" height="60" fill="#b58863"/>
+  <rect x="1000" y="375" width="60" height="60" fill="#b58863"/>
+  <rect x="700" y="315" width="60" height="60" fill="#b58863"/>
+  <rect x="820" y="315" width="60" height="60" fill="#b58863"/>
+  <rect x="940" y="315" width="60" height="60" fill="#b58863"/>
+  <rect x="1060" y="315" width="60" height="60" fill="#b58863"/>
+  <rect x="640" y="255" width="60" height="60" fill="#b58863"/>
+  <rect x="760" y="255" width="60" height="60" fill="#b58863"/>
+  <rect x="880" y="255" width="60" height="60" fill="#b58863"/>
+  <rect x="1000" y="255" width="60" height="60" fill="#b58863"/>
+  <rect x="700" y="195" width="60" height="60" fill="#b58863"/>
+  <rect x="820" y="195" width="60" height="60" fill="#b58863"/>
+  <rect x="940" y="195" width="60" height="60" fill="#b58863"/>
+  <rect x="1060" y="195" width="60" height="60" fill="#b58863"/>
+  <rect x="640" y="135" width="60" height="60" fill="#b58863"/>
+  <rect x="760" y="135" width="60" height="60" fill="#b58863"/>
+  <rect x="880" y="135" width="60" height="60" fill="#b58863"/>
+  <rect x="1000" y="135" width="60" height="60" fill="#b58863"/>
+  <rect x="700" y="75"  width="60" height="60" fill="#b58863"/>
+  <rect x="820" y="75"  width="60" height="60" fill="#b58863"/>
+  <rect x="940" y="75"  width="60" height="60" fill="#b58863"/>
+  <rect x="1060" y="75" width="60" height="60" fill="#b58863"/>
+
+  <!-- Pieces: font-size 40px, centered in each 60px square -->
+  <!-- center_x = x0 + file*60 + 30, center_y = y0 + (7-rank)*60 + 30 -->
+  <!-- x0=640, y0=75 -->
+
+  <!-- Black back rank (rank 7, center_y=105): ♜♞♝♛♚♝♞♜ -->
+  <text x="670"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♜</text>
+  <text x="730"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♞</text>
+  <text x="790"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♝</text>
+  <text x="850"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♛</text>
+  <text x="910"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♚</text>
+  <text x="970"  y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♝</text>
+  <text x="1030" y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♞</text>
+  <text x="1090" y="117" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♜</text>
+
+  <!-- Black pawns (rank 6, center_y=165) -->
+  <text x="670"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="730"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="790"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="850"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="910"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="970"  y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="1030" y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+  <text x="1090" y="177" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" stroke="#ccc" stroke-width="0.8">♟</text>
+
+  <!-- White pawns (rank 1, center_y=465) -->
+  <text x="670"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="730"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="790"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="850"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="910"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="970"  y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="1030" y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+  <text x="1090" y="477" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♙</text>
+
+  <!-- White back rank (rank 0, center_y=525): ♖♘♗♕♔♗♘♖ -->
+  <text x="670"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♖</text>
+  <text x="730"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♘</text>
+  <text x="790"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♗</text>
+  <text x="850"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♕</text>
+  <text x="910"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♔</text>
+  <text x="970"  y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♗</text>
+  <text x="1030" y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♘</text>
+  <text x="1090" y="537" font-family="serif" font-size="42" text-anchor="middle" dominant-baseline="middle" fill="#ffffff" stroke="#555" stroke-width="0.8">♖</text>
+
+</svg>
