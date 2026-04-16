@@ -53,6 +53,112 @@ let worker = null;
 let currentAudioUrl = null;
 let dotsInterval = null;
 
+// ── Word ticker ───────────────────────────────────────────────────
+const tickerEl = document.getElementById('word-ticker');
+const TICKER_CLASSES = ['tw-past2','tw-past1','tw-cur','tw-next1','tw-next2'];
+let tickerWords = [];
+let tickerIdx = 0;
+let tickerTarget = -1;
+let tickerTimer = null;
+let tickerChunkWordEnds = [];
+
+// Mirror of chunkText in worker.js — keeps word-boundary mapping in sync.
+function chunkTextForTicker(text, maxLen = 350) {
+  const chunks = [];
+  for (const para of text.split(/\n\n+/)) {
+    const sentences = para.match(/[^.!?\n]+[.!?\n]*/g) || [para];
+    let current = '';
+    for (let sent of sentences) {
+      sent = sent.trim();
+      if (!sent) continue;
+      if (current.length + sent.length + 1 > maxLen && current.length > 0) {
+        chunks.push(current.trim()); current = sent;
+      } else {
+        current += (current ? ' ' : '') + sent;
+      }
+      while (current.length > maxLen) {
+        const cut = current.lastIndexOf(' ', maxLen);
+        if (cut <= 0) { chunks.push(current); current = ''; break; }
+        chunks.push(current.slice(0, cut).trim());
+        current = current.slice(cut + 1);
+      }
+    }
+    if (current.trim()) chunks.push(current.trim());
+  }
+  return chunks.filter(c => c.length > 0);
+}
+
+function buildChunkWordEnds(text) {
+  // Returns array where ends[i] = index of the last word belonging to chunk i.
+  const ends = [];
+  let total = 0;
+  for (const chunk of chunkTextForTicker(text)) {
+    total += chunk.split(/\s+/).filter(Boolean).length;
+    ends.push(total - 1);
+  }
+  return ends;
+}
+
+function startWordTicker(text) {
+  tickerWords = text.trim().split(/\s+/).filter(Boolean);
+  tickerChunkWordEnds = buildChunkWordEnds(text);
+  tickerIdx = 0;
+  tickerTarget = -1;
+  tickerEl.hidden = false;
+  renderTicker();
+  // Advance one word at a time toward tickerTarget; pauses naturally at chunk
+  // boundaries until the next LOADING message advances the target.
+  tickerTimer = setInterval(() => {
+    if (tickerIdx < tickerTarget) { tickerIdx++; renderTicker(); }
+  }, 100);
+}
+
+function setTickerTarget(idx) {
+  tickerTarget = Math.min(Math.max(idx, 0), tickerWords.length - 1);
+}
+
+// Called on each LOADING chunk message.  chunk is 1-indexed.
+// chunk K starting  →  chunks 0..K-2 are complete,  chunk K-1 is running.
+function advanceTickerToChunk(chunk) {
+  const K = chunk; // 1-indexed
+  const ends = tickerChunkWordEnds;
+
+  // Snap past all completed chunks (so we never show less progress than reality).
+  const lastCompletedIdx = K - 2; // 0-indexed index of last completed chunk
+  if (lastCompletedIdx >= 0 && ends[lastCompletedIdx] !== undefined) {
+    tickerIdx = Math.max(tickerIdx, ends[lastCompletedIdx] + 1);
+  }
+
+  // Allow the ticker to animate through the current (running) chunk.
+  const currentChunkIdx = K - 1; // 0-indexed
+  const target = ends[currentChunkIdx] !== undefined
+    ? ends[currentChunkIdx]
+    : tickerWords.length - 1;
+  setTickerTarget(target);
+}
+
+function renderTicker() {
+  tickerEl.innerHTML = '';
+  for (let offset = -2; offset <= 2; offset++) {
+    const i = tickerIdx + offset;
+    const span = document.createElement('span');
+    span.textContent = (i >= 0 && i < tickerWords.length) ? tickerWords[i] : '\u00a0\u00a0\u00a0';
+    span.className = (i >= 0 && i < tickerWords.length) ? TICKER_CLASSES[offset + 2] : 'tw-empty';
+    tickerEl.appendChild(span);
+  }
+}
+
+function stopWordTicker() {
+  clearInterval(tickerTimer);
+  tickerTimer = null;
+  tickerEl.hidden = true;
+  tickerEl.innerHTML = '';
+  tickerWords = [];
+  tickerIdx = 0;
+  tickerTarget = -1;
+  tickerChunkWordEnds = [];
+}
+
 function startDots(label) {
   let count = 0;
   statusText.textContent = label;
@@ -89,6 +195,7 @@ speakBtn.addEventListener('click', () => {
   downloadBtn.hidden = false;
   downloadBtn.disabled = true;
   startDots('Synthesizing');
+  startWordTicker(text);
 
   worker.postMessage({
     type: MessageTypes.INFERENCE_REQUEST,
@@ -99,6 +206,7 @@ speakBtn.addEventListener('click', () => {
 
 resetBtn.addEventListener('click', () => {
   stopDots();
+  stopWordTicker();
   if (worker) {
     worker.terminate();
     worker = null;
@@ -162,11 +270,21 @@ function handleLoading({ status, chunk, total }) {
   if (status === 'synthesizing') {
     const label = (chunk && total > 1) ? `Synthesizing (${chunk}/${total})` : 'Synthesizing';
     startDots(label);
+
+    if (chunk) {
+      // Multi-chunk path: advance ticker to the words for this chunk.
+      advanceTickerToChunk(chunk);
+    } else {
+      // Single-chunk path: no per-chunk messages will follow, so let the
+      // ticker run freely through all words.
+      setTickerTarget(tickerWords.length - 1);
+    }
   }
 }
 
 function handleResult({ audio, sampling_rate }) {
   stopDots();
+  stopWordTicker();
   const blob = encodeWAV(audio, sampling_rate);
   if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
   currentAudioUrl = URL.createObjectURL(blob);
@@ -179,6 +297,7 @@ function handleResult({ audio, sampling_rate }) {
 
 function handleError({ message }) {
   stopDots();
+  stopWordTicker();
   downloadBtn.hidden = true;
   downloadBtn.disabled = true;
   setStatus('Error: ' + message);

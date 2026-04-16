@@ -8,6 +8,27 @@
   <meta name="description" content="Free text to speech in your browser. Paste any text and hear it read aloud instantly — no ads, no sign up, no server. Your text never leaves your device.">
   <meta property="og:title" content="Big Daddy Read To Me">
   <meta property="og:description" content="Free text to speech in your browser. No ads, no sign up, no server. Your text never leaves your device.">
+<style>
+  #word-ticker {
+    margin-top: 0.5rem;
+    font-size: 0.88rem;
+    display: flex;
+    gap: 0.4rem;
+    align-items: baseline;
+    min-height: 1.4em;
+    user-select: none;
+  }
+  #word-ticker span {
+    transition: color 0.12s ease, font-weight 0.12s ease;
+    white-space: nowrap;
+  }
+  .tw-past2  { color: #777; }
+  .tw-past1  { color: #555; }
+  .tw-cur    { color: #111; font-weight: 600; }
+  .tw-next1  { color: #aaa; }
+  .tw-next2  { color: #ccc; }
+  .tw-empty  { color: transparent; }
+</style>
 </head>
 
 <body>
@@ -40,6 +61,8 @@
     <button id="reset-btn" hidden>Reset</button>
     <span id="status-text"></span>
   </div>
+
+  <div id="word-ticker" hidden></div>
 
   <div id="output" hidden>
     <br>
