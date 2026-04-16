@@ -166,10 +166,25 @@
       letter-spacing: 0.05em;
     }
 
+    /* Hidden input to summon mobile keyboard */
+    #kb {
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      font-size: 16px; /* prevent iOS viewport zoom on focus */
+      border: none;
+      outline: none;
+    }
+
     [hidden] { display: none !important; }
   </style>
 </head>
 <body>
+
+<input id="kb" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
 <div id="collage"></div>
 <div id="overlay"></div>
@@ -187,7 +202,7 @@
     </div>
     <p class="char-info" id="char-info"></p>
     <p class="go-text">go to the gym.</p>
-    <p class="restart-hint">press any key to go again</p>
+    <p class="restart-hint">tap or press any key to go again</p>
   </div>
 
 </div>
@@ -327,18 +342,58 @@
   });
 
   /* ─── Input ──────────────────────────────────────────────────────── */
+  const kbInput = document.getElementById('kb');
+
+  // Tap anywhere: focus the hidden input to summon the mobile keyboard.
+  // On the result screen, a tap resets instead.
+  document.addEventListener('click', () => {
+    if (showing) { reset(); return; }
+    kbInput.focus({ preventScroll: true });
+  });
+
+  // On mobile, tap sends touchend before click — focus early so the
+  // keyboard appears without a second tap.
+  document.addEventListener('touchend', () => {
+    if (!showing) kbInput.focus({ preventScroll: true });
+  }, { passive: true });
+
+  // On mobile, autocapitalize etc. may mean keydown fires with key='Unidentified'.
+  // Use a flag so the input event doesn't double-process keys that keydown handled.
+  let handledByKeydown = false;
+
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (showing) { reset(); return; }
+    if (showing) { reset(); handledByKeydown = true; return; }
     const key = e.key;
     if (key.length !== 1) return;
     if (key === ' ') e.preventDefault();
+    handledByKeydown = true;
     if (key === TARGET[progress]) {
       spans[progress].el.classList.add('typed');
       progress++;
       if (progress === TARGET.length) showCharacter();
     }
   });
+
+  // Mobile keyboards fire `input` with e.data = the typed character.
+  // Skip if keydown already handled it (desktop path).
+  kbInput.addEventListener('input', e => {
+    const char = (e.data || '').toLowerCase();
+    kbInput.value = ''; // keep input empty so backspace etc. don't accumulate
+    if (handledByKeydown) { handledByKeydown = false; return; }
+    if (!char) return;
+    if (showing) { reset(); return; }
+    if (char === TARGET[progress]) {
+      spans[progress].el.classList.add('typed');
+      progress++;
+      if (progress === TARGET.length) showCharacter();
+    }
+  });
+
+  // Update prompt text on touch devices
+  if ('ontouchstart' in window) {
+    document.querySelector('.prompt').textContent = 'tap, then type the following';
+  }
 
   /* ─── Show character ─────────────────────────────────────────────── */
   function showCharacter() {
