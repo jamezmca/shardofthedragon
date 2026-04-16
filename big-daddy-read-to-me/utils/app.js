@@ -167,6 +167,7 @@ function startDots(label) {
 
 function stopDots() {
   spinnerEl.hidden = true;
+  statusText.textContent = '';
 }
 
 const isCached = localStorage.getItem(CACHE_KEY) === 'true';
