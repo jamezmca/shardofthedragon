@@ -432,11 +432,22 @@ function pushURL(replace,snap){
 }
 
 function newGame(){
+  // Called from button — open fresh game in a new tab
   const gid=genId();
   const url=buildURL(gid,encodeState(initState(),false));
   const a=document.createElement('a');
   a.href=url;a.target='_blank';a.rel='noopener';
   document.body.appendChild(a);a.click();a.remove();
+}
+
+function startHere(){
+  // Called on first load with no game ID — set up in current tab
+  GID=genId();
+  ST=initState();
+  SIDE=null;
+  recordSeen(GID,ST);
+  history.replaceState(null,'',buildURL(GID,encodeState(ST,false)));
+  render();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -664,7 +675,7 @@ window.addEventListener('popstate',()=>{
     if(w)showStale(w);
     recordSeen(GID,ST);
   } else {
-    newGame();
+    startHere();
     return;
   }
   render();
