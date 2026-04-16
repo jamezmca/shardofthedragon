@@ -51,7 +51,8 @@ fileInput.addEventListener('change', () => {
 
 let worker = null;
 let currentAudioUrl = null;
-let dotsInterval = null;
+
+const spinnerEl = document.getElementById('spinner');
 
 // ── Word ticker ───────────────────────────────────────────────────
 const tickerEl = document.getElementById('word-ticker');
@@ -160,17 +161,12 @@ function stopWordTicker() {
 }
 
 function startDots(label) {
-  let count = 0;
   statusText.textContent = label;
-  dotsInterval = setInterval(() => {
-    count = (count + 1) % 4;
-    statusText.textContent = label + '.'.repeat(count);
-  }, 500);
+  spinnerEl.hidden = false;
 }
 
 function stopDots() {
-  clearInterval(dotsInterval);
-  dotsInterval = null;
+  spinnerEl.hidden = true;
 }
 
 const isCached = localStorage.getItem(CACHE_KEY) === 'true';
