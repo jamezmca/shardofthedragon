@@ -158,8 +158,11 @@ function handleDownloading({ file, progress }) {
   }
 }
 
-function handleLoading({ status }) {
-  if (status === 'synthesizing') startDots('Synthesizing');
+function handleLoading({ status, chunk, total }) {
+  if (status === 'synthesizing') {
+    const label = (chunk && total > 1) ? `Synthesizing (${chunk}/${total})` : 'Synthesizing';
+    startDots(label);
+  }
 }
 
 function handleResult({ audio, sampling_rate }) {
