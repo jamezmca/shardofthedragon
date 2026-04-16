@@ -76,7 +76,7 @@
     }
 
     .phrase {
-      font-size: min(4.4rem, 9vw);
+      font-size: min(4.4rem, 6.5vw, 9vh);
       line-height: 1.25;
       user-select: none;
       cursor: default;
@@ -397,6 +397,7 @@
 
   /* ─── Show character ─────────────────────────────────────────────── */
   function showCharacter() {
+    kbInput.blur(); // dismiss mobile keyboard
     showing = true;
     const pool = featured.length ? featured : picks;
     const char = pool[Math.floor(Math.random() * pool.length)];
