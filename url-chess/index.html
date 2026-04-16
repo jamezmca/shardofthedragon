@@ -31,7 +31,6 @@ input[type=text]{font-family:monospace;font-size:.9rem;padding:.28rem .45rem;bor
 #stale{font-size:.8rem;padding:.35rem .55rem;background:#fffbe0;border:1px solid #e8c840;margin-bottom:.5rem;display:none}
 #gameover{font-size:.95rem;font-weight:bold;padding:.45rem;text-align:center;background:#222;color:#fff;margin-bottom:.5rem;display:none}
 #turn-line{font-size:.85rem;margin-bottom:.3rem}
-#urlinfo{font-size:.75rem;color:#666;margin-top:.35rem}
 #history{font-size:.78rem;max-height:4.5rem;overflow-y:auto;background:#fff;border:1px solid #ccc;padding:.3rem .5rem;line-height:1.9}
 #promo-picker{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.4rem}
 #promo-picker span{font-size:.82rem}
@@ -60,16 +59,10 @@ input[type=text]{font-family:monospace;font-size:.9rem;padding:.28rem .45rem;bor
 
 <section>
   <div class="row">
-    <button id="btn-white">Play as White</button>
-    <button id="btn-black">Play as Black</button>
-    <button id="btn-new">New Game</button>
-  </div>
-  <div class="row">
     <button id="btn-copy">Copy Link</button>
-    <button id="btn-compress">Compress URL</button>
+    <button id="btn-new">New Game</button>
     <button id="btn-clear">Clear Local Data</button>
   </div>
-  <div id="urlinfo"></div>
 </section>
 
 <section>
@@ -425,20 +418,22 @@ function staleWarning(gid,st){
 let GID='', ST=null, SIDE=null;
 let hlFrom=null, legalDests=[];
 
+const URL_COMPRESS_THRESHOLD = 1800;
+
 function pushURL(replace,snap){
-  const url=buildURL(GID,encodeState(ST,snap||false));
+  let ss=encodeState(ST,snap||false);
+  // Auto-compress if history mode would exceed the threshold
+  if(!snap && buildURL(GID,ss).length > URL_COMPRESS_THRESHOLD)
+    ss=encodeState(ST,true);
+  const url=buildURL(GID,ss);
   if(replace)history.replaceState(null,'',url);
   else history.pushState(null,'',url);
 }
 
 function newGame(){
-  GID=genId();
-  ST=initState();
-  SIDE='w';
-  lset(GID,'side','w');
-  recordSeen(GID,ST);
-  pushURL(true);
-  render();
+  const gid=genId();
+  const url=buildURL(gid,encodeState(initState(),false));
+  window.open(url,'_blank');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -448,7 +443,6 @@ function newGame(){
 function render(){
   renderBoard();
   renderTurn();
-  renderURLInfo();
   renderHistory();
   renderGameOver();
 }
@@ -479,13 +473,17 @@ function renderBoard(){
 function renderTurn(){
   const s=status(ST);
   const tn=ST.turn==='w'?'White':'Black';
-  const sn=SIDE==='w'?'White':SIDE==='b'?'Black':'Observer';
-  const mine=SIDE===ST.turn;
-  let msg=`Turn: <b>${tn}</b> &nbsp;·&nbsp; You: <b>${sn}</b> &nbsp;·&nbsp; `;
+  let msg=`Turn: <b>${tn}</b> &nbsp;·&nbsp; `;
   if(s==='check')msg+=`<b style="color:#c00">CHECK</b> &nbsp;·&nbsp; `;
-  if(s==='checkmate'||s==='stalemate'||s==='draw50')msg+='<b>Game over</b>';
-  else if(mine)msg+='<b>Your turn</b> — move then copy & share the link';
-  else msg+='Waiting for opponent\'s link';
+  if(s==='checkmate'||s==='stalemate'||s==='draw50'){
+    msg+='<b>Game over</b>';
+  } else if(SIDE===null){
+    msg+=`Make a move to play as <b>${tn}</b>`;
+  } else if(SIDE===ST.turn){
+    msg+=`<b>Your turn</b> — move then copy &amp; share the link`;
+  } else {
+    msg+='Waiting for opponent\'s link';
+  }
   document.getElementById('turn-line').innerHTML=msg;
 }
 
@@ -498,13 +496,6 @@ function renderGameOver(){
   else el.style.display='none';
 }
 
-function renderURLInfo(){
-  const url=buildURL(GID,encodeState(ST,false));
-  const len=url.length, MAX=2000;
-  const rem=Math.max(0,Math.floor((MAX-len)/5));
-  document.getElementById('urlinfo').textContent=
-    `URL: ${len} chars · safe limit ~${MAX} · ~${rem} moves before compression recommended`;
-}
 
 function renderHistory(){
   const el=document.getElementById('history');
@@ -536,7 +527,7 @@ function showPromoPicker(from,to){
   el.innerHTML='<span>Promote to:</span>';
   el.style.display='flex';
   for(const p of 'qrbn'){
-    const g=SIDE==='w'?p.toUpperCase():p;
+    const g=ST.turn==='w'?p.toUpperCase():p;
     const btn=document.createElement('button');
     btn.textContent=GLYPH[g]+' '+p.toUpperCase();
     btn.onclick=()=>{
@@ -555,6 +546,8 @@ function showPromoPicker(from,to){
 // ── Move execution ────────────────────────────────────────────────
 
 function doMove(mv){
+  // Assign side on first move: whoever moves first is that color
+  if(SIDE===null){SIDE=col(ST.board[mv.from]);lset(GID,'side',SIDE);}
   ST=applyMove(ST,mv);
   recordSeen(GID,ST);
   pushURL(false);
@@ -633,26 +626,17 @@ document.getElementById('btn-move').addEventListener('click',()=>tryMove(documen
 document.getElementById('mi').addEventListener('keydown',e=>{if(e.key==='Enter')tryMove(e.target.value);});
 document.getElementById('mi').addEventListener('input',e=>onInput(e.target.value));
 
-document.getElementById('btn-new').addEventListener('click',()=>{if(confirm('Start a new game? A new game ID will be created.'))newGame();});
-
-document.getElementById('btn-white').addEventListener('click',()=>{SIDE='w';lset(GID,'side','w');render();});
-document.getElementById('btn-black').addEventListener('click',()=>{SIDE='b';lset(GID,'side','b');render();});
+document.getElementById('btn-new').addEventListener('click',()=>newGame());
 
 document.getElementById('btn-copy').addEventListener('click',()=>{
-  navigator.clipboard.writeText(buildURL(GID,encodeState(ST,false))).then(()=>{
+  // Copy the current URL as it appears in the address bar
+  navigator.clipboard.writeText(location.href).then(()=>{
     showMsg('Link copied!','ok');setTimeout(clearMsg,2500);
   });
 });
 
-document.getElementById('btn-compress').addEventListener('click',()=>{
-  pushURL(true,true);
-  showMsg('URL compressed to snapshot mode.','ok');
-  renderURLInfo();
-  setTimeout(clearMsg,2500);
-});
-
 document.getElementById('btn-clear').addEventListener('click',()=>{
-  if(confirm('Clear local data for this game? (Side choice and stale detection will reset.)'))
+  if(confirm('Clear local data for this game? (Side assignment and stale detection will reset.)'))
   {lclear(GID);SIDE=null;hideStale();render();}
 });
 
