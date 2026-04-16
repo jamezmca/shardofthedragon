@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Generate og-image.png</title>
+<style>
+  body{font-family:monospace;padding:2rem;background:#111;color:#eee}
+  canvas{display:block;max-width:100%;border:1px solid #333;margin:1rem 0}
+  button{font-family:monospace;font-size:1rem;padding:.5rem 1.2rem;background:#fff;border:none;cursor:pointer;margin-top:.5rem}
+  p{font-size:.85rem;color:#888;margin-top:1rem}
+</style>
+</head>
+<body>
+<h2>og-image.png generator</h2>
+<canvas id="c" width="1200" height="630"></canvas>
+<br>
+<button onclick="save()">Save as og-image.png</button>
+<p>Save the file, place it in the url-chess/ folder alongside index.html, and deploy.</p>
+
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+
+const W = 1200, H = 630;
+const SQ = 60;
+const X0 = 640, Y0 = 75;
+const LIGHT = '#f0d9b5', DARK = '#b58863';
+
+const PIECES = [
+  // [file, rank, glyph, isWhite]
+  // Black back rank (rank 7)
+  [0,7,'♜',false],[1,7,'♞',false],[2,7,'♝',false],[3,7,'♛',false],
+  [4,7,'♚',false],[5,7,'♝',false],[6,7,'♞',false],[7,7,'♜',false],
+  // Black pawns (rank 6)
+  [0,6,'♟',false],[1,6,'♟',false],[2,6,'♟',false],[3,6,'♟',false],
+  [4,6,'♟',false],[5,6,'♟',false],[6,6,'♟',false],[7,6,'♟',false],
+  // White pawns (rank 1)
+  [0,1,'♙',true],[1,1,'♙',true],[2,1,'♙',true],[3,1,'♙',true],
+  [4,1,'♙',true],[5,1,'♙',true],[6,1,'♙',true],[7,1,'♙',true],
+  // White back rank (rank 0)
+  [0,0,'♖',true],[1,0,'♘',true],[2,0,'♗',true],[3,0,'♕',true],
+  [4,0,'♔',true],[5,0,'♗',true],[6,0,'♘',true],[7,0,'♖',true],
+];
+
+function draw() {
+  // Background
+  ctx.fillStyle = '#18181b';
+  ctx.fillRect(0, 0, W, H);
+
+  // Left title
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 80px "Courier New", Courier, monospace';
+  ctx.letterSpacing = '6px';
+  ctx.fillText('URL', 320, 235);
+  ctx.fillText('CHESS', 320, 325);
+  ctx.font = '19px "Courier New", Courier, monospace';
+  ctx.fillStyle = '#666666';
+  ctx.letterSpacing = '0px';
+  ctx.fillText('play chess by sharing a link', 320, 378);
+
+  // Divider
+  ctx.strokeStyle = '#2e2e2e';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(618, 75); ctx.lineTo(618, 555); ctx.stroke();
+
+  // Board border
+  ctx.fillStyle = '#111111';
+  ctx.fillRect(637, 72, 486, 486);
+
+  // Squares
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      ctx.fillStyle = (f + r) % 2 === 0 ? DARK : LIGHT;
+      ctx.fillRect(X0 + f * SQ, Y0 + (7 - r) * SQ, SQ, SQ);
+    }
+  }
+
+  // Pieces
+  ctx.font = '42px serif';
+  ctx.textBaseline = 'middle';
+  for (const [f, r, glyph, white] of PIECES) {
+    const cx = X0 + f * SQ + SQ / 2;
+    const cy = Y0 + (7 - r) * SQ + SQ / 2;
+    // Shadow for visibility
+    ctx.fillStyle = white ? '#555' : '#ccc';
+    ctx.fillText(glyph, cx + 1, cy + 1);
+    ctx.fillStyle = white ? '#ffffff' : '#1a1a1a';
+    ctx.fillText(glyph, cx, cy);
+  }
+}
+
+function save() {
+  draw();
+  const a = document.createElement('a');
+  a.download = 'og-image.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+
+draw();
+</script>
+</body>
+</html>
