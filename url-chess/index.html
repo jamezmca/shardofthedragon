@@ -434,7 +434,9 @@ function pushURL(replace,snap){
 function newGame(){
   const gid=genId();
   const url=buildURL(gid,encodeState(initState(),false));
-  window.open(url,'_blank');
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();a.remove();
 }
 
 // ═══════════════════════════════════════════════════════════════════
