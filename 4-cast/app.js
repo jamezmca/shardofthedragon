@@ -66,7 +66,7 @@ async function geocodeSearch(query) {
 
 /* ─── Open-Meteo weather fetch ───────────────────────────────────────────────── */
 async function fetchWeather(lat, lon) {
-  const cacheKey = `wx:${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const cacheKey = `wx2:${lat.toFixed(2)},${lon.toFixed(2)}`;
   const cached = cacheGet(cacheKey, CACHE_WEATHER_TTL);
   if (cached) return cached;
 
@@ -74,26 +74,26 @@ async function fetchWeather(lat, lon) {
     `https://api.open-meteo.com/v1/forecast` +
     `?latitude=${lat}&longitude=${lon}` +
     `&current=weather_code,apparent_temperature` +
-    `&hourly=precipitation_probability` +
-    `&timezone=auto&forecast_days=1`;
+    `&hourly=weather_code,apparent_temperature,precipitation_probability` +
+    `&timezone=auto&forecast_days=4`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error('Weather request failed');
   const json = await res.json();
 
-  // Match current hour by truncating to "YYYY-MM-DDTHH" — hourly entries are
-  // always on the hour but current.time may include minutes (e.g. "T14:30").
+  // Find the index of the current hour in the hourly arrays.
   const nowHour = json.current.time.slice(0, 13);
-  const hourIndex = json.hourly.time.findIndex(t => t.slice(0, 13) === nowHour);
-  const precipPct = hourIndex >= 0
-    ? json.hourly.precipitation_probability[hourIndex]
-    : json.hourly.precipitation_probability[0];
+  const currentHourIndex = Math.max(
+    0, json.hourly.time.findIndex(t => t.slice(0, 13) === nowHour)
+  );
 
   const result = {
-    weatherCode:     json.current.weather_code,
-    apparentTemp:    Math.round(json.current.apparent_temperature),
-    precipPct:       precipPct ?? 0,
-    isMetric:        true,
+    currentHourIndex,
+    hourly: {
+      weather_code:             json.hourly.weather_code,
+      apparent_temperature:     json.hourly.apparent_temperature,
+      precipitation_probability: json.hourly.precipitation_probability,
+    },
   };
   cacheSet(cacheKey, result);
   return result;
@@ -107,7 +107,13 @@ const suggestionEl = document.getElementById('suggestions');
 const uiLocation   = document.getElementById('ui-location');
 const uiTemp       = document.getElementById('ui-temp');
 const uiRain       = document.getElementById('ui-rain');
+const timeNavEl    = document.getElementById('time-nav');
 const btnChange    = document.getElementById('btn-change');
+
+/* ─── Forecast offset state ──────────────────────────────────────────────────── */
+let selectedOffset = 0;
+let currentWx      = null;
+let currentName    = '';
 
 /* ─── Routing ────────────────────────────────────────────────────────────────── */
 function getParams() {
@@ -139,21 +145,54 @@ function clearLocation() {
 async function showWeather(name, lat, lon) {
   try {
     const wx = await fetchWeather(lat, lon);
-    const theme = wmoToTheme(wx.weatherCode, wx.apparentTemp);
-
-    document.body.setAttribute('data-theme', theme);
-    uiLocation.textContent = name;
-    uiTemp.innerHTML       = `${wx.apparentTemp}<span class="ui-temp-unit">°C</span>`;
-    uiRain.textContent     = `${wx.precipPct}% chance of rain`;
+    currentWx   = wx;
+    currentName = name;
 
     homeEl.hidden    = true;
     weatherEl.hidden = false;
+
+    renderWeather(name, wx, selectedOffset);
     startRefreshTimer(name, lat, lon);
   } catch (err) {
     console.error(err);
     alert('Could not load weather. Please try again.');
   }
 }
+
+/* ─── Render weather for a given hour offset ─────────────────────────────────── */
+function renderWeather(name, wx, offsetHours) {
+  const idx = Math.min(
+    wx.currentHourIndex + offsetHours,
+    wx.hourly.weather_code.length - 1
+  );
+  const weatherCode  = wx.hourly.weather_code[idx];
+  const apparentTemp = Math.round(wx.hourly.apparent_temperature[idx]);
+  const precipPct    = wx.hourly.precipitation_probability[idx] ?? 0;
+
+  const theme = wmoToTheme(weatherCode, apparentTemp);
+  document.body.setAttribute('data-theme', theme);
+
+  uiLocation.textContent = name;
+  uiTemp.innerHTML       = `${apparentTemp}<span class="ui-temp-unit">°C</span>`;
+  uiRain.textContent     = `${precipPct}% chance of rain`;
+}
+
+/* ─── Update active time nav button ──────────────────────────────────────────── */
+function setActiveOffset(offset) {
+  selectedOffset = offset;
+  timeNavEl.querySelectorAll('.time-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.offset) === offset);
+  });
+}
+
+/* ─── Time nav click handler ─────────────────────────────────────────────────── */
+timeNavEl.addEventListener('click', e => {
+  const btn = e.target.closest('.time-btn');
+  if (!btn || !currentWx) return;
+  const offset = parseInt(btn.dataset.offset);
+  setActiveOffset(offset);
+  renderWeather(currentName, currentWx, offset);
+});
 
 /* ─── Auto-refresh ───────────────────────────────────────────────────────────── */
 let refreshTimer = null;
@@ -214,6 +253,7 @@ function selectResult(index) {
   const label = [r.name, r.admin1, r.country].filter(Boolean).join(', ');
   searchInput.value = label;
   suggestionEl.hidden = true;
+  setActiveOffset(0);
   pushLocation(label, r.lat, r.lon);
   showWeather(label, r.lat, r.lon);
 }
@@ -265,6 +305,8 @@ btnChange.addEventListener('click', () => {
   homeEl.hidden    = false;
   searchInput.value = '';
   searchInput.focus();
+  setActiveOffset(0);
+  currentWx = null;
 });
 
 window.addEventListener('popstate', init);

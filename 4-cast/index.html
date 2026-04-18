@@ -48,8 +48,17 @@
       <p class="ui-location" id="ui-location"></p>
       <p class="ui-temp"     id="ui-temp"></p>
       <p class="ui-rain"     id="ui-rain"></p>
-      <button id="btn-change">change location</button>
+      <nav id="time-nav">
+        <button class="time-btn active" data-offset="0">now</button>
+        <button class="time-btn" data-offset="3">+3 hrs</button>
+        <button class="time-btn" data-offset="6">+6 hrs</button>
+        <button class="time-btn" data-offset="12">+12 hrs</button>
+        <button class="time-btn" data-offset="24">+1 day</button>
+        <button class="time-btn" data-offset="48">+2 days</button>
+        <button class="time-btn" data-offset="72">+3 days</button>
+      </nav>
     </div>
+    <button id="btn-change">change location</button>
   </div>
 
   <script src="app.js"></script>

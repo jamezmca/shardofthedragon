@@ -199,9 +199,47 @@ html, body {
   margin-bottom: 1.5rem;
 }
 
-#btn-change {
+#time-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  margin-top: 0;
+  margin-bottom: 0;
   pointer-events: all;
-  display: inline-block; align-self: flex-start;
+  width: fit-content;
+}
+
+.time-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Pixelify Sans', sans-serif;
+  font-size: clamp(0.72rem, 1.5vw, 0.85rem);
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0;
+  padding-left: 1.4em;
+  text-align: left;
+  opacity: 0.38;
+  transition: opacity 0.15s;
+  color: inherit;
+}
+
+.time-btn:hover { opacity: 0.65; }
+
+.time-btn.active {
+  opacity: 1;
+  padding-left: 0;
+}
+
+.time-btn.active::before {
+  content: '\2192\00a0';
+}
+
+#btn-change {
+  position: absolute;
+  bottom: 2rem; left: 2rem;
+  z-index: 10;
+  pointer-events: all;
   padding: 0.4rem 1rem;
   background: rgba(255,255,255,0.25);
   border: 1.5px solid rgba(255,255,255,0.5);
@@ -285,6 +323,7 @@ html, body {
 [data-theme="sunny-hot"] .ui-location { color: #7c2d12; }
 [data-theme="sunny-hot"] .ui-temp     { color: #7c2d12; }
 [data-theme="sunny-hot"] .ui-rain     { color: #b45309; }
+[data-theme="sunny-hot"] #time-nav    { color: #7c2d12; }
 [data-theme="sunny-hot"] #btn-change  {
   border-color: rgba(120,40,0,0.3); color: #7c2d12;
   background: rgba(255,255,255,0.3);
@@ -316,6 +355,7 @@ html, body {
 [data-theme="sunny-cold"] .ui-location { color: #1e3a5f; }
 [data-theme="sunny-cold"] .ui-temp     { color: #1e3a5f; }
 [data-theme="sunny-cold"] .ui-rain     { color: #2563eb; }
+[data-theme="sunny-cold"] #time-nav    { color: #1e3a5f; }
 [data-theme="sunny-cold"] #btn-change  {
   border-color: rgba(30,58,95,0.3); color: #1e3a5f;
   background: rgba(255,255,255,0.3);
@@ -341,6 +381,7 @@ html, body {
 [data-theme="overcast"] .ui-location { color: #374151; }
 [data-theme="overcast"] .ui-temp     { color: #374151; }
 [data-theme="overcast"] .ui-rain     { color: #4b5563; }
+[data-theme="overcast"] #time-nav    { color: #374151; }
 [data-theme="overcast"] #btn-change  {
   border-color: rgba(55,65,81,0.3); color: #374151;
   background: rgba(255,255,255,0.35);
@@ -392,6 +433,7 @@ html, body {
 [data-theme="overcast-showers"] .ui-location { color: #e5e7eb; }
 [data-theme="overcast-showers"] .ui-temp     { color: #f9fafb; }
 [data-theme="overcast-showers"] .ui-rain     { color: #bfdbfe; }
+[data-theme="overcast-showers"] #time-nav    { color: #e5e7eb; }
 [data-theme="overcast-showers"] #btn-change  { color: #f3f4f6; }
 
 /* ─── 5. LIGHT RAIN ──────────────────────────────────────────────────────────── */
@@ -425,6 +467,7 @@ html, body {
 [data-theme="light-rain"] .ui-location { color: #e2e8f0; }
 [data-theme="light-rain"] .ui-temp     { color: #f8fafc; }
 [data-theme="light-rain"] .ui-rain     { color: #bae6fd; }
+[data-theme="light-rain"] #time-nav    { color: #e2e8f0; }
 [data-theme="light-rain"] #btn-change  { color: #f1f5f9; }
 
 /* ─── 6. HEAVY RAIN ──────────────────────────────────────────────────────────── */
@@ -466,6 +509,7 @@ html, body {
 [data-theme="heavy-rain"] .ui-location { color: #94a3b8; }
 [data-theme="heavy-rain"] .ui-temp     { color: #e2e8f0; }
 [data-theme="heavy-rain"] .ui-rain     { color: #7dd3fc; }
+[data-theme="heavy-rain"] #time-nav    { color: #94a3b8; }
 [data-theme="heavy-rain"] #btn-change  { color: #cbd5e1; }
 
 /* ─── 7. SNOWING ─────────────────────────────────────────────────────────────── */
@@ -500,6 +544,7 @@ html, body {
 [data-theme="snowing"] .ui-location { color: #3b3d78; }
 [data-theme="snowing"] .ui-temp     { color: #2e3070; }
 [data-theme="snowing"] .ui-rain     { color: #6366f1; }
+[data-theme="snowing"] #time-nav    { color: #3b3d78; }
 [data-theme="snowing"] #btn-change  {
   border-color: rgba(60,60,120,0.3); color: #3b3d78;
   background: rgba(255,255,255,0.35);
@@ -541,6 +586,7 @@ html, body {
 [data-theme="blizzard"] .ui-location { color: #374151; }
 [data-theme="blizzard"] .ui-temp     { color: #1f2937; }
 [data-theme="blizzard"] .ui-rain     { color: #4b5563; }
+[data-theme="blizzard"] #time-nav    { color: #374151; }
 [data-theme="blizzard"] #btn-change  {
   border-color: rgba(55,65,81,0.3); color: #374151;
   background: rgba(255,255,255,0.4);
