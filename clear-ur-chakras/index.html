@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clear Ur Chakras</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --c1: #e63946; /* earth   */
+      --c2: #f4831f; /* water   */
+      --c3: #f9c74f; /* fire    */
+      --c4: #52b788; /* air     */
+      --c5: #4895ef; /* sound   */
+      --c6: #7b2d8b; /* light   */
+      --c7: #c77dff; /* thought */
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #0a0a12;
+      color: #e8e0d5;
+      font-family: 'Lora', serif;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.7s ease;
+      overflow-y: auto;
+    }
+    .screen.active {
+      opacity: 1; pointer-events: all;
+    }
+
+    /* ── HOME ── */
+    #home {
+      background: #0a0a12;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .home-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-align: center;
+      color: #e8e0d5;
+    }
+
+    .home-subtitle {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: clamp(0.85rem, 1.6vw, 1rem);
+      color: rgba(232,224,213,0.5);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Spine visualization ── */
+    .spine-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+
+    .chakra-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .chakra-row .orb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+      animation: orb-pulse 3s ease-in-out infinite;
+    }
+    .chakra-row:nth-child(odd) .orb  { animation-delay: 0s; }
+    .chakra-row:nth-child(even) .orb { animation-delay: 0.4s; }
+
+    .chakra-row .orb-label {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      opacity: 0.85;
+    }
+    .chakra-row .orb-sub {
+      font-style: italic;
+      font-size: 0.75em;
+      opacity: 0.5;
+      margin-left: 0.3em;
+    }
+
+    .spine-segment {
+      width: 2px;
+      height: 28px;
+      background: linear-gradient(to bottom, rgba(200,180,255,0.15), rgba(200,180,255,0.08));
+      margin-left: -1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .spine-segment::after {
+      content: '';
+      position: absolute;
+      top: -100%; left: 0; right: 0;
+      height: 60%;
+      background: linear-gradient(to bottom, transparent, rgba(200,180,255,0.7), transparent);
+      animation: flow-up 2.4s linear infinite;
+    }
+
+    @keyframes flow-up {
+      from { transform: translateY(0); }
+      to   { transform: translateY(200%); }
+    }
+
+    @keyframes orb-pulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.15); }
+    }
+
+    .home-cta {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.4rem;
+    }
+
+    .home-cta p {
+      font-style: italic;
+      font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+      color: rgba(232,224,213,0.7);
+    }
+
+    .btn-primary {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.8rem, 1.6vw, 0.95rem);
+      letter-spacing: 0.18em;
+      color: #e8e0d5;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.75rem 2.2rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-primary:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    /* ── CHAKRA SCREENS ── */
+    .chakra-screen {
+      padding: 3rem 2rem 5rem;
+      justify-content: flex-start;
+      gap: 0;
+    }
+
+    .chakra-screen .inner {
+      width: 100%;
+      max-width: 660px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* progress */
+    .progress {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+    .progress-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.3s;
+    }
+    .progress-dot.done { background: rgba(255,255,255,0.5); }
+    .progress-dot.active { background: #fff; }
+
+    /* mandala */
+    .mandala-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+    .mandala {
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: mandala-pulse 4s ease-in-out infinite;
+    }
+    .mandala-ring {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      opacity: 0.3;
+      animation: ring-spin 18s linear infinite;
+    }
+    .mandala-ring-2 {
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      opacity: 0.2;
+      animation: ring-spin 12s linear infinite reverse;
+    }
+    .mandala-core {
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.9;
+      box-shadow: 0 0 24px currentColor, 0 0 60px currentColor;
+    }
+
+    @keyframes ring-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes mandala-pulse {
+      0%, 100% { filter: brightness(1); }
+      50%       { filter: brightness(1.25); }
+    }
+
+    /* chakra text */
+    .chakra-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      text-align: center;
+    }
+    .chakra-name {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.1;
+    }
+    .chakra-meta {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      text-align: center;
+    }
+    .meta-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .meta-value {
+      font-style: italic;
+      font-size: 0.92rem;
+      opacity: 0.85;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .chakra-governs {
+      font-size: clamp(0.92rem, 1.8vw, 1rem);
+      line-height: 1.7;
+      opacity: 0.8;
+      text-align: center;
+    }
+
+    .blocked-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 1.2rem 1.5rem;
+      text-align: center;
+    }
+    .blocked-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.4;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    .blocked-by {
+      font-size: 1.05rem;
+      font-style: italic;
+      opacity: 0.9;
+    }
+    .blocked-desc {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      opacity: 0.55;
+      line-height: 1.6;
+    }
+
+    .steps-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.45;
+    }
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      list-style: none;
+    }
+    .steps-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      font-size: clamp(0.88rem, 1.7vw, 0.97rem);
+      line-height: 1.65;
+      opacity: 0.8;
+    }
+    .step-num {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      opacity: 0.35;
+      flex-shrink: 0;
+      margin-top: 0.3rem;
+    }
+
+    .continue-row {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 1rem;
+    }
+    .btn-continue {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: inherit;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 0.65rem 1.8rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-continue:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.35);
+    }
+
+    /* ── END SCREEN ── */
+    #end {
+      background: #04040d;
+      gap: 2.5rem;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .end-pools {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .end-pool {
+      width: 18px;
+      border-radius: 9px;
+      animation: pool-flow 2.5s ease-in-out infinite;
+      opacity: 0.85;
+    }
+    .end-pool:nth-child(1) { background: var(--c1); height: 38px; animation-delay: 0s;    }
+    .end-pool:nth-child(2) { background: var(--c2); height: 52px; animation-delay: 0.2s;  }
+    .end-pool:nth-child(3) { background: var(--c3); height: 44px; animation-delay: 0.4s;  }
+    .end-pool:nth-child(4) { background: var(--c4); height: 60px; animation-delay: 0.6s;  }
+    .end-pool:nth-child(5) { background: var(--c5); height: 48px; animation-delay: 0.8s;  }
+    .end-pool:nth-child(6) { background: var(--c6); height: 56px; animation-delay: 1.0s;  }
+    .end-pool:nth-child(7) { background: var(--c7); height: 70px; animation-delay: 1.2s;  }
+
+    @keyframes pool-flow {
+      0%, 100% { transform: scaleY(1);    opacity: 0.75; }
+      50%       { transform: scaleY(1.15); opacity: 1;    }
+    }
+
+    .end-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.5rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #e8e0d5;
+    }
+    .end-body {
+      font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+      line-height: 1.8;
+      max-width: 480px;
+      opacity: 0.7;
+      font-style: italic;
+    }
+    .end-hint {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.3;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HOME ─────────────────────────────────────────────────── -->
+<div id="home" class="screen active">
+  <p class="home-subtitle">with guru pathik</p>
+  <h1 class="home-title">Clear Ur Chakras</h1>
+
+  <div class="spine-wrap" id="spine"></div>
+
+  <div class="home-cta">
+    <p>Are you ready to clear your chakras?</p>
+    <button class="btn-primary" onclick="startJourney()">I am ready</button>
+  </div>
+</div>
+
+<!-- ── CHAKRA SCREENS 1–7 ────────────────────────────────────── -->
+<!-- generated by JS -->
+
+<!-- ── END ──────────────────────────────────────────────────── -->
+<div id="end" class="screen">
+  <div class="end-pools">
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+    <div class="end-pool"></div>
+  </div>
+  <h2 class="end-title">Your chakras are clear.</h2>
+  <p class="end-body">
+    The stream flows unobstructed now — from the earth beneath your feet
+    to the cosmos above your crown. You are whole, and you are connected
+    to all things.
+  </p>
+  <button class="btn-primary" onclick="resetJourney()">Revisit when you are ready</button>
+  <p class="end-hint">Return any time the stream grows still</p>
+</div>
+
+<script>
+const CHAKRAS = [
+  {
+    name:       'Earth Chakra',
+    sanskrit:   'Muladhara',
+    element:    'Earth',
+    location:   'Base of the spine',
+    color:      '#e63946',
+    bg:         'radial-gradient(ellipse at 50% 80%, #2a0608 0%, #0d0204 100%)',
+    governs:    'Survival, security, and our relationship with the physical world. It is the foundation upon which all other chakras rest.',
+    blockedBy:  'Fear',
+    blockedDesc:'Fear keeps you rigid and defensive, severing your sense of safety in the world.',
+    steps: [
+      'Sit quietly. Become aware of the fears you carry — large and small, rational and irrational.',
+      'Visualize each fear as a boulder resting in a pool at the base of your spine.',
+      'With each exhale, feel the current of a great stream loosening each boulder from the riverbed.',
+      'Watch as the water carries every fear downstream, beyond the horizon, until the pool runs clear.',
+      'Feel the solid earth beneath you. You are safe. You are grounded. You belong here.',
+    ],
+  },
+  {
+    name:       'Water Chakra',
+    sanskrit:   'Svadhisthana',
+    element:    'Water',
+    location:   'The sacrum',
+    color:      '#f4831f',
+    bg:         'radial-gradient(ellipse at 50% 80%, #2a1200 0%, #0d0700 100%)',
+    governs:    'Pleasure, enjoyment of life, and the free flow of feeling. It governs creativity and the sweetness of being alive.',
+    blockedBy:  'Guilt',
+    blockedDesc:'Guilt poisons the water. It tells you that you do not deserve joy, and so joy cannot reach you.',
+    steps: [
+      'Let the things you feel guilty about rise to the surface. Do not push them back down.',
+      'Look at each one honestly. Ask: does holding this guilt serve you, or only punish you?',
+      'Recognize that guilt, left unresolved, only blocks the flow of love and pleasure.',
+      'Forgive yourself — not because what happened doesn\'t matter, but because you are still here.',
+      'Feel the guilt dissolve like salt into the river. The water is clean. Let it flow.',
+    ],
+  },
+  {
+    name:       'Fire Chakra',
+    sanskrit:   'Manipura',
+    element:    'Fire',
+    location:   'The stomach',
+    color:      '#f9c74f',
+    bg:         'radial-gradient(ellipse at 50% 80%, #241800 0%, #0c0900 100%)',
+    governs:    'Willpower, ego, and personal strength. It is the seat of your drive and your sense of agency in the world.',
+    blockedBy:  'Shame',
+    blockedDesc:'Shame dims the flame. It whispers that you are not enough — that your failures define you.',
+    steps: [
+      'Think of the things you are ashamed of. Let them be present, without flinching.',
+      'Notice how shame makes you small. It is a story, not a sentence.',
+      'Offer yourself the same compassion you would give someone you love deeply.',
+      'Let every disappointment you carry be consumed by the fire — turned to warmth, not ash.',
+      'Feel the flame steady and bright in your core. You are enough. You always were.',
+    ],
+  },
+  {
+    name:       'Air Chakra',
+    sanskrit:   'Anahata',
+    element:    'Air',
+    location:   'The heart',
+    color:      '#52b788',
+    bg:         'radial-gradient(ellipse at 50% 80%, #021a0c 0%, #010a05 100%)',
+    governs:    'Love — for others, for yourself, and for all living things. It is the bridge between the lower and upper chakras.',
+    blockedBy:  'Grief',
+    blockedDesc:'Grief seals the heart. It is a natural response to love, but when held too tightly, it stops love from moving through you.',
+    steps: [
+      'Open yourself to your grief. Do not turn from it — it is only love with nowhere to go.',
+      'Understand that love is a form of energy. It cannot be created or destroyed, only transformed.',
+      'When someone or something leaves, the love remains. It does not end with them.',
+      'Let the grief move through you like wind through leaves — present, felt, and passing.',
+      'Feel your heart open again, not in spite of the loss, but because of all you loved.',
+    ],
+  },
+  {
+    name:       'Sound Chakra',
+    sanskrit:   'Vishuddha',
+    element:    'Sound',
+    location:   'The throat',
+    color:      '#4895ef',
+    bg:         'radial-gradient(ellipse at 50% 80%, #001528 0%, #00060f 100%)',
+    governs:    'Truth, communication, and the authentic expression of who you are. It connects inner knowing with outward speech.',
+    blockedBy:  'Lies',
+    blockedDesc:'The lies we tell ourselves — and the truths we swallow — tighten around the throat and silence what needs to be said.',
+    steps: [
+      'Sit with the stories you tell yourself. Which ones are true, and which ones are comfortable?',
+      'Think of the things you have left unsaid. What are you afraid would happen if you said them?',
+      'In the privacy of your own mind, say them now. Speak them clearly and without apology.',
+      'Feel the vibration of honesty. Notice how the throat loosens when truth is allowed to pass.',
+      'Commit to one small act of honest expression today. The stream clears one truth at a time.',
+    ],
+  },
+  {
+    name:       'Light Chakra',
+    sanskrit:   'Ajna',
+    element:    'Light',
+    location:   'The centre of the forehead',
+    color:      '#c77dff',
+    bg:         'radial-gradient(ellipse at 50% 80%, #150028 0%, #07000f 100%)',
+    governs:    'Insight, intuition, and perception beyond the ordinary. The seat of clarity and inner vision.',
+    blockedBy:  'Illusion',
+    blockedDesc:'The greatest illusion is that we are separate — from each other, from the world, from the cosmos. This illusion closes the eye of the mind.',
+    steps: [
+      'Consider the ways you draw lines between yourself and others — in judgment, in competition, in loneliness.',
+      'Look at a living thing near you. It breathes the same air. It is sustained by the same earth.',
+      'Expand your awareness outward — to your city, your continent, your planet, your galaxy.',
+      'You are not a self contained in a body. You are a temporary arrangement of the universe observing itself.',
+      'Let the boundary between "you" and "everything else" soften. You were never truly separate.',
+    ],
+  },
+  {
+    name:       'Thought Chakra',
+    sanskrit:   'Sahasrara',
+    element:    'Thought',
+    location:   'The crown of the head',
+    color:      '#e0c3fc',
+    bg:         'radial-gradient(ellipse at 50% 80%, #120020 0%, #05000a 100%)',
+    governs:    'Pure cosmic energy, enlightenment, and our connection to the universe itself. The highest of the seven pools.',
+    blockedBy:  'Earthly Attachment',
+    blockedDesc:'Attachment to outcomes, possessions, and even people — however natural — can anchor us so firmly to the self that the cosmic current cannot flow through.',
+    steps: [
+      'This is the most difficult chakra to open. Do not rush it. Breathe.',
+      'Meditate on the things you are most attached to. Hold them gently, not with a closed fist.',
+      'Understand that loving something and clinging to it are different. Love flows. Attachment grasps.',
+      'Offer each attachment to the stream, not as loss, but as trust — trust that the river knows the way.',
+      'Surrender, for just this moment, to the current. You are not separate from the universe. You are it.',
+    ],
+  },
+];
+
+let currentChakra = 0;
+
+/* ── Build home spine ── */
+(function buildSpine() {
+  const spine = document.getElementById('spine');
+  [...CHAKRAS].reverse().forEach((ch, i) => {
+    const row = document.createElement('div');
+    row.className = 'chakra-row';
+    row.innerHTML = `
+      <span class="orb-label" style="color:${ch.color}">${ch.name}<span class="orb-sub">${ch.sanskrit}</span></span>
+      <div class="orb" style="background:${ch.color};color:${ch.color}"></div>
+    `;
+    spine.appendChild(row);
+    if (i < CHAKRAS.length - 1) {
+      const seg = document.createElement('div');
+      seg.className = 'spine-segment';
+      spine.appendChild(seg);
+    }
+  });
+})();
+
+/* ── Build chakra screens ── */
+CHAKRAS.forEach((ch, idx) => {
+  const n = idx + 1;
+  const div = document.createElement('div');
+  div.id = `chakra-${n}`;
+  div.className = 'screen chakra-screen';
+  div.style.background = ch.bg;
+
+  const dots = CHAKRAS.map((_, di) =>
+    `<div class="progress-dot ${di < idx ? 'done' : di === idx ? 'active' : ''}"></div>`
+  ).join('');
+
+  const steps = ch.steps.map((s, si) =>
+    `<li><span class="step-num">${si + 1}</span><span>${s}</span></li>`
+  ).join('');
+
+  div.innerHTML = `
+    <div class="inner">
+      <div class="progress">${dots}</div>
+
+      <div class="mandala-wrap">
+        <div class="mandala" style="color:${ch.color}; box-shadow: 0 0 60px ${ch.color}22, 0 0 120px ${ch.color}11">
+          <div class="mandala-ring"></div>
+          <div class="mandala-ring-2"></div>
+          <div class="mandala-core" style="background:${ch.color}; box-shadow: 0 0 28px ${ch.color}, 0 0 70px ${ch.color}88"></div>
+        </div>
+      </div>
+
+      <div>
+        <p class="chakra-eyebrow">Chakra ${n} of 7 &nbsp;·&nbsp; ${ch.element}</p>
+        <h2 class="chakra-name" style="color:${ch.color}">${ch.name}</h2>
+      </div>
+
+      <div class="chakra-meta">
+        <div class="meta-item">
+          <span class="meta-label">Sanskrit</span>
+          <span class="meta-value">${ch.sanskrit}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Located at</span>
+          <span class="meta-value">${ch.location}</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="chakra-governs">${ch.governs}</p>
+
+      <div class="blocked-box" style="border-color:${ch.color}22">
+        <span class="blocked-label">Blocked by</span>
+        <span class="blocked-by" style="color:${ch.color}">${ch.blockedBy}</span>
+        <p class="blocked-desc">${ch.blockedDesc}</p>
+      </div>
+
+      <div>
+        <p class="steps-title">To unblock</p>
+        <ul class="steps-list" style="margin-top:1rem">${steps}</ul>
+      </div>
+
+      <div class="continue-row">
+        <button class="btn-continue" style="border-color:${ch.color}44; color:${ch.color === '#f9c74f' ? '#c49a00' : ch.color}" onclick="nextChakra(${n})">
+          ${n < 7 ? 'Continue →' : 'Complete →'}
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+});
+
+/* ── Navigation ── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById(id).scrollTop = 0;
+}
+
+function startJourney() {
+  currentChakra = 1;
+  showScreen('chakra-1');
+}
+
+function nextChakra(n) {
+  if (n < 7) {
+    showScreen(`chakra-${n + 1}`);
+  } else {
+    showScreen('end');
+  }
+}
+
+function resetJourney() {
+  showScreen('home');
+}
+</script>
+</body>
+</html>
