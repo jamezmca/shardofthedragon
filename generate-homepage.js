@@ -131,6 +131,7 @@ const html = `<!doctype html>
     <input id="search" type="text" placeholder="search" autocomplete="off">
     <div id="count">${apps.length} total</div>
     <div id="links">
+    <a href="https://youtube.com/c/smoljames" target="_blank">smoljames youtube 🔥</a>
     <a href="https://github.com/jamezmca/shardofthedragon" target="_blank">github repo ⭐️</a>
 ${linksHtml}
     </div>
