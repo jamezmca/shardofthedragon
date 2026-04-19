@@ -173,14 +173,15 @@
     /* Hidden input to summon mobile keyboard */
     #kb {
       position: fixed;
-      top: -200px;
-      left: -200px;
+      top: 50%;
+      left: 50%;
       width: 1px;
       height: 1px;
       opacity: 0;
       font-size: 16px; /* prevent iOS viewport zoom on focus */
       border: none;
       outline: none;
+      pointer-events: none;
     }
 
     [hidden] { display: none !important; }
