@@ -76,11 +76,15 @@
     }
 
     .phrase {
-      font-size: min(4.4rem, 6.5vw, 9vh);
+      font-size: min(4.4rem, 9vh);
       line-height: 1.25;
       user-select: none;
       cursor: default;
       color: #1a1a1a;
+    }
+
+    @media (max-width: 480px) {
+      .phrase { font-size: 3.2rem; }
     }
 
     .letter {
@@ -335,7 +339,7 @@
   /* ─── Build letter spans ─────────────────────────────────────────── */
   const spans = TARGET.split('').map(ch => {
     const span = document.createElement('span');
-    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.textContent = ch === ' ' ? ' ' : ch;
     span.className   = 'letter';
     phraseEl.appendChild(span);
     return { el: span, ch };
