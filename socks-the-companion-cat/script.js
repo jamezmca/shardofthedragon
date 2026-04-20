@@ -49,8 +49,9 @@ const CONFIG = {
   // Pixel canvas size (logical; CSS scales it)
   canvasSize: 64,
 
-  // CSS classes for the four scale options
-  sizes: ['size-s', 'size-m', 'size-l', 'size-xl'],
+  // CSS classes and matching pixel widths for the four scale options
+  sizes:    ['size-s', 'size-m', 'size-l', 'size-xl'],
+  sizePx:   [128,       256,      400,      560],
 
   // Horizontal movement: how far (px, logical) a walk can shift position
   movement: {
@@ -492,7 +493,7 @@ function clampCatX() {
 
 function applyPosition() {
   const vw = window.innerWidth;
-  const scaledW = parseInt(canvas.style.width || '128');
+  const scaledW = CONFIG.sizePx[sizeIdx];
   const leftPx = catX * vw - scaledW / 2;
   const clampedLeft = Math.max(0, Math.min(vw - scaledW, leftPx));
   canvas.style.left = clampedLeft + 'px';
@@ -507,7 +508,8 @@ function doWalk(direction) {
   const steps = CONFIG.movement.minSteps +
     Math.floor(Math.random() * (CONFIG.movement.maxSteps - CONFIG.movement.minSteps + 1));
   const vw = window.innerWidth;
-  const delta = (steps * CONFIG.movement.stepPx) / vw;
+  const scaledW = CONFIG.sizePx[sizeIdx];
+  const delta = (steps * CONFIG.movement.stepPx) / (vw - scaledW || vw);
   catX += direction * delta;
   clampCatX();
   applyPosition();
@@ -605,7 +607,7 @@ function tick(now) {
   // Cursor glance (only when awake, rare)
   if (AWAKE_STATES.has(currentState) && !blink &&
       Math.random() < CONFIG.idle.cursorGlanceChance) {
-    const scaledW = parseInt(canvas.style.width || '128');
+    const scaledW = CONFIG.sizePx[sizeIdx];
     const catPx   = parseInt(canvas.style.left  || '0') + scaledW / 2;
     if (Math.abs(cursorX - catPx) < CONFIG.idle.cursorNearPx) {
       blink = true;
