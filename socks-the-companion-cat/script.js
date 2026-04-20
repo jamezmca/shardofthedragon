@@ -122,11 +122,9 @@ const PALETTE_THEME = [
 ];
 
 function applyPaletteTheme() {
-  const isNight = document.body.classList.contains('night');
+  // Background is always white; only update control text colour to match palette
   const t = PALETTE_THEME[paletteIndex] || PALETTE_THEME[0];
-  // Set directly on body so the `transition: background` rule fires reliably
-  document.body.style.background = isNight ? t.nightBg : t.dayBg;
-  document.documentElement.style.setProperty('--text', isNight ? t.nightText : t.dayText);
+  document.documentElement.style.setProperty('--text', t.dayText);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -738,16 +736,8 @@ document.getElementById('btn-pet').addEventListener('click', () => {
   }
 });
 
-/* ═══════════════════════════════════════════════════════════════════
-   DAY / NIGHT MODE
-   ═══════════════════════════════════════════════════════════════════ */
-function applyDayNight() {
-  const h = new Date().getHours();
-  document.body.classList.toggle('night', h < 6 || h >= 20);
-  applyPaletteTheme();
-}
-applyDayNight();
-setInterval(applyDayNight, 5 * 60 * 1000);
+// Apply initial palette theme (tints the control text colour per coat)
+applyPaletteTheme();
 
 /* ═══════════════════════════════════════════════════════════════════
    LOCALSTORAGE SETTINGS
@@ -782,121 +772,85 @@ window.addEventListener('resize', () => {
    RADIATOR
    ═══════════════════════════════════════════════════════════════════ */
 
+// Shared radiator canvas context, set once in initRadiator
+let radCtx = null;
+const RAD_W      = 28;
+const RAD_H_BODY = 20;
+const RAD_H_WAVE = 16; // logical pixels of heat-wave space above body
+const RAD_H      = RAD_H_BODY + RAD_H_WAVE;
+
 function initRadiator() {
   const el = document.getElementById('radiator');
-  const W = 28, H = 20;
-  el.width  = W;
-  el.height = H;
-  const rc = el.getContext('2d');
+  el.width  = RAD_W;
+  el.height = RAD_H;
+  radCtx = el.getContext('2d');
 
   const R = {
-    rail:  '#706860',
-    hiTop: '#a09688',   // highlight on top face
-    hi:    '#988e84',   // left-edge highlight of each ridge
-    mid:   '#887e74',   // ridge body
-    sh:    '#585048',   // right-edge shadow of each ridge
-    grv:   '#2e2820',   // deep groove between ridges
-    foot:  '#504840',   // floor mounting strip
+    rail:  '#5a3010',   // dark warm brown rail
+    hiTop: '#d07828',   // hot copper top-face highlight
+    hi:    '#ff9a42',   // left-edge highlight — hottest point
+    mid:   '#e06820',   // ridge body — glowing orange
+    sh:    '#8a3010',   // right-edge shadow
+    grv:   '#d04808',   // groove — glimpse of hot pipe behind
+    foot:  '#3a1a06',   // base foot
   };
 
-  function rp(color, x, y, w, h) { rc.fillStyle = color; rc.fillRect(x, y, w, h); }
+  function rp(c, x, y, w, h) { radCtx.fillStyle = c; radCtx.fillRect(x, y, w, h); }
+  const Y = RAD_H_WAVE; // body starts below the wave zone
 
-  // ── top rail ──────────────────────────────────────────────────
-  rp(R.rail,  0, 0, W, 3);
-  rp(R.hiTop, 0, 0, W, 1); // top-face highlight
+  // ── top rail ────────────────────────────────────────────────
+  rp(R.rail,  0, Y,   RAD_W, 3);
+  rp(R.hiTop, 0, Y,   RAD_W, 1);
 
-  // ── 5 ridges (each 4px wide), 4 grooves (1px), 2px side margins
-  //    layout: 2 | 4 | 1 | 4 | 1 | 4 | 1 | 4 | 1 | 4 | 2 = 28
-  const RIDGES = [2, 7, 12, 17, 22];
-  RIDGES.forEach(rx => {
-    rp(R.hi,  rx,   3, 1, 14); // left highlight
-    rp(R.mid, rx+1, 3, 2, 14); // body
-    rp(R.sh,  rx+3, 3, 1, 14); // shadow
+  // ── 5 ridges + 4 grooves (layout: 2 | 4|1|4|1|4|1|4|1|4 | 2 = 28)
+  [2, 7, 12, 17, 22].forEach(rx => {
+    rp(R.hi,  rx,   Y+3, 1, 14);
+    rp(R.mid, rx+1, Y+3, 2, 14);
+    rp(R.sh,  rx+3, Y+3, 1, 14);
   });
-  // grooves
-  [6, 11, 16, 21].forEach(gx => rp(R.grv, gx, 3, 1, 14));
-  // side fills
-  rp(R.sh, 0, 3, 2, 14);
-  rp(R.sh, 26, 3, 2, 14);
+  [6, 11, 16, 21].forEach(gx => rp(R.grv, gx, Y+3, 1, 14));
+  rp(R.sh, 0,  Y+3, 2, 14); // side margins
+  rp(R.sh, 26, Y+3, 2, 14);
 
-  // ── bottom rail ───────────────────────────────────────────────
-  rp(R.rail, 0, 17, W, 3);
-  rp(R.foot, 0, 19, W, 1); // foot strip
+  // ── bottom rail ─────────────────────────────────────────────
+  rp(R.rail, 0, Y+17, RAD_W, 3);
+  rp(R.foot, 0, Y+19, RAD_W, 1);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SUMMON SCREEN
-   ═══════════════════════════════════════════════════════════════════ */
+function animateRadiator() {
+  if (!radCtx) return;
 
-const SUMMON_SEQUENCE = 'psp psp psp';
+  // Clear only the heat-wave zone above the body
+  radCtx.clearRect(0, 0, RAD_W, RAD_H_WAVE);
 
-function initSummonScreen() {
-  const lettersDiv = document.getElementById('prompt-letters');
+  const t = performance.now() / 1000; // seconds
 
-  // Build one <span> per character
-  SUMMON_SEQUENCE.split('').forEach((ch, i) => {
-    const span = document.createElement('span');
-    span.className = 'prompt-char' + (ch === ' ' ? ' prompt-space' : '');
-    span.textContent = ch === ' ' ? '\u00a0' : ch;
-    span.dataset.index = i;
-    lettersDiv.appendChild(span);
-  });
+  // 4 sinusoidal wave lines at staggered heights, each drifting upward
+  for (let w = 0; w < 4; w++) {
+    const speed  = 1.4 + w * 0.15;                              // logical px / sec
+    const offset = w * (RAD_H_WAVE / 4);                        // stagger start
+    // baseY drifts 0 → RAD_H_WAVE, wraps; convert so it starts at bottom
+    const progress = (t * speed + offset) % RAD_H_WAVE;
+    const baseY    = (RAD_H_WAVE - 1) - progress;               // bottom = RAD_H_WAVE-1
 
-  let typedIndex = 0;
+    // Fade out as wave rises (opacity is highest near the radiator)
+    const opacity = (baseY / (RAD_H_WAVE - 1)) * 0.52;
+    if (opacity < 0.02) continue;
 
-  function lightUpChar(i) {
-    const span = lettersDiv.querySelector(`[data-index="${i}"]`);
-    if (!span) return;
-    span.classList.add('lit', 'just-lit');
-    span.addEventListener('animationend', () => span.classList.remove('just-lit'), { once: true });
-  }
+    const phase = w * 1.6 + t * 0.25; // slowly shift the wave shape over time
+    radCtx.fillStyle = `rgba(255,120,28,${opacity.toFixed(2)})`;
 
-  function advanceSpaces() {
-    while (typedIndex < SUMMON_SEQUENCE.length && SUMMON_SEQUENCE[typedIndex] === ' ') {
-      lightUpChar(typedIndex);
-      typedIndex++;
-    }
-  }
-
-  document.addEventListener('keydown', function onKey(e) {
-    if (typedIndex >= SUMMON_SEQUENCE.length) return;
-    advanceSpaces();
-    if (typedIndex >= SUMMON_SEQUENCE.length) { triggerSummon(); return; }
-
-    if (e.key === SUMMON_SEQUENCE[typedIndex]) {
-      lightUpChar(typedIndex);
-      typedIndex++;
-      advanceSpaces();
-      if (typedIndex >= SUMMON_SEQUENCE.length) {
-        document.removeEventListener('keydown', onKey);
-        setTimeout(triggerSummon, 500);
+    for (let x = 0; x < RAD_W; x++) {
+      // Sinusoidal horizontal wobble: amplitude ±1.4 logical px
+      const sinY = Math.sin(x * 0.46 + phase) * 1.4;
+      const py   = Math.round(baseY + sinY);
+      if (py >= 0 && py < RAD_H_WAVE) {
+        radCtx.fillRect(x, py, 1, 1);
       }
     }
-  });
-}
+  }
 
-function triggerSummon() {
-  const screen = document.getElementById('summon-screen');
-  screen.classList.add('fade-out');
-
-  setTimeout(() => {
-    screen.style.display = 'none';
-    // Reveal cat, radiator, and controls
-    const scene    = document.getElementById('scene');
-    const controls = document.getElementById('controls');
-    const radiator = document.getElementById('radiator');
-    scene.classList.remove('hidden');
-    controls.classList.remove('hidden');
-    radiator.classList.remove('hidden');
-    initRadiator();
-    // Small delay so display:flex kicks in before opacity transition
-    requestAnimationFrame(() => {
-      scene.classList.add('visible');
-      controls.classList.add('visible');
-      radiator.classList.add('rad-visible');
-    });
-    startCat();
-  }, 1000);
+  requestAnimationFrame(animateRadiator);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -904,21 +858,19 @@ function triggerSummon() {
    ═══════════════════════════════════════════════════════════════════ */
 loadSettings();
 applySize();
-applyPaletteTheme(); // re-apply now that saved paletteIndex is loaded
+applyPaletteTheme();
 
 // Sync button states from loaded settings
 document.getElementById('btn-mute').textContent  = audioEnabled ? '🔊' : '🔇';
 document.getElementById('btn-pause').textContent = paused ? '▶' : '⏸';
 document.getElementById('btn-size').textContent  = ['S','M','L','XL'][sizeIdx];
 
-function startCat() {
-  catX = 0.45 + Math.random() * 0.2;
-  clampCatX();
-  applyPosition();
-  enterState('sit');
-  lastTime = performance.now();
-  requestAnimationFrame(tick);
-}
+initRadiator();
+animateRadiator();
 
-// Build the summon screen; cat doesn't start until sequence is typed
-initSummonScreen();
+catX = 0.45 + Math.random() * 0.2;
+clampCatX();
+applyPosition();
+enterState('sit');
+lastTime = performance.now();
+requestAnimationFrame(tick);

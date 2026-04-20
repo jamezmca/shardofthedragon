@@ -2,99 +2,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #f5f0e8;
-  --floor: #e8e0d0;
-  --ctrl-bg: rgba(240, 234, 220, 0.85);
-  --ctrl-border: rgba(180, 165, 140, 0.5);
-  --text: #7a6a55;
-}
-
-body.night {
-  --bg: #1e1a2e;
-  --floor: #2a2440;
-  --ctrl-bg: rgba(30, 24, 48, 0.85);
-  --ctrl-border: rgba(80, 60, 120, 0.5);
-  --text: #9a8ab0;
+  --ctrl-bg: rgba(240, 240, 240, 0.85);
+  --ctrl-border: rgba(180, 180, 180, 0.5);
+  --text: #888;
 }
 
 body {
-  background: var(--bg);
+  background: #ffffff;
   min-height: 100vh;
   overflow: hidden;
   font-family: 'Courier New', monospace;
-  transition: background 2s ease;
 }
 
 /* ─── Utility ──────────────────────────────────────────────────── */
-/* .hidden is overridden by .visible for scene & controls */
 .hidden { display: none; }
 
-/* ─── Summon screen ────────────────────────────────────────────── */
-#summon-screen {
-  position: fixed;
-  inset: 0;
-  background: #0c0c0f;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  transition: opacity 1s ease;
-}
-
-#summon-screen.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#summon-text {
-  text-align: center;
-  user-select: none;
-}
-
-.summon-label {
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  color: #383848;
-  margin-bottom: 28px;
-  text-transform: lowercase;
-}
-
-#prompt-letters {
-  display: flex;
-  gap: 0;
-  justify-content: center;
-  align-items: baseline;
-}
-
-.prompt-char {
-  font-family: 'Courier New', monospace;
-  font-size: 52px;
-  letter-spacing: 0.08em;
-  color: #252530;
-  transition: color 0.15s ease, text-shadow 0.15s ease;
-  display: inline-block;
-}
-
-.prompt-char.prompt-space {
-  width: 30px;
-}
-
-.prompt-char.lit {
-  color: #e8e4f0;
-  text-shadow: 0 0 18px rgba(200, 190, 255, 0.5);
-}
-
-/* Flash animation when a char is typed */
-@keyframes char-flash {
-  0%   { color: #ffffff; text-shadow: 0 0 30px rgba(220,210,255,0.9); }
-  100% { color: #e8e4f0; text-shadow: 0 0 18px rgba(200,190,255,0.5); }
-}
-.prompt-char.just-lit {
-  animation: char-flash 0.3s ease-out forwards;
-}
-
-/* ─── Scene / floor ────────────────────────────────────────────── */
+/* ─── Scene ────────────────────────────────────────────────────── */
 #scene {
   position: fixed;
   bottom: 48px;
@@ -103,11 +26,7 @@ body {
   display: flex;
   align-items: flex-end;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 1.2s ease 0.2s;
 }
-
-#scene.visible { display: flex; opacity: 1; }
 
 /* ─── Cat canvas ───────────────────────────────────────────────── */
 #cat-canvas {
@@ -135,7 +54,7 @@ body {
   animation: zzz-float 4s ease-in-out infinite;
   transition: opacity 1.5s ease;
 }
-.zzz.hidden { opacity: 0; display: block; } /* override .hidden for fade transition */
+.zzz.hidden { opacity: 0; display: block; } /* keep in flow for fade */
 
 @keyframes zzz-float {
   0%, 100% { transform: translateY(0);   }
@@ -148,13 +67,10 @@ body {
   bottom: 0;
   left: 28px;
   width: 140px;   /* 28 logical × 5 */
-  height: 100px;  /* 20 logical × 5 */
+  height: 180px;  /* 36 logical × 5 (20 body + 16 wave zone) */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  opacity: 0;
-  transition: opacity 1.4s ease 0.4s;
 }
-#radiator.rad-visible { display: block; opacity: 1; }
 
 /* ─── Controls ─────────────────────────────────────────────────── */
 #controls {
@@ -168,12 +84,8 @@ body {
   border-radius: 20px;
   padding: 5px 10px;
   backdrop-filter: blur(4px);
-  transition: background 2s ease, border-color 2s ease, opacity 0.8s ease;
   z-index: 10;
-  opacity: 0;
 }
-
-#controls.visible { display: flex; opacity: 1; }
 
 #controls button {
   background: none;
