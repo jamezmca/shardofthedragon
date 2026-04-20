@@ -226,137 +226,112 @@ function drawLoafBody(ctx, pal, eyeOpen = false) {
 }
 
 function drawCurlBody(ctx, pal, eyeOpen = false) {
-  // Curled / purring — body in side profile, head turned to face viewer.
-  // Zones: front-facing head (top-left) → neck → oval body → haunches (right).
+  // Compact curl — head x=14-50 matches body x=14-50, no neck.
+  // Floor at y≈52, ears at y=2 — matches sit/loaf visual height.
 
-  // ── BODY — compact oval ────────────────────────────────────────
-  px(ctx, pal.body, 14, 30, 38, 22); // body core
-  px(ctx, pal.body, 16, 28, 34,  4); // top rounding
-  px(ctx, pal.body, 16, 52, 34,  4); // bottom rounding
-  px(ctx, pal.body, 10, 34,  6, 14); // left end (chest)
-  px(ctx, pal.body, 50, 32,  4, 18); // right end
+  // ── BODY — core x=14-50, y=28-48 ─────────────────────────────
+  px(ctx, pal.body, 14, 28, 36, 20); // core
+  px(ctx, pal.body, 16, 26, 32,  4); // top rounding
+  px(ctx, pal.body, 16, 46, 32,  4); // bottom rounding y=46-50
+  px(ctx, pal.body, 10, 32,  6, 14); // left end
+  px(ctx, pal.body, 48, 30,  6, 18); // right end
 
   // Haunches — darker right ~40%
-  px(ctx, pal.point, 36, 30, 18, 24);
-  px(ctx, pal.point, 34, 32,  4, 18);
+  px(ctx, pal.point, 38, 26, 16, 26);
+  px(ctx, pal.point, 36, 28,  4, 22);
 
-  // ── NECK ───────────────────────────────────────────────────────
-  px(ctx, pal.body,  8, 22, 12,  10);
+  // Tucked paws along base
+  px(ctx, pal.point, 14, 48, 24,  4);
 
-  // ── HEAD — front-facing, turned toward viewer ──────────────────
-  px(ctx, pal.body,  1,  3, 22, 20); // head block
-  px(ctx, pal.body,  3,  1, 18,  4); // top rounding
-  px(ctx, pal.body,  0,  6,  3, 12); // left rounding
-  px(ctx, pal.body, 21,  6,  3, 12); // right rounding
+  // Tail wrapping right side, floor at y≈52
+  px(ctx, pal.point, 52, 30,  4, 18);
+  px(ctx, pal.point, 48, 46,  6,  4);
+  px(ctx, pal.point, 28, 48, 22,  4);
+  px(ctx, pal.point, 12, 48, 18,  3);
+  px(ctx, pal.point, 10, 46,  4,  4);
 
-  // TWO ears (both visible from front)
-  px(ctx, pal.point,  2,  0,  7,  9); // left ear outer
-  px(ctx, pal.inner,  3,  1,  5,  7); // left ear inner
-  px(ctx, pal.point, 15,  0,  7,  9); // right ear outer
-  px(ctx, pal.inner, 16,  1,  5,  7); // right ear inner
+  // ── HEAD — x=14-50, y=8-28, no neck ──────────────────────────
+  px(ctx, pal.body, 14,  8, 36, 20); // head block
+  px(ctx, pal.body, 16,  6, 32,  4); // top rounding y=6-10
 
-  // Face — both eyes closed, centered nose
+  // Ears y=2-10 with pink inner
+  px(ctx, pal.point, 17,  2,  8,  8);
+  px(ctx, '#c87878', 18,  3,  5,  6);
+  px(ctx, pal.point, 39,  2,  8,  8);
+  px(ctx, '#c87878', 40,  3,  5,  6);
+
+  // Face mask
+  px(ctx, pal.point, 20, 13, 24,  8);
+
+  // Eyes
   if (eyeOpen) {
-    px(ctx, pal.eye,    3, 10,  6,  4); // left eye open
-    px(ctx, '#2a3a50',  4, 11,  3,  2);
-    px(ctx, '#ffffff',  5, 10,  1,  1);
-    px(ctx, pal.eye,   15, 10,  6,  4); // right eye open
-    px(ctx, '#2a3a50', 16, 11,  3,  2);
-    px(ctx, '#ffffff', 17, 10,  1,  1);
+    px(ctx, pal.eye,   21, 14,  8,  4);
+    px(ctx, '#2a3a50', 22, 15,  5,  2);
+    px(ctx, '#ffffff', 23, 14,  1,  1);
+    px(ctx, pal.eye,   35, 14,  8,  4);
+    px(ctx, '#2a3a50', 36, 15,  5,  2);
+    px(ctx, '#ffffff', 37, 14,  1,  1);
   } else {
-    px(ctx, '#aaaaaa',  3, 12,  7,  2); // left eye shut
-    px(ctx, '#888888',  3, 14,  7,  1);
-    px(ctx, '#aaaaaa', 14, 12,  7,  2); // right eye shut
-    px(ctx, '#888888', 14, 14,  7,  1);
+    px(ctx, '#aaaaaa', 21, 16,  8,  2);
+    px(ctx, '#888888', 21, 18,  8,  1);
+    px(ctx, '#aaaaaa', 35, 16,  8,  2);
+    px(ctx, '#888888', 35, 18,  8,  1);
   }
-  px(ctx, pal.nose,   9, 17,  6,  3); // nose centered
-  px(ctx, pal.point, 10, 20,  4,  1); // tiny mouth
 
-  // Whiskers — both sides
-  px(ctx, '#aaaaaa',  0, 16,  8,  1);
-  px(ctx, '#aaaaaa', 16, 16,  8,  1);
-  px(ctx, '#aaaaaa',  0, 18,  8,  1);
-  px(ctx, '#aaaaaa', 16, 18,  8,  1);
+  px(ctx, pal.nose,  27, 21, 10,  3);
+  px(ctx, pal.point, 28, 24,  8,  1);
 
-  // ── TAIL — drawn before paws ───────────────────────────────────
-  px(ctx, pal.point, 52, 34,  4, 18);
-  px(ctx, pal.point, 48, 50,  6,  4);
-  px(ctx, pal.point, 30, 54, 20,  4);
-  px(ctx, pal.point, 14, 54, 18,  4);
-  px(ctx, pal.point, 10, 50,  6,  6);
-
-  // ── FRONT PAWS — bottom of body ────────────────────────────────
-  px(ctx, pal.point,  2, 46, 18,  5);
-  px(ctx, pal.point,  2, 49,  8,  4);
-  px(ctx, pal.point, 10, 49,  8,  4);
-  px(ctx, pal.point,  2, 52,  2,  2);
-  px(ctx, pal.point,  5, 52,  2,  2);
-  px(ctx, pal.point, 10, 52,  2,  2);
-  px(ctx, pal.point, 13, 52,  2,  2);
+  // Whiskers both sides
+  px(ctx, '#aaaaaa', 12, 20,  6,  1);
+  px(ctx, '#aaaaaa', 46, 20,  6,  1);
+  px(ctx, '#aaaaaa', 12, 22,  6,  1);
+  px(ctx, '#aaaaaa', 46, 22,  6,  1);
 }
 
 function drawSleepBody(ctx, pal, b = 0) {
-  // Cat lying on its side.
-  // Key visual trick: head is drawn LIGHTER than body haunches so they
-  // don't merge — and head sits ABOVE the body line with a clear neck gap.
-  // Left = head+ear. Right = dark haunches + sweeping tail. Unmistakable.
+  // Sleeping — compact settled loaf, both eyes shut.
+  // Shifted up 8px vs previous: ears at y≈3, floor at y≈54.
+  // Head x=16-48 matches body x=16-48 — no neck, seamless join.
 
-  // ── BODY — flat horizontal slab ───────────────────────────────
-  px(ctx, pal.body, 18, 34+b, 44, 14); // body core (44 wide × 14 tall ≈ 3:1)
-  px(ctx, pal.body, 20, 32+b, 40,  4); // top rounding
-  px(ctx, pal.body, 20, 46+b, 40,  4); // bottom rounding
-  px(ctx, pal.body, 14, 36+b,  6, 10); // left end rounding (chest area)
-  px(ctx, pal.body, 60, 36+b,  4, 10); // right end rounding
+  // ── BODY — x=16-48, y=32-50 ───────────────────────────────────
+  px(ctx, pal.body, 16, 32+b, 32, 18); // body core
+  px(ctx, pal.body, 18, 30+b, 28,  4); // top rounding
+  px(ctx, pal.body, 18, 50+b, 28,  4); // bottom rounding y=50-54
+  px(ctx, pal.body, 12, 36+b,  6, 10); // left end
+  px(ctx, pal.body, 46, 34+b,  6, 14); // right end
 
-  // Haunches — explicitly DARKER than body, marks the back end
-  px(ctx, pal.point, 44, 34+b, 20, 14); // haunch mass
-  px(ctx, pal.point, 42, 36+b,  4, 10); // soft left haunch edge
+  // Tucked paws
+  px(ctx, pal.point, 16, 50+b, 32,  4);
 
-  // ── NECK — connects front-facing head down to body ─────────────
-  px(ctx, pal.body,  8, 28+b, 12,  8);
+  // Tail tip beside body
+  px(ctx, pal.point, 10, 40+b,  4,  8);
+  px(ctx, pal.point, 10, 47+b,  8,  3);
 
-  // ── HEAD — front-facing, turned toward the viewer ─────────────
-  px(ctx, pal.body,  1, 10+b, 22, 20); // head block
-  px(ctx, pal.body,  3,  8+b, 18,  4); // top rounding
-  px(ctx, pal.body,  0, 13+b,  3, 12); // left rounding
-  px(ctx, pal.body, 21, 13+b,  3, 12); // right rounding
+  // ── HEAD — x=16-48, y=12-32 ───────────────────────────────────
+  px(ctx, pal.body, 16, 12+b, 32, 22); // head block y=12-34
+  px(ctx, pal.body, 18, 10+b, 28,  4); // top rounding y=10-14
 
-  // TWO ears (both visible from front)
-  px(ctx, pal.point,  2,  2+b,  7,  9); // left ear outer
-  px(ctx, pal.inner,  3,  3+b,  5,  7); // left ear inner
-  px(ctx, pal.point, 15,  2+b,  7,  9); // right ear outer
-  px(ctx, pal.inner, 16,  3+b,  5,  7); // right ear inner
+  // ── EARS — y=3-12 with pink inner ─────────────────────────────
+  px(ctx, pal.point, 18,  3+b,  8,  9);
+  px(ctx, '#c87878', 19,  4+b,  5,  7);
+  px(ctx, pal.point, 38,  3+b,  8,  9);
+  px(ctx, '#c87878', 39,  4+b,  5,  7);
 
-  // ── FACE — both eyes closed (sleeping), centered nose ─────────
-  px(ctx, '#aaaaaa',  3, 17+b,  7,  2); // left eye shut
-  px(ctx, '#888888',  3, 19+b,  7,  1); // left lash
-  px(ctx, '#aaaaaa', 14, 17+b,  7,  2); // right eye shut
-  px(ctx, '#888888', 14, 19+b,  7,  1); // right lash
+  // ── FACE ──────────────────────────────────────────────────────
+  px(ctx, pal.point, 21, 18+b, 22,  8); // face mask
 
-  px(ctx, pal.nose,   9, 22+b,  6,  3); // nose centered
-  px(ctx, pal.point, 10, 25+b,  4,  1); // tiny mouth
+  px(ctx, '#aaaaaa', 22, 20+b,  8,  2); // left eye shut
+  px(ctx, '#888888', 22, 22+b,  8,  1); // left lash
+  px(ctx, '#aaaaaa', 34, 20+b,  8,  2); // right eye shut
+  px(ctx, '#888888', 34, 22+b,  8,  1); // right lash
 
-  // Whiskers — both sides, clearly readable
-  px(ctx, '#aaaaaa',  0, 21+b,  8,  1);
-  px(ctx, '#aaaaaa', 16, 21+b,  8,  1);
-  px(ctx, '#aaaaaa',  0, 23+b,  8,  1);
-  px(ctx, '#aaaaaa', 16, 23+b,  8,  1);
+  px(ctx, pal.nose,  29, 26+b,  6,  3); // nose
+  px(ctx, pal.point, 30, 29+b,  4,  1); // mouth
 
-  // ── FRONT PAWS — tucked below and forward from the head ───────
-  px(ctx, pal.point,  2, 38+b, 18,  5); // paw slab
-  px(ctx, pal.point,  2, 41+b,  7,  4); // near paw
-  px(ctx, pal.point,  9, 41+b,  7,  4); // far paw
-  px(ctx, pal.point,  2, 44+b,  2,  2); // toes
-  px(ctx, pal.point,  5, 44+b,  2,  2);
-  px(ctx, pal.point,  9, 44+b,  2,  2);
-  px(ctx, pal.point, 12, 44+b,  2,  2);
-
-  // ── TAIL — exits from right of haunches, drops down, sweeps back ─
-  px(ctx, pal.point, 62, 36+b,  2, 12); // tail drops from far right
-  px(ctx, pal.point, 58, 46+b,  6,  4); // corner turn
-  px(ctx, pal.point, 42, 50+b, 18,  4); // sweeping left under body
-  px(ctx, pal.point, 26, 52+b, 18,  4); // continuing left
-  px(ctx, pal.point, 22, 48+b,  6,  5); // tail tip curling up near paws
+  px(ctx, '#aaaaaa', 14, 25+b,  6,  1); // whiskers
+  px(ctx, '#aaaaaa', 44, 25+b,  6,  1);
+  px(ctx, '#aaaaaa', 14, 27+b,  6,  1);
+  px(ctx, '#aaaaaa', 44, 27+b,  6,  1);
 }
 
 function drawStandBody(ctx, pal) {
@@ -522,12 +497,10 @@ function applyPosition() {
   const clampedLeft = Math.max(0, Math.min(vw - scaledW, leftPx));
   canvas.style.left = clampedLeft + 'px';
 
-  // ZZZ floats above the front-facing head, centered on it.
-  // Head center x ≈ 12/64 of canvas width; ear tips reach y ≈ 2/64.
   const scale = scaledW / 64;
   const zzz = document.getElementById('zzz');
-  zzz.style.left = (clampedLeft + 8 * scale) + 'px';
-  zzz.style.bottom = (48 + scaledW - 2 * scale + 8) + 'px';
+  zzz.style.left = (clampedLeft + 4 * scale) + 'px';
+  zzz.style.bottom = (48 + scaledW - 2 * scale + 10) + 'px';
 }
 
 function doWalk(direction) {
@@ -558,11 +531,29 @@ let cursorX = -9999;
 let cursorY = -9999;
 document.addEventListener('mousemove', e => { cursorX = e.clientX; cursorY = e.clientY; });
 
+/* ═══════════════════════════════════════════════════════════════════
+   DEV MODE  — enabled via ?dev=true in the URL
+   ═══════════════════════════════════════════════════════════════════ */
+const DEV_MODE = new URLSearchParams(window.location.search).get('dev') === 'true';
+const DEV_STATE_MS = 8000; // ms per state in dev mode
+
+if (DEV_MODE) {
+  document.getElementById('dev-bar').classList.remove('hidden');
+  document.getElementById('dev-next').addEventListener('click', () => {
+    stateEndTime = 0; // force transition on next scheduler tick
+  });
+}
+
+function updateDevBar(state) {
+  if (!DEV_MODE) return;
+  document.getElementById('dev-state').textContent = state;
+}
+
 function enterState(state) {
   currentState = state;
   frameIdx = 0;
   const [min, max] = CONFIG.durations[state];
-  stateEndTime = performance.now() + randBetween(min, max);
+  stateEndTime = performance.now() + (DEV_MODE ? DEV_STATE_MS : randBetween(min, max));
 
   // Walking: pick a direction
   if (state === 'walk') {
@@ -572,6 +563,7 @@ function enterState(state) {
 
   updateAudio(state);
   updateZzz(state);
+  updateDevBar(state);
 }
 
 let walkDir  = 1;
@@ -721,7 +713,7 @@ function updateAudio(state) {
    ═══════════════════════════════════════════════════════════════════ */
 function updateZzz(state) {
   const zzz = document.getElementById('zzz');
-  if (state === 'sleep' || state === 'purr' || state === 'curl') {
+  if (state === 'sleep') {
     zzz.classList.remove('hidden');
   } else {
     zzz.classList.add('hidden');
@@ -731,6 +723,43 @@ function updateZzz(state) {
 /* ═══════════════════════════════════════════════════════════════════
    UI CONTROLS
    ═══════════════════════════════════════════════════════════════════ */
+
+
+// Mouse (animal) cursor SVG — shown when hovering the cat canvas
+const MOUSE_CURSOR_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><ellipse cx='18' cy='20' rx='8' ry='7' fill='%23888'/><circle cx='12' cy='15' r='6' fill='%23888'/><ellipse cx='8.5' cy='9' rx='3' ry='3.5' fill='%23888'/><ellipse cx='8.5' cy='9' rx='1.8' ry='2.2' fill='%23f9a0b0'/><circle cx='11' cy='15' r='1.5' fill='%23111'/><circle cx='10.5' cy='14.5' r='0.5' fill='%23fff'/><path d='M26 22 Q31 19 31 25 Q31 30 27 29' stroke='%23888' stroke-width='2' fill='none' stroke-linecap='round'/></svg>`;
+canvas.style.cursor = `url("data:image/svg+xml,${MOUSE_CURSOR_SVG}") 11 15, pointer`;
+
+// Heart balloon spawner
+const HEART_COLORS = ['#ff6b8a','#ff4477','#ff8fb0','#e87aff','#ff7676','#f0a0c8'];
+
+function spawnHeart(clientX, clientY) {
+  const el = document.createElement('div');
+  el.className = 'heart-balloon';
+  el.textContent = '♥';
+  const size = 13 + Math.random() * 14;
+  el.style.fontSize = size + 'px';
+  // Center the heart on the click point
+  el.style.left = (clientX - size * 0.4) + 'px';
+  el.style.top  = (clientY - size * 0.5) + 'px';
+  el.style.color = HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)];
+  const dur = 2.6 + Math.random() * 1.4;
+  el.style.setProperty('--heart-dur', dur + 's');
+  const swayDir = Math.random() > 0.5 ? 1 : -1;
+  el.style.setProperty('--sway', swayDir * (6 + Math.random() * 18) + 'px');
+  document.body.appendChild(el);
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+}
+
+canvas.addEventListener('click', e => {
+  spawnHeart(e.clientX, e.clientY);
+  // Tiny reaction: ear twitch or blink
+  if (currentState === 'sleep') {
+    earTwitch = true;
+  } else {
+    blink = true;
+    blinkTimer = 300;
+  }
+});
 
 // Size
 let sizeIdx = 2; // default: large
@@ -748,26 +777,6 @@ document.getElementById('btn-size').addEventListener('click', () => {
   saveSettings();
 });
 
-// Pause
-document.getElementById('btn-pause').addEventListener('click', () => {
-  paused = !paused;
-  document.getElementById('btn-pause').textContent = paused ? '▶' : '⏸';
-  saveSettings();
-});
-
-// Mute
-document.getElementById('btn-mute').addEventListener('click', () => {
-  audioEnabled = !audioEnabled;
-  document.getElementById('btn-mute').textContent = audioEnabled ? '🔊' : '🔇';
-  if (audioEnabled) {
-    ensureAudioCtx();
-    updateAudio(currentState);
-  } else {
-    stopPurr();
-  }
-  saveSettings();
-});
-
 // Palette
 document.getElementById('btn-palette').addEventListener('click', () => {
   paletteIndex = (paletteIndex + 1) % PALETTES.length;
@@ -779,21 +788,18 @@ document.getElementById('btn-palette').addEventListener('click', () => {
 // Pet the cat
 document.getElementById('btn-pet').addEventListener('click', () => {
   if (currentState === 'sleep') {
-    // Tiny sleepy reaction
     earTwitch = true;
     setTimeout(() => { earTwitch = false; }, 800);
   } else {
-    // Awake positive reaction
     const prev = currentState;
     blink = true;
     blinkTimer = 500;
-    // Brief purr state then return
     enterState('purr');
     setTimeout(() => { enterState(prev); }, randBetween(8000, 15000));
   }
 });
 
-// Apply initial palette theme (tints the control text colour per coat)
+// Apply initial palette theme
 applyPaletteTheme();
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -918,9 +924,7 @@ applySize();
 applyPaletteTheme();
 
 // Sync button states from loaded settings
-document.getElementById('btn-mute').textContent  = audioEnabled ? '🔊' : '🔇';
-document.getElementById('btn-pause').textContent = paused ? '▶' : '⏸';
-document.getElementById('btn-size').textContent  = ['S','M','L','XL'][sizeIdx];
+document.getElementById('btn-size').textContent = ['S','M','L','XL'][sizeIdx];
 
 initRadiator();
 animateRadiator();

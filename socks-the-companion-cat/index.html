@@ -16,11 +16,32 @@
   <canvas id="radiator" aria-label="Radiator heater"></canvas>
 
   <div id="controls">
-    <button id="btn-mute" title="Mute / unmute purring">🔇</button>
-    <button id="btn-pause" title="Pause / resume animation">⏸</button>
-    <button id="btn-size" title="Cycle cat size">L</button>
-    <button id="btn-pet" title="Pet the cat">🐾</button>
-    <button id="btn-palette" title="Cycle coat colour">🎨</button>
+<button id="btn-size" title="Cycle cat size">L</button>
+    <!-- pet -->
+    <button id="btn-pet" title="Pet the cat">
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <circle cx="4.5" cy="3.5" r="1.5"/>
+        <circle cx="8.5" cy="2.5" r="1.4"/>
+        <circle cx="12" cy="4.5" r="1.4"/>
+        <circle cx="2" cy="6.5" r="1.4"/>
+        <path d="M7.5 7C4.5 7 2.5 10.5 3.5 13C4.5 15 10.5 15 12 13C13.2 10.5 10.5 7 7.5 7Z"/>
+      </svg>
+    </button>
+    <!-- palette -->
+    <button id="btn-palette" title="Cycle coat colour">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M8 2A6 6 0 0 0 2 8C2 11.3 4.7 14 8 14C8.55 14 9 13.55 9 13C9 12.72 8.89 12.47 8.71 12.29C8.54 12.12 8.44 11.87 8.44 11.6C8.44 11.05 8.89 10.6 9.44 10.6H11A3 3 0 0 0 14 7.6C14 4.5 11.3 2 8 2Z"/>
+        <circle cx="5.5" cy="7" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="8.5" cy="4.5" r="1" fill="currentColor" stroke="none"/>
+        <circle cx="11" cy="7" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+  </div>
+
+  <div id="dev-bar" class="hidden">
+    <span class="dev-label">dev</span>
+    <span id="dev-state">sit</span>
+    <button id="dev-next">⏭ skip</button>
   </div>
 
   <script src="script.js"></script>

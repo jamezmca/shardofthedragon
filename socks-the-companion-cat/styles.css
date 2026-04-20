@@ -2,8 +2,6 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --ctrl-bg: rgba(240, 240, 240, 0.85);
-  --ctrl-border: rgba(180, 180, 180, 0.5);
   --text: #888;
 }
 
@@ -15,7 +13,7 @@ body {
 }
 
 /* ─── Utility ──────────────────────────────────────────────────── */
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* ─── Scene ────────────────────────────────────────────────────── */
 #scene {
@@ -35,6 +33,7 @@ body {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   transition: left 0.6s ease;
+  pointer-events: auto;
 }
 
 #cat-canvas.size-s  { width: 128px;  height: 128px;  }
@@ -76,24 +75,19 @@ body {
   position: fixed;
   bottom: 0;
   left: 28px;
-  width: 140px;   /* 28 logical × 5 */
-  height: 180px;  /* 36 logical × 5 (20 body + 16 wave zone) */
+  width: 140px;
+  height: 180px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
 
-/* ─── Controls ─────────────────────────────────────────────────── */
+/* ─── Controls — bare icons, no container box ──────────────────── */
 #controls {
   position: fixed;
-  bottom: 10px;
-  right: 16px;
+  bottom: 12px;
+  right: 14px;
   display: flex;
-  gap: 6px;
-  background: var(--ctrl-bg);
-  border: 1px solid var(--ctrl-border);
-  border-radius: 20px;
-  padding: 5px 10px;
-  backdrop-filter: blur(4px);
+  gap: 1px;
   z-index: 10;
 }
 
@@ -101,13 +95,72 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  border-radius: 5px;
   color: var(--text);
-  padding: 2px 5px;
-  border-radius: 6px;
-  line-height: 1;
+  opacity: 0.4;
   transition: opacity 0.2s;
-  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: bold;
+  line-height: 1;
 }
-#controls button:hover  { opacity: 1; }
-#controls button.active { opacity: 1; }
+#controls button:hover  { opacity: 0.9; }
+#controls button.active { opacity: 0.9; }
+#controls button svg    { width: 14px; height: 14px; display: block; }
+
+/* ─── Dev bar ──────────────────────────────────────────────────── */
+#dev-bar {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 18, 28, 0.88);
+  border: 1px solid rgba(100, 110, 160, 0.3);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #8090a8;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+#dev-bar .dev-label { opacity: 0.45; }
+#dev-bar #dev-state { color: #72d9a8; font-weight: bold; min-width: 72px; }
+#dev-bar button {
+  background: rgba(70, 75, 120, 0.45);
+  border: 1px solid rgba(110, 115, 170, 0.3);
+  border-radius: 4px;
+  color: #9aaabf;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  padding: 2px 7px;
+  line-height: 1.6;
+}
+#dev-bar button:hover { background: rgba(90, 95, 150, 0.7); color: #fff; }
+
+/* ─── Heart balloons ───────────────────────────────────────────── */
+.heart-balloon {
+  position: fixed;
+  pointer-events: none;
+  z-index: 200;
+  animation: heart-float var(--heart-dur, 3s) ease-out forwards;
+  transform-origin: center bottom;
+  user-select: none;
+}
+
+@keyframes heart-float {
+  0%   { opacity: 0.95; transform: translateY(0)      translateX(0)                    scale(1);    }
+  25%  { opacity: 1;    transform: translateY(-65px)  translateX(var(--sway))          scale(1.05); }
+  55%  { opacity: 0.75; transform: translateY(-150px) translateX(calc(var(--sway)*-0.6)) scale(0.9); }
+  80%  { opacity: 0.35; transform: translateY(-220px) translateX(var(--sway))          scale(0.8);  }
+  100% { opacity: 0;    transform: translateY(-300px) translateX(calc(var(--sway)*0.3)) scale(0.6); }
+}
