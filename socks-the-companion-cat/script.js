@@ -250,60 +250,59 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
 }
 
 function drawSleepBody(ctx, pal, b = 0) {
-  // Side-profile sleeping cat, curled into a crescent — facing right
-  // b = breathOffset (0 or ±1 px, gentle whole-body vertical shift)
+  // Cat lying flat on its side — clearly horizontal body, head at left, tail at right
+  // b = breath offset (±1 px slow vertical shift)
 
-  // ── BODY oval ────────────────────────────────────────────────
-  px(ctx, pal.body,  16, 22+b, 40, 30); // torso core
-  px(ctx, pal.body,  18, 18+b, 36,  6); // top rounding
-  px(ctx, pal.body,  18, 50+b, 36,  4); // bottom rounding
-  px(ctx, pal.body,  12, 28+b,  6, 18); // left side curve
-  px(ctx, pal.body,  54, 26+b,  6, 18); // right side curve
+  // ── BODY — wide, flat, unmistakably horizontal ────────────────
+  px(ctx, pal.body, 16, 28+b, 42, 14); // body core slab
+  px(ctx, pal.body, 18, 26+b, 38,  4); // top edge rounding
+  px(ctx, pal.body, 18, 40+b, 38,  4); // bottom edge rounding
+  px(ctx, pal.body, 12, 30+b,  6, 10); // left end rounding (neck area)
+  px(ctx, pal.body, 56, 30+b,  6, 10); // right end rounding
 
-  // ── HAUNCHES (darker, back-right of body) ────────────────────
-  px(ctx, pal.point, 44, 20+b, 16, 26); // haunch mass
-  px(ctx, pal.point, 42, 22+b,  4, 22); // soft left haunch edge
-  px(ctx, pal.body,  44, 20+b,  4,  4); // blend top of haunch into body
+  // Haunches — darker right half, identifies back end
+  px(ctx, pal.point, 42, 28+b, 18, 14);
+  px(ctx, pal.point, 40, 30+b,  4, 10); // soft left edge
+  px(ctx, pal.body,  42, 28+b,  4,  3); // blend at top
 
-  // ── HEAD (upper-left, profile facing right, drooped/resting) ─
-  px(ctx, pal.body,   6, 10+b, 22, 20); // head mass
-  px(ctx, pal.body,   8,  8+b, 18,  4); // top of head rounding
+  // ── HEAD — clearly round, at same height as body, facing right ─
+  px(ctx, pal.body,  2, 17+b, 20, 18); // head oval
+  px(ctx, pal.body,  4, 15+b, 16,  4); // top rounding
+  px(ctx, pal.body,  2, 21+b,  3,  8); // left rounding
 
-  // Ear — single side-profile triangular ear
-  px(ctx, pal.point, 10,  4+b,  5,  8); // outer ear
-  px(ctx, pal.inner, 11,  5+b,  3,  5); // inner ear warm tint
+  // Ear — tall and upright so it reads clearly
+  px(ctx, pal.point,  4,  6+b,  7, 14); // outer ear
+  px(ctx, pal.inner,  5,  7+b,  5, 11); // inner ear
 
-  // Closed eye — a gentle curved line
-  px(ctx, pal.point, 12, 18+b,  8,  1); // upper lid
-  px(ctx, pal.point, 13, 19+b,  6,  1); // lower lash curve
+  // Closed eye — 2 px tall so it's clearly visible on a large canvas
+  px(ctx, pal.point,  8, 21+b, 10,  2);
+  // Tiny eyelash curve below
+  px(ctx, pal.point,  9, 23+b,  8,  1);
 
-  // Nose
-  px(ctx, pal.nose,  20, 23+b,  4,  2);
-  // Tiny mouth
-  px(ctx, pal.point, 21, 25+b,  2,  1);
+  // Nose & mouth
+  px(ctx, pal.nose,  18, 27+b,  4,  2);
+  px(ctx, pal.point, 20, 29+b,  2,  1);
 
-  // Whiskers (very faint, horizontal)
-  px(ctx, '#b0a090',  2, 22+b, 16,  1);
-  px(ctx, '#b0a090',  2, 24+b, 16,  1);
+  // Whiskers — faint lines extending left from snout
+  px(ctx, '#b8a898',  2, 26+b, 14,  1);
+  px(ctx, '#b8a898',  2, 28+b, 14,  1);
 
-  // ── FRONT PAWS (tucked forward, below head) ──────────────────
-  px(ctx, pal.point,  8, 32+b, 24,  6); // paw mass
-  px(ctx, pal.point,  8, 36+b, 10,  4); // near paw
-  px(ctx, pal.point, 18, 36+b, 10,  4); // far paw
-  // Toe suggestions
-  px(ctx, pal.point,  8, 38+b,  2,  2);
-  px(ctx, pal.point, 11, 38+b,  2,  2);
-  px(ctx, pal.point, 18, 38+b,  2,  2);
-  px(ctx, pal.point, 21, 38+b,  2,  2);
+  // ── FRONT PAWS — extended forward below head ──────────────────
+  px(ctx, pal.point,  2, 37+b, 22,  6); // paw slab
+  px(ctx, pal.point,  2, 41+b,  9,  5); // near paw
+  px(ctx, pal.point, 11, 41+b,  9,  5); // far paw
+  // Toes
+  px(ctx, pal.point,  2, 44+b,  2,  2);
+  px(ctx, pal.point,  5, 44+b,  2,  2);
+  px(ctx, pal.point, 11, 44+b,  2,  2);
+  px(ctx, pal.point, 14, 44+b,  2,  2);
 
-  // ── TAIL (sweeps from haunches right, curves under body) ─────
-  px(ctx, pal.point, 58, 28+b,  5, 16); // tail descending from haunches
-  px(ctx, pal.point, 54, 42+b,  9,  5); // tail turning corner
-  px(ctx, pal.point, 36, 46+b, 20,  5); // tail bottom going left
-  px(ctx, pal.point, 18, 48+b, 20,  5); // tail continuing left
-  px(ctx, pal.point,  6, 44+b, 14,  5); // tail approaching paws / wrapping back
-  px(ctx, pal.point,  4, 40+b,  4,  6); // tail tip
-  px(ctx, pal.body,   4, 42+b,  2,  3); // soften tail tip highlight
+  // ── TAIL — leaves right of haunches, sweeps down then back left ─
+  px(ctx, pal.point, 60, 32+b,  4, 10); // tail dropping from right end
+  px(ctx, pal.point, 56, 40+b,  8,  4); // tail turning corner
+  px(ctx, pal.point, 40, 44+b, 18,  4); // tail sweeping left
+  px(ctx, pal.point, 24, 46+b, 18,  4); // tail continuing
+  px(ctx, pal.point, 20, 43+b,  6,  4); // tail tip rising near paws
 }
 
 function drawStandBody(ctx, pal) {
