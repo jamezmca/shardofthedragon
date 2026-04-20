@@ -112,6 +112,23 @@ const PALETTES = [
   { body: '#f5c880', point: '#c06030', eye: '#70b070', nose: '#f0a0a0', inner: '#f5c880' },
 ];
 
+/* Per-palette backgrounds chosen to contrast the cat colour.
+   Tweak these to change the room feel for each coat. */
+const PALETTE_THEME = [
+  { dayBg: '#f0ebe0', nightBg: '#1a1a26', dayText: '#7a6a55', nightText: '#9a8ab0' }, // black cat  → warm cream
+  { dayBg: '#8aaaba', nightBg: '#1a2535', dayText: '#3a5060', nightText: '#8090a8' }, // cream cat  → cool slate
+  { dayBg: '#cfc4b0', nightBg: '#1e1a14', dayText: '#6a5a48', nightText: '#908070' }, // grey tabby → warm tan
+  { dayBg: '#4e5e70', nightBg: '#0e1620', dayText: '#c0d0dc', nightText: '#8090a0' }, // orange cat → dark slate
+];
+
+function applyPaletteTheme() {
+  const isNight = document.body.classList.contains('night');
+  const t = PALETTE_THEME[paletteIndex] || PALETTE_THEME[0];
+  // Set directly on body so the `transition: background` rule fires reliably
+  document.body.style.background = isNight ? t.nightBg : t.dayBg;
+  document.documentElement.style.setProperty('--text', isNight ? t.nightText : t.dayText);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    ANIMATION FRAMES  — canvas pixel-art draw functions per state
    Each entry is an array of frame-draw functions: (ctx, pal) => void
@@ -234,24 +251,61 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
   px(ctx, pal.nose, 30, 30, 4, 2);
 }
 
-function drawSleepBody(ctx, pal, breathOffset = 0) {
-  // Flattened sleeping curl — slightly compressed
-  const by = 2 + breathOffset;
-  px(ctx, pal.body,  14, 32 + by, 36, 20);
-  px(ctx, pal.body,  16, 30 + by, 32, 8);
-  // Tail
-  px(ctx, pal.point, 12, 34 + by, 4, 18);
-  px(ctx, pal.point, 12, 50 + by, 22, 4);
-  px(ctx, pal.point, 34, 50 + by, 16, 4);
-  px(ctx, pal.point, 48, 40 + by, 4, 14);
-  // Head resting flat
-  px(ctx, pal.body,  20, 24 + by, 24, 14);
-  px(ctx, pal.point, 20, 20 + by,  5,  8);
-  px(ctx, pal.point, 39, 20 + by,  5,  8);
-  // Closed eyes
-  px(ctx, pal.point, 24, 29 + by, 5, 1);
-  px(ctx, pal.point, 34, 29 + by, 5, 1);
-  px(ctx, pal.nose,  29, 33 + by, 4, 2);
+function drawSleepBody(ctx, pal, b = 0) {
+  // Side-profile sleeping cat, curled into a crescent — facing right
+  // b = breathOffset (0 or ±1 px, gentle whole-body vertical shift)
+
+  // ── BODY oval ────────────────────────────────────────────────
+  px(ctx, pal.body,  16, 22+b, 40, 30); // torso core
+  px(ctx, pal.body,  18, 18+b, 36,  6); // top rounding
+  px(ctx, pal.body,  18, 50+b, 36,  4); // bottom rounding
+  px(ctx, pal.body,  12, 28+b,  6, 18); // left side curve
+  px(ctx, pal.body,  54, 26+b,  6, 18); // right side curve
+
+  // ── HAUNCHES (darker, back-right of body) ────────────────────
+  px(ctx, pal.point, 44, 20+b, 16, 26); // haunch mass
+  px(ctx, pal.point, 42, 22+b,  4, 22); // soft left haunch edge
+  px(ctx, pal.body,  44, 20+b,  4,  4); // blend top of haunch into body
+
+  // ── HEAD (upper-left, profile facing right, drooped/resting) ─
+  px(ctx, pal.body,   6, 10+b, 22, 20); // head mass
+  px(ctx, pal.body,   8,  8+b, 18,  4); // top of head rounding
+
+  // Ear — single side-profile triangular ear
+  px(ctx, pal.point, 10,  4+b,  5,  8); // outer ear
+  px(ctx, pal.inner, 11,  5+b,  3,  5); // inner ear warm tint
+
+  // Closed eye — a gentle curved line
+  px(ctx, pal.point, 12, 18+b,  8,  1); // upper lid
+  px(ctx, pal.point, 13, 19+b,  6,  1); // lower lash curve
+
+  // Nose
+  px(ctx, pal.nose,  20, 23+b,  4,  2);
+  // Tiny mouth
+  px(ctx, pal.point, 21, 25+b,  2,  1);
+
+  // Whiskers (very faint, horizontal)
+  px(ctx, '#b0a090',  2, 22+b, 16,  1);
+  px(ctx, '#b0a090',  2, 24+b, 16,  1);
+
+  // ── FRONT PAWS (tucked forward, below head) ──────────────────
+  px(ctx, pal.point,  8, 32+b, 24,  6); // paw mass
+  px(ctx, pal.point,  8, 36+b, 10,  4); // near paw
+  px(ctx, pal.point, 18, 36+b, 10,  4); // far paw
+  // Toe suggestions
+  px(ctx, pal.point,  8, 38+b,  2,  2);
+  px(ctx, pal.point, 11, 38+b,  2,  2);
+  px(ctx, pal.point, 18, 38+b,  2,  2);
+  px(ctx, pal.point, 21, 38+b,  2,  2);
+
+  // ── TAIL (sweeps from haunches right, curves under body) ─────
+  px(ctx, pal.point, 58, 28+b,  5, 16); // tail descending from haunches
+  px(ctx, pal.point, 54, 42+b,  9,  5); // tail turning corner
+  px(ctx, pal.point, 36, 46+b, 20,  5); // tail bottom going left
+  px(ctx, pal.point, 18, 48+b, 20,  5); // tail continuing left
+  px(ctx, pal.point,  6, 44+b, 14,  5); // tail approaching paws / wrapping back
+  px(ctx, pal.point,  4, 40+b,  4,  6); // tail tip
+  px(ctx, pal.body,   4, 42+b,  2,  3); // soften tail tip highlight
 }
 
 function drawStandBody(ctx, pal) {
@@ -663,6 +717,7 @@ document.getElementById('btn-mute').addEventListener('click', () => {
 document.getElementById('btn-palette').addEventListener('click', () => {
   paletteIndex = (paletteIndex + 1) % PALETTES.length;
   pal = PALETTES[paletteIndex];
+  applyPaletteTheme();
   saveSettings();
 });
 
@@ -689,6 +744,7 @@ document.getElementById('btn-pet').addEventListener('click', () => {
 function applyDayNight() {
   const h = new Date().getHours();
   document.body.classList.toggle('night', h < 6 || h >= 20);
+  applyPaletteTheme();
 }
 applyDayNight();
 setInterval(applyDayNight, 5 * 60 * 1000);
@@ -721,6 +777,52 @@ window.addEventListener('resize', () => {
   clampCatX();
   applyPosition();
 });
+
+/* ═══════════════════════════════════════════════════════════════════
+   RADIATOR
+   ═══════════════════════════════════════════════════════════════════ */
+
+function initRadiator() {
+  const el = document.getElementById('radiator');
+  const W = 28, H = 20;
+  el.width  = W;
+  el.height = H;
+  const rc = el.getContext('2d');
+
+  const R = {
+    rail:  '#706860',
+    hiTop: '#a09688',   // highlight on top face
+    hi:    '#988e84',   // left-edge highlight of each ridge
+    mid:   '#887e74',   // ridge body
+    sh:    '#585048',   // right-edge shadow of each ridge
+    grv:   '#2e2820',   // deep groove between ridges
+    foot:  '#504840',   // floor mounting strip
+  };
+
+  function rp(color, x, y, w, h) { rc.fillStyle = color; rc.fillRect(x, y, w, h); }
+
+  // ── top rail ──────────────────────────────────────────────────
+  rp(R.rail,  0, 0, W, 3);
+  rp(R.hiTop, 0, 0, W, 1); // top-face highlight
+
+  // ── 5 ridges (each 4px wide), 4 grooves (1px), 2px side margins
+  //    layout: 2 | 4 | 1 | 4 | 1 | 4 | 1 | 4 | 1 | 4 | 2 = 28
+  const RIDGES = [2, 7, 12, 17, 22];
+  RIDGES.forEach(rx => {
+    rp(R.hi,  rx,   3, 1, 14); // left highlight
+    rp(R.mid, rx+1, 3, 2, 14); // body
+    rp(R.sh,  rx+3, 3, 1, 14); // shadow
+  });
+  // grooves
+  [6, 11, 16, 21].forEach(gx => rp(R.grv, gx, 3, 1, 14));
+  // side fills
+  rp(R.sh, 0, 3, 2, 14);
+  rp(R.sh, 26, 3, 2, 14);
+
+  // ── bottom rail ───────────────────────────────────────────────
+  rp(R.rail, 0, 17, W, 3);
+  rp(R.foot, 0, 19, W, 1); // foot strip
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    SUMMON SCREEN
@@ -779,15 +881,19 @@ function triggerSummon() {
 
   setTimeout(() => {
     screen.style.display = 'none';
-    // Reveal cat and controls
+    // Reveal cat, radiator, and controls
     const scene    = document.getElementById('scene');
     const controls = document.getElementById('controls');
+    const radiator = document.getElementById('radiator');
     scene.classList.remove('hidden');
     controls.classList.remove('hidden');
+    radiator.classList.remove('hidden');
+    initRadiator();
     // Small delay so display:flex kicks in before opacity transition
     requestAnimationFrame(() => {
       scene.classList.add('visible');
       controls.classList.add('visible');
+      radiator.classList.add('rad-visible');
     });
     startCat();
   }, 1000);
@@ -798,6 +904,7 @@ function triggerSummon() {
    ═══════════════════════════════════════════════════════════════════ */
 loadSettings();
 applySize();
+applyPaletteTheme(); // re-apply now that saved paletteIndex is loaded
 
 // Sync button states from loaded settings
 document.getElementById('btn-mute').textContent  = audioEnabled ? '🔊' : '🔇';

@@ -142,6 +142,20 @@ body {
   50%       { transform: translateY(-6px); }
 }
 
+/* ─── Radiator ─────────────────────────────────────────────────── */
+#radiator {
+  position: fixed;
+  bottom: 0;
+  left: 28px;
+  width: 140px;   /* 28 logical × 5 */
+  height: 100px;  /* 20 logical × 5 */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  opacity: 0;
+  transition: opacity 1.4s ease 0.4s;
+}
+#radiator.rad-visible { display: block; opacity: 1; }
+
 /* ─── Controls ─────────────────────────────────────────────────── */
 #controls {
   position: fixed;
