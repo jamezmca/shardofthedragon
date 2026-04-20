@@ -45,20 +45,30 @@ body {
 /* ─── Zzz label ────────────────────────────────────────────────── */
 .zzz {
   position: absolute;
-  bottom: 56px;
-  font-size: 11px;
-  color: var(--text);
-  opacity: 0.5;
-  letter-spacing: 4px;
   pointer-events: none;
-  animation: zzz-float 4s ease-in-out infinite;
-  transition: opacity 1.5s ease;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  transition: opacity 1.2s ease;
 }
-.zzz.hidden { opacity: 0; display: block; } /* keep in flow for fade */
+.zzz.hidden { opacity: 0; }
 
-@keyframes zzz-float {
-  0%, 100% { transform: translateY(0);   }
-  50%       { transform: translateY(-6px); }
+.zzz span {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #aaa;
+  opacity: 0;
+  animation: z-rise 2.6s ease-in-out infinite;
+}
+.zzz span:nth-child(1) { font-size: 11px; animation-delay: 0s;    }
+.zzz span:nth-child(2) { font-size: 15px; animation-delay: 0.75s; }
+.zzz span:nth-child(3) { font-size: 20px; animation-delay: 1.5s;  }
+
+@keyframes z-rise {
+  0%   { opacity: 0;   transform: translateY(0);     }
+  20%  { opacity: 0.8;                               }
+  80%  { opacity: 0.3;                               }
+  100% { opacity: 0;   transform: translateY(-18px); }
 }
 
 /* ─── Radiator ─────────────────────────────────────────────────── */

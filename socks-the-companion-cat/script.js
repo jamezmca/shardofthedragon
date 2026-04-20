@@ -226,83 +226,137 @@ function drawLoafBody(ctx, pal, eyeOpen = false) {
 }
 
 function drawCurlBody(ctx, pal, eyeOpen = false) {
-  // Curled up — oval shape
-  px(ctx, pal.body,  16, 30, 32, 24);
-  px(ctx, pal.body,  18, 28, 28, 8);
-  // Tail wraps around entire body
-  px(ctx, pal.point, 14, 32, 4, 20);
-  px(ctx, pal.point, 14, 50, 20, 4);
-  px(ctx, pal.point, 32, 50, 16, 4);
-  px(ctx, pal.point, 46, 38, 4, 16);
-  // Head tucked down
-  px(ctx, pal.body,  22, 20, 20, 16);
-  px(ctx, pal.point, 22, 16,  5,  8);
-  px(ctx, pal.point, 37, 16,  5,  8);
-  px(ctx, pal.point, 25, 24, 12, 6);
+  // Curled / purring — body in side profile, head turned to face viewer.
+  // Zones: front-facing head (top-left) → neck → oval body → haunches (right).
+
+  // ── BODY — compact oval ────────────────────────────────────────
+  px(ctx, pal.body, 14, 30, 38, 22); // body core
+  px(ctx, pal.body, 16, 28, 34,  4); // top rounding
+  px(ctx, pal.body, 16, 52, 34,  4); // bottom rounding
+  px(ctx, pal.body, 10, 34,  6, 14); // left end (chest)
+  px(ctx, pal.body, 50, 32,  4, 18); // right end
+
+  // Haunches — darker right ~40%
+  px(ctx, pal.point, 36, 30, 18, 24);
+  px(ctx, pal.point, 34, 32,  4, 18);
+
+  // ── NECK ───────────────────────────────────────────────────────
+  px(ctx, pal.body,  8, 22, 12,  10);
+
+  // ── HEAD — front-facing, turned toward viewer ──────────────────
+  px(ctx, pal.body,  1,  3, 22, 20); // head block
+  px(ctx, pal.body,  3,  1, 18,  4); // top rounding
+  px(ctx, pal.body,  0,  6,  3, 12); // left rounding
+  px(ctx, pal.body, 21,  6,  3, 12); // right rounding
+
+  // TWO ears (both visible from front)
+  px(ctx, pal.point,  2,  0,  7,  9); // left ear outer
+  px(ctx, pal.inner,  3,  1,  5,  7); // left ear inner
+  px(ctx, pal.point, 15,  0,  7,  9); // right ear outer
+  px(ctx, pal.inner, 16,  1,  5,  7); // right ear inner
+
+  // Face — both eyes closed, centered nose
   if (eyeOpen) {
-    px(ctx, pal.eye,   27, 25, 3, 3);
-    px(ctx, pal.eye,   33, 25, 3, 3);
+    px(ctx, pal.eye,    3, 10,  6,  4); // left eye open
+    px(ctx, '#2a3a50',  4, 11,  3,  2);
+    px(ctx, '#ffffff',  5, 10,  1,  1);
+    px(ctx, pal.eye,   15, 10,  6,  4); // right eye open
+    px(ctx, '#2a3a50', 16, 11,  3,  2);
+    px(ctx, '#ffffff', 17, 10,  1,  1);
   } else {
-    px(ctx, pal.point, 27, 27, 4, 1);
-    px(ctx, pal.point, 33, 27, 4, 1);
+    px(ctx, '#aaaaaa',  3, 12,  7,  2); // left eye shut
+    px(ctx, '#888888',  3, 14,  7,  1);
+    px(ctx, '#aaaaaa', 14, 12,  7,  2); // right eye shut
+    px(ctx, '#888888', 14, 14,  7,  1);
   }
-  px(ctx, pal.nose, 30, 30, 4, 2);
+  px(ctx, pal.nose,   9, 17,  6,  3); // nose centered
+  px(ctx, pal.point, 10, 20,  4,  1); // tiny mouth
+
+  // Whiskers — both sides
+  px(ctx, '#aaaaaa',  0, 16,  8,  1);
+  px(ctx, '#aaaaaa', 16, 16,  8,  1);
+  px(ctx, '#aaaaaa',  0, 18,  8,  1);
+  px(ctx, '#aaaaaa', 16, 18,  8,  1);
+
+  // ── TAIL — drawn before paws ───────────────────────────────────
+  px(ctx, pal.point, 52, 34,  4, 18);
+  px(ctx, pal.point, 48, 50,  6,  4);
+  px(ctx, pal.point, 30, 54, 20,  4);
+  px(ctx, pal.point, 14, 54, 18,  4);
+  px(ctx, pal.point, 10, 50,  6,  6);
+
+  // ── FRONT PAWS — bottom of body ────────────────────────────────
+  px(ctx, pal.point,  2, 46, 18,  5);
+  px(ctx, pal.point,  2, 49,  8,  4);
+  px(ctx, pal.point, 10, 49,  8,  4);
+  px(ctx, pal.point,  2, 52,  2,  2);
+  px(ctx, pal.point,  5, 52,  2,  2);
+  px(ctx, pal.point, 10, 52,  2,  2);
+  px(ctx, pal.point, 13, 52,  2,  2);
 }
 
 function drawSleepBody(ctx, pal, b = 0) {
-  // Cat lying flat on its side — clearly horizontal body, head at left, tail at right
-  // b = breath offset (±1 px slow vertical shift)
+  // Cat lying on its side.
+  // Key visual trick: head is drawn LIGHTER than body haunches so they
+  // don't merge — and head sits ABOVE the body line with a clear neck gap.
+  // Left = head+ear. Right = dark haunches + sweeping tail. Unmistakable.
 
-  // ── BODY — wide, flat, unmistakably horizontal ────────────────
-  px(ctx, pal.body, 16, 28+b, 42, 14); // body core slab
-  px(ctx, pal.body, 18, 26+b, 38,  4); // top edge rounding
-  px(ctx, pal.body, 18, 40+b, 38,  4); // bottom edge rounding
-  px(ctx, pal.body, 12, 30+b,  6, 10); // left end rounding (neck area)
-  px(ctx, pal.body, 56, 30+b,  6, 10); // right end rounding
+  // ── BODY — flat horizontal slab ───────────────────────────────
+  px(ctx, pal.body, 18, 34+b, 44, 14); // body core (44 wide × 14 tall ≈ 3:1)
+  px(ctx, pal.body, 20, 32+b, 40,  4); // top rounding
+  px(ctx, pal.body, 20, 46+b, 40,  4); // bottom rounding
+  px(ctx, pal.body, 14, 36+b,  6, 10); // left end rounding (chest area)
+  px(ctx, pal.body, 60, 36+b,  4, 10); // right end rounding
 
-  // Haunches — darker right half, identifies back end
-  px(ctx, pal.point, 42, 28+b, 18, 14);
-  px(ctx, pal.point, 40, 30+b,  4, 10); // soft left edge
-  px(ctx, pal.body,  42, 28+b,  4,  3); // blend at top
+  // Haunches — explicitly DARKER than body, marks the back end
+  px(ctx, pal.point, 44, 34+b, 20, 14); // haunch mass
+  px(ctx, pal.point, 42, 36+b,  4, 10); // soft left haunch edge
 
-  // ── HEAD — clearly round, at same height as body, facing right ─
-  px(ctx, pal.body,  2, 17+b, 20, 18); // head oval
-  px(ctx, pal.body,  4, 15+b, 16,  4); // top rounding
-  px(ctx, pal.body,  2, 21+b,  3,  8); // left rounding
+  // ── NECK — connects front-facing head down to body ─────────────
+  px(ctx, pal.body,  8, 28+b, 12,  8);
 
-  // Ear — tall and upright so it reads clearly
-  px(ctx, pal.point,  4,  6+b,  7, 14); // outer ear
-  px(ctx, pal.inner,  5,  7+b,  5, 11); // inner ear
+  // ── HEAD — front-facing, turned toward the viewer ─────────────
+  px(ctx, pal.body,  1, 10+b, 22, 20); // head block
+  px(ctx, pal.body,  3,  8+b, 18,  4); // top rounding
+  px(ctx, pal.body,  0, 13+b,  3, 12); // left rounding
+  px(ctx, pal.body, 21, 13+b,  3, 12); // right rounding
 
-  // Closed eye — 2 px tall so it's clearly visible on a large canvas
-  px(ctx, pal.point,  8, 21+b, 10,  2);
-  // Tiny eyelash curve below
-  px(ctx, pal.point,  9, 23+b,  8,  1);
+  // TWO ears (both visible from front)
+  px(ctx, pal.point,  2,  2+b,  7,  9); // left ear outer
+  px(ctx, pal.inner,  3,  3+b,  5,  7); // left ear inner
+  px(ctx, pal.point, 15,  2+b,  7,  9); // right ear outer
+  px(ctx, pal.inner, 16,  3+b,  5,  7); // right ear inner
 
-  // Nose & mouth
-  px(ctx, pal.nose,  18, 27+b,  4,  2);
-  px(ctx, pal.point, 20, 29+b,  2,  1);
+  // ── FACE — both eyes closed (sleeping), centered nose ─────────
+  px(ctx, '#aaaaaa',  3, 17+b,  7,  2); // left eye shut
+  px(ctx, '#888888',  3, 19+b,  7,  1); // left lash
+  px(ctx, '#aaaaaa', 14, 17+b,  7,  2); // right eye shut
+  px(ctx, '#888888', 14, 19+b,  7,  1); // right lash
 
-  // Whiskers — faint lines extending left from snout
-  px(ctx, '#b8a898',  2, 26+b, 14,  1);
-  px(ctx, '#b8a898',  2, 28+b, 14,  1);
+  px(ctx, pal.nose,   9, 22+b,  6,  3); // nose centered
+  px(ctx, pal.point, 10, 25+b,  4,  1); // tiny mouth
 
-  // ── FRONT PAWS — extended forward below head ──────────────────
-  px(ctx, pal.point,  2, 37+b, 22,  6); // paw slab
-  px(ctx, pal.point,  2, 41+b,  9,  5); // near paw
-  px(ctx, pal.point, 11, 41+b,  9,  5); // far paw
-  // Toes
-  px(ctx, pal.point,  2, 44+b,  2,  2);
+  // Whiskers — both sides, clearly readable
+  px(ctx, '#aaaaaa',  0, 21+b,  8,  1);
+  px(ctx, '#aaaaaa', 16, 21+b,  8,  1);
+  px(ctx, '#aaaaaa',  0, 23+b,  8,  1);
+  px(ctx, '#aaaaaa', 16, 23+b,  8,  1);
+
+  // ── FRONT PAWS — tucked below and forward from the head ───────
+  px(ctx, pal.point,  2, 38+b, 18,  5); // paw slab
+  px(ctx, pal.point,  2, 41+b,  7,  4); // near paw
+  px(ctx, pal.point,  9, 41+b,  7,  4); // far paw
+  px(ctx, pal.point,  2, 44+b,  2,  2); // toes
   px(ctx, pal.point,  5, 44+b,  2,  2);
-  px(ctx, pal.point, 11, 44+b,  2,  2);
-  px(ctx, pal.point, 14, 44+b,  2,  2);
+  px(ctx, pal.point,  9, 44+b,  2,  2);
+  px(ctx, pal.point, 12, 44+b,  2,  2);
 
-  // ── TAIL — leaves right of haunches, sweeps down then back left ─
-  px(ctx, pal.point, 60, 32+b,  4, 10); // tail dropping from right end
-  px(ctx, pal.point, 56, 40+b,  8,  4); // tail turning corner
-  px(ctx, pal.point, 40, 44+b, 18,  4); // tail sweeping left
-  px(ctx, pal.point, 24, 46+b, 18,  4); // tail continuing
-  px(ctx, pal.point, 20, 43+b,  6,  4); // tail tip rising near paws
+  // ── TAIL — exits from right of haunches, drops down, sweeps back ─
+  px(ctx, pal.point, 62, 36+b,  2, 12); // tail drops from far right
+  px(ctx, pal.point, 58, 46+b,  6,  4); // corner turn
+  px(ctx, pal.point, 42, 50+b, 18,  4); // sweeping left under body
+  px(ctx, pal.point, 26, 52+b, 18,  4); // continuing left
+  px(ctx, pal.point, 22, 48+b,  6,  5); // tail tip curling up near paws
 }
 
 function drawStandBody(ctx, pal) {
@@ -364,8 +418,8 @@ const ANIMATIONS = {
 
   purr: [
     (ctx, pal) => drawCurlBody(ctx, pal, false),
-    (ctx, pal) => drawCurlBody(ctx, pal, false),         // gentle breathing implied by frame swap
-    (ctx, pal) => { drawCurlBody(ctx, pal, false); px(ctx,'#e8d8c0',28,18,8,2); }, // chest fluff puff
+    (ctx, pal) => drawCurlBody(ctx, pal, false),
+    (ctx, pal) => drawCurlBody(ctx, pal, false),
   ],
 
   sleep: [
@@ -465,11 +519,15 @@ function applyPosition() {
   const vw = window.innerWidth;
   const scaledW = parseInt(canvas.style.width || '128');
   const leftPx = catX * vw - scaledW / 2;
-  canvas.style.left = Math.max(0, Math.min(vw - scaledW, leftPx)) + 'px';
+  const clampedLeft = Math.max(0, Math.min(vw - scaledW, leftPx));
+  canvas.style.left = clampedLeft + 'px';
 
-  // Position zzz label
+  // ZZZ floats above the front-facing head, centered on it.
+  // Head center x ≈ 12/64 of canvas width; ear tips reach y ≈ 2/64.
+  const scale = scaledW / 64;
   const zzz = document.getElementById('zzz');
-  zzz.style.left = (parseInt(canvas.style.left) + scaledW / 2 - 20) + 'px';
+  zzz.style.left = (clampedLeft + 8 * scale) + 'px';
+  zzz.style.bottom = (48 + scaledW - 2 * scale + 8) + 'px';
 }
 
 function doWalk(direction) {
@@ -663,7 +721,7 @@ function updateAudio(state) {
    ═══════════════════════════════════════════════════════════════════ */
 function updateZzz(state) {
   const zzz = document.getElementById('zzz');
-  if (state === 'sleep') {
+  if (state === 'sleep' || state === 'purr' || state === 'curl') {
     zzz.classList.remove('hidden');
   } else {
     zzz.classList.add('hidden');
