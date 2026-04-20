@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Socks — your companion cat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── Summon screen ── -->
+  <div id="summon-screen">
+    <div id="summon-text">
+      <p class="summon-label">type the following</p>
+      <div id="prompt-letters"></div>
+    </div>
+  </div>
+
+  <!-- ── Cat scene (hidden until summoned) ── -->
+  <div id="scene" class="hidden">
+    <canvas id="cat-canvas" width="64" height="64" aria-label="Socks the companion cat"></canvas>
+    <div id="zzz" class="zzz hidden">z z z</div>
+  </div>
+
+  <div id="controls" class="hidden">
+    <button id="btn-mute" title="Mute / unmute purring">🔇</button>
+    <button id="btn-pause" title="Pause / resume animation">⏸</button>
+    <button id="btn-size" title="Cycle cat size">L</button>
+    <button id="btn-pet" title="Pet the cat">🐾</button>
+    <button id="btn-palette" title="Cycle coat colour">🎨</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

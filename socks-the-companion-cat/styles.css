@@ -1,0 +1,177 @@
+/* ─── Reset & base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f0e8;
+  --floor: #e8e0d0;
+  --ctrl-bg: rgba(240, 234, 220, 0.85);
+  --ctrl-border: rgba(180, 165, 140, 0.5);
+  --text: #7a6a55;
+}
+
+body.night {
+  --bg: #1e1a2e;
+  --floor: #2a2440;
+  --ctrl-bg: rgba(30, 24, 48, 0.85);
+  --ctrl-border: rgba(80, 60, 120, 0.5);
+  --text: #9a8ab0;
+}
+
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  transition: background 2s ease;
+}
+
+/* ─── Utility ──────────────────────────────────────────────────── */
+/* .hidden is overridden by .visible for scene & controls */
+.hidden { display: none; }
+
+/* ─── Summon screen ────────────────────────────────────────────── */
+#summon-screen {
+  position: fixed;
+  inset: 0;
+  background: #0c0c0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 1s ease;
+}
+
+#summon-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#summon-text {
+  text-align: center;
+  user-select: none;
+}
+
+.summon-label {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #383848;
+  margin-bottom: 28px;
+  text-transform: lowercase;
+}
+
+#prompt-letters {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+  align-items: baseline;
+}
+
+.prompt-char {
+  font-family: 'Courier New', monospace;
+  font-size: 52px;
+  letter-spacing: 0.08em;
+  color: #252530;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+  display: inline-block;
+}
+
+.prompt-char.prompt-space {
+  width: 30px;
+}
+
+.prompt-char.lit {
+  color: #e8e4f0;
+  text-shadow: 0 0 18px rgba(200, 190, 255, 0.5);
+}
+
+/* Flash animation when a char is typed */
+@keyframes char-flash {
+  0%   { color: #ffffff; text-shadow: 0 0 30px rgba(220,210,255,0.9); }
+  100% { color: #e8e4f0; text-shadow: 0 0 18px rgba(200,190,255,0.5); }
+}
+.prompt-char.just-lit {
+  animation: char-flash 0.3s ease-out forwards;
+}
+
+/* ─── Scene / floor ────────────────────────────────────────────── */
+#scene {
+  position: fixed;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease 0.2s;
+}
+
+#scene.visible { display: flex; opacity: 1; }
+
+/* ─── Cat canvas ───────────────────────────────────────────────── */
+#cat-canvas {
+  position: absolute;
+  bottom: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: left 0.6s ease;
+}
+
+#cat-canvas.size-s  { width: 128px;  height: 128px;  }
+#cat-canvas.size-m  { width: 256px;  height: 256px;  }
+#cat-canvas.size-l  { width: 400px;  height: 400px;  }
+#cat-canvas.size-xl { width: 560px;  height: 560px;  }
+
+/* ─── Zzz label ────────────────────────────────────────────────── */
+.zzz {
+  position: absolute;
+  bottom: 56px;
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.5;
+  letter-spacing: 4px;
+  pointer-events: none;
+  animation: zzz-float 4s ease-in-out infinite;
+  transition: opacity 1.5s ease;
+}
+.zzz.hidden { opacity: 0; display: block; } /* override .hidden for fade transition */
+
+@keyframes zzz-float {
+  0%, 100% { transform: translateY(0);   }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ─── Controls ─────────────────────────────────────────────────── */
+#controls {
+  position: fixed;
+  bottom: 10px;
+  right: 16px;
+  display: flex;
+  gap: 6px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  backdrop-filter: blur(4px);
+  transition: background 2s ease, border-color 2s ease, opacity 0.8s ease;
+  z-index: 10;
+  opacity: 0;
+}
+
+#controls.visible { display: flex; opacity: 1; }
+
+#controls button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  padding: 2px 5px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: opacity 0.2s;
+  opacity: 0.7;
+}
+#controls button:hover  { opacity: 1; }
+#controls button.active { opacity: 1; }
