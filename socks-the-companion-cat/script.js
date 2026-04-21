@@ -290,49 +290,60 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
 }
 
 function drawSleepBody(ctx, pal, b = 0) {
-  // Sleeping — compact settled loaf, both eyes shut.
-  // Shifted up 8px vs previous: ears at y≈3, floor at y≈54.
-  // Head x=16-48 matches body x=16-48 — no neck, seamless join.
+  // Sleeping: front-facing head at left with chin near floor, front paws forward,
+  // body stretched right, tail lying flat with gentle tip curl. Floor y≈52.
+  //
+  // Body spans x=22-58. All darker markings are clipped to body bounds to
+  // prevent floating blocks.
 
-  // ── BODY — x=16-48, y=32-50 ───────────────────────────────────
-  px(ctx, pal.body, 16, 32+b, 32, 18); // body core
-  px(ctx, pal.body, 18, 30+b, 28,  4); // top rounding
-  px(ctx, pal.body, 18, 50+b, 28,  4); // bottom rounding y=50-54
-  px(ctx, pal.body, 12, 36+b,  6, 10); // left end
-  px(ctx, pal.body, 46, 34+b,  6, 14); // right end
+  // ── BODY — x=22-54 core, right end cap x=52-58 ────────────────
+  px(ctx, pal.body, 22, 36+b, 30, 12); // core x=22-52, y=36-48
+  px(ctx, pal.body, 24, 34+b, 26,  4); // top rounding x=24-50, y=34-38
+  px(ctx, pal.body, 24, 48+b, 26,  4); // bottom rounding x=24-50, y=48-52
+  px(ctx, pal.body, 50, 38+b,  8,  8); // right end cap x=50-58, y=38-46
 
-  // Tucked paws
-  px(ctx, pal.point, 16, 50+b, 32,  4);
+  // Haunches — clipped entirely within body bounds
+  px(ctx, pal.point, 38, 36+b, 12, 12); // x=38-50, y=36-48  (within core) ✓
+  px(ctx, pal.point, 38, 34+b, 10,  4); // x=38-48, y=34-38  (within top rounding x=24-50) ✓
+  px(ctx, pal.point, 36, 36+b,  4, 10); // left edge of haunch
 
-  // Tail tip beside body
-  px(ctx, pal.point, 10, 40+b,  4,  8);
-  px(ctx, pal.point, 10, 47+b,  8,  3);
+  // ── FRONT PAWS — forward of head at floor level ────────────────
+  px(ctx, pal.point,  2, 48+b, 22,  4); // paws x=2-24, y=48-52
 
-  // ── HEAD — x=16-48, y=12-32 ───────────────────────────────────
-  px(ctx, pal.body, 16, 12+b, 32, 22); // head block y=12-34
-  px(ctx, pal.body, 18, 10+b, 28,  4); // top rounding y=10-14
+  // ── TAIL — exits body bottom-right, lies flat, tip curls ───────
+  // Connects visually to body's right end cap (x=50-58, y=38-46)
+  px(ctx, pal.point, 50, 48+b, 10,  4); // tail flat on floor x=50-60, y=48-52
+  px(ctx, pal.point, 56, 44+b,  4,  6); // tip curl x=56-60, y=44-50 (joins tail flat)
 
-  // ── EARS — y=3-12 with pink inner ─────────────────────────────
-  px(ctx, pal.point, 18,  3+b,  8,  9);
-  px(ctx, '#c87878', 19,  4+b,  5,  7);
-  px(ctx, pal.point, 38,  3+b,  8,  9);
-  px(ctx, '#c87878', 39,  4+b,  5,  7);
+  // ── HEAD — front-facing, chin at floor level ───────────────────
+  // Drawn last so it sits cleanly over the paw tops
+  px(ctx, pal.body,  6, 26+b, 22, 22); // head x=6-28, y=26-48
+  px(ctx, pal.body,  8, 24+b, 18,  4); // top rounding y=24-28
 
-  // ── FACE ──────────────────────────────────────────────────────
-  px(ctx, pal.point, 21, 18+b, 22,  8); // face mask
+  // Both ears y=16-24 with pink inner
+  px(ctx, pal.point,  8, 16+b,  7,  8);
+  px(ctx, '#c87878',  9, 17+b,  4,  6);
+  px(ctx, pal.point, 19, 16+b,  7,  8);
+  px(ctx, '#c87878', 20, 17+b,  4,  6);
 
-  px(ctx, '#aaaaaa', 22, 20+b,  8,  2); // left eye shut
-  px(ctx, '#888888', 22, 22+b,  8,  1); // left lash
-  px(ctx, '#aaaaaa', 34, 20+b,  8,  2); // right eye shut
-  px(ctx, '#888888', 34, 22+b,  8,  1); // right lash
+  // Face mask
+  px(ctx, pal.point,  9, 32+b, 16,  8);
 
-  px(ctx, pal.nose,  29, 26+b,  6,  3); // nose
-  px(ctx, pal.point, 30, 29+b,  4,  1); // mouth
+  // Both eyes firmly shut
+  px(ctx, '#aaaaaa', 10, 34+b,  6,  2);
+  px(ctx, '#888888', 10, 36+b,  6,  1);
+  px(ctx, '#aaaaaa', 18, 34+b,  6,  2);
+  px(ctx, '#888888', 18, 36+b,  6,  1);
 
-  px(ctx, '#aaaaaa', 14, 25+b,  6,  1); // whiskers
-  px(ctx, '#aaaaaa', 44, 25+b,  6,  1);
-  px(ctx, '#aaaaaa', 14, 27+b,  6,  1);
-  px(ctx, '#aaaaaa', 44, 27+b,  6,  1);
+  // Nose + mouth
+  px(ctx, pal.nose,  14, 40+b,  6,  3);
+  px(ctx, pal.point, 15, 43+b,  4,  1);
+
+  // Whiskers both sides
+  px(ctx, '#aaaaaa',  2, 39+b,  8,  1);
+  px(ctx, '#aaaaaa',  2, 41+b,  8,  1);
+  px(ctx, '#aaaaaa', 24, 39+b,  8,  1);
+  px(ctx, '#aaaaaa', 24, 41+b,  8,  1);
 }
 
 function drawStandBody(ctx, pal) {
@@ -385,7 +396,13 @@ const ANIMATIONS = {
 
   loaf: [
     (ctx, pal) => drawLoafBody(ctx, pal, false),
-    (ctx, pal, b) => drawLoafBody(ctx, pal, !b),         // occasional eye open
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
+    (ctx, pal, b) => drawLoafBody(ctx, pal, !b),         // rare slow blink
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
+    (ctx, pal) => drawLoafBody(ctx, pal, false),
   ],
 
   curl: [
