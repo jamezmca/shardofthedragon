@@ -100,26 +100,32 @@ const PURR_STATES = new Set(['curl', 'purr', 'sleep']);
 const AWAKE_STATES = new Set(['sit', 'watch', 'loaf', 'curl', 'purr', 'stand', 'walk', 'resettle']);
 
 /* ═══════════════════════════════════════════════════════════════════
-   PALETTES  — cream Ragdoll + two alternates
+   PALETTES  — WoW cat models
    ═══════════════════════════════════════════════════════════════════ */
 const PALETTES = [
-  // 0: black & grey (default — dark charcoal with golden eyes)
-  { body: '#3c3c3c', point: '#161616', eye: '#d4a818', nose: '#c47070', inner: '#525252' },
-  // 1: classic Ragdoll (cream + grey-brown points)
-  { body: '#f5ead8', point: '#9e8a7a', eye: '#8ab4d8', nose: '#e8a0a0', inner: '#c8b5a2' },
-  // 2: silver tabby
-  { body: '#d8d8d0', point: '#606060', eye: '#90c080', nose: '#e8b0b0', inner: '#aaaaaa' },
+  // 0: Bhag'thera — black panther of Stranglethorn, blue-black pelt, amber eyes
+  { body: '#1e1e26', point: '#0a0a10', eye: '#e8a820', nose: '#b86868', inner: '#30283c' },
+  // 1: Gondria — WotLK spectral spirit beast, ghostly pale blue-white, glowing teal eyes
+  { body: '#ddeef8', point: '#88b0d0', eye: '#30e0f8', nose: '#c8d8e8', inner: '#aacce0' },
+  // 2: Swift Stormsaber — blue-grey Darnassian saber mount, amber eyes
+  { body: '#8898b0', point: '#4a5a78', eye: '#d4b040', nose: '#e0a0a8', inner: '#aabbd0' },
   // 3: warm orange
   { body: '#f5c880', point: '#c06030', eye: '#70b070', nose: '#f0a0a0', inner: '#e0a060' },
+  // 4: Mist Saber — Darkshore misty grey-blue saber, pale green eyes
+  { body: '#b8c8d8', point: '#607080', eye: '#a0c870', nose: '#e8b0b8', inner: '#9ab0c0' },
+  // 5: Winterspring Cub — icy white with steel-blue markings and pale blue eyes
+  { body: '#eff3f8', point: '#7a94ae', eye: '#9acce8', nose: '#e8aab8', inner: '#c8d0e0' },
 ];
 
 /* Per-palette backgrounds chosen to contrast the cat colour.
    Tweak these to change the room feel for each coat. */
 const PALETTE_THEME = [
-  { dayBg: '#f0ebe0', nightBg: '#1a1a26', dayText: '#7a6a55', nightText: '#9a8ab0' }, // black cat  → warm cream
-  { dayBg: '#8aaaba', nightBg: '#1a2535', dayText: '#3a5060', nightText: '#8090a8' }, // cream cat  → cool slate
-  { dayBg: '#cfc4b0', nightBg: '#1e1a14', dayText: '#6a5a48', nightText: '#908070' }, // grey tabby → warm tan
-  { dayBg: '#4e5e70', nightBg: '#0e1620', dayText: '#c0d0dc', nightText: '#8090a0' }, // orange cat → dark slate
+  { dayBg: '#2a3820', nightBg: '#0a1008', dayText: '#70a050', nightText: '#508040' }, // Bhag'thera    → Stranglethorn jungle
+  { dayBg: '#2a3040', nightBg: '#0c1018', dayText: '#90b8d8', nightText: '#a0c8e8' }, // Gondria        → Zul'Drak icy ruins
+  { dayBg: '#9080a8', nightBg: '#1a1530', dayText: '#d0c8e8', nightText: '#a898c8' }, // Stormsaber     → Darnassian twilight
+  { dayBg: '#4e5e70', nightBg: '#0e1620', dayText: '#c0d0dc', nightText: '#8090a0' }, // warm orange    → dark slate
+  { dayBg: '#c8d8e8', nightBg: '#101c28', dayText: '#507090', nightText: '#7898b0' }, // Mist Saber     → Darkshore coast
+  { dayBg: '#d8e8f4', nightBg: '#0c1824', dayText: '#3a5870', nightText: '#7098b8' }, // Winterspring   → snowy sky
 ];
 
 function applyPaletteTheme() {
