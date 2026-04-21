@@ -168,11 +168,9 @@ function drawSittingBody(ctx, pal, eyeOpen = true, headTilt = 0) {
   // Ear left
   px(ctx, pal.point, hx,    8,  6,  6);
   px(ctx, pal.point, hx+1,  6,  4,  4);
-  px(ctx, pal.inner, hx+1,  9,  3,  4);
   // Ear right
   px(ctx, pal.point, hx+20, 8,  6,  6);
   px(ctx, pal.point, hx+21, 6,  4,  4);
-  px(ctx, pal.inner, hx+21, 9,  3,  4);
   // Face — darker mask around eyes
   px(ctx, pal.point, hx+5, 13,  16, 8);
   // Eyes
@@ -211,9 +209,7 @@ function drawLoafBody(ctx, pal, eyeOpen = false) {
   // Head lower / settled
   px(ctx, pal.body,  20, 12, 24, 20);
   px(ctx, pal.point, 20,  8,  6,  8);
-  px(ctx, pal.inner, 21,  9,  3,  6);
   px(ctx, pal.point, 38,  8,  6,  8);
-  px(ctx, pal.inner, 39,  9,  3,  6);
   // Mask
   px(ctx, pal.point, 24, 16, 16, 8);
   if (eyeOpen) {
@@ -261,9 +257,7 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
 
   // Ears y=2-10 with lighter inner
   px(ctx, pal.point, 17,  2,  8,  8);
-  px(ctx, pal.inner, 18,  3,  5,  6);
   px(ctx, pal.point, 39,  2,  8,  8);
-  px(ctx, pal.inner, 40,  3,  5,  6);
 
   // Face mask
   px(ctx, pal.point, 20, 13, 24,  8);
@@ -325,9 +319,7 @@ function drawSleepBody(ctx, pal, b = 0) {
 
   // Ears — moderate width, not too tall, with lighter inner
   px(ctx, pal.point,  7, 24+b,  7,  6);
-  px(ctx, pal.inner,  8, 25+b,  4,  4);
   px(ctx, pal.point, 20, 24+b,  7,  6);
-  px(ctx, pal.inner, 21, 25+b,  4,  4);
 
   // Face mask — wide, in lower half of head
   px(ctx, pal.point,  8, 36+b, 20,  8);
@@ -368,9 +360,7 @@ function drawStandBody(ctx, pal) {
   // Head — alert
   px(ctx, pal.body,  20, 8, 24, 18);
   px(ctx, pal.point, 20, 4,  6,  8);
-  px(ctx, pal.inner, 21, 5,  3,  6);
   px(ctx, pal.point, 38, 4,  6,  8);
-  px(ctx, pal.inner, 39, 5,  3,  6);
   px(ctx, pal.point, 24, 14, 16, 6);
   px(ctx, pal.eye,   26, 14, 4,  4);
   px(ctx, pal.eye,   34, 14, 4,  4);
