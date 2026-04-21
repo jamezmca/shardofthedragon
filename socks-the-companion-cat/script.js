@@ -315,35 +315,34 @@ function drawSleepBody(ctx, pal, b = 0) {
   px(ctx, pal.point, 50, 48+b, 10,  4); // tail flat on floor x=50-60, y=48-52
   px(ctx, pal.point, 56, 44+b,  4,  6); // tip curl x=56-60, y=44-50 (joins tail flat)
 
-  // ── HEAD — front-facing, chin at floor level ───────────────────
-  // Drawn last so it sits cleanly over the paw tops
-  px(ctx, pal.body,  6, 26+b, 22, 22); // head x=6-28, y=26-48
-  px(ctx, pal.body,  8, 24+b, 18,  4); // top rounding y=24-28
+  // ── HEAD — wide flat blob, chin at floor, drawn over paw tops ──
+  px(ctx, pal.body,  4, 32+b, 28, 16); // head x=4-32, y=32-48 (wide & low)
+  px(ctx, pal.body,  6, 30+b, 24,  4); // top rounding y=30-34
 
-  // Both ears y=16-24 with pink inner
-  px(ctx, pal.point,  8, 16+b,  7,  8);
-  px(ctx, '#c87878',  9, 17+b,  4,  6);
-  px(ctx, pal.point, 19, 16+b,  7,  8);
-  px(ctx, '#c87878', 20, 17+b,  4,  6);
+  // Ears — moderate width, not too tall
+  px(ctx, pal.point,  7, 24+b,  7,  6); // left ear x=7-14, y=24-30
+  px(ctx, '#c87878',  8, 25+b,  4,  4);
+  px(ctx, pal.point, 20, 24+b,  7,  6); // right ear x=20-27, y=24-30
+  px(ctx, '#c87878', 21, 25+b,  4,  4);
 
-  // Face mask
-  px(ctx, pal.point,  9, 32+b, 16,  8);
+  // Face mask — wide, in lower half of head
+  px(ctx, pal.point,  8, 36+b, 20,  8);
 
-  // Both eyes firmly shut
-  px(ctx, '#aaaaaa', 10, 34+b,  6,  2);
-  px(ctx, '#888888', 10, 36+b,  6,  1);
-  px(ctx, '#aaaaaa', 18, 34+b,  6,  2);
-  px(ctx, '#888888', 18, 36+b,  6,  1);
+  // Both eyes shut, spread wide to match broader face
+  px(ctx, '#aaaaaa', 10, 38+b,  6,  2);
+  px(ctx, '#888888', 10, 40+b,  6,  1);
+  px(ctx, '#aaaaaa', 20, 38+b,  6,  2);
+  px(ctx, '#888888', 20, 40+b,  6,  1);
 
-  // Nose + mouth
-  px(ctx, pal.nose,  14, 40+b,  6,  3);
-  px(ctx, pal.point, 15, 43+b,  4,  1);
+  // Nose + mouth close to floor
+  px(ctx, pal.nose,  15, 43+b,  6,  3);
+  px(ctx, pal.point, 16, 46+b,  4,  1);
 
   // Whiskers both sides
-  px(ctx, '#aaaaaa',  2, 39+b,  8,  1);
-  px(ctx, '#aaaaaa',  2, 41+b,  8,  1);
-  px(ctx, '#aaaaaa', 24, 39+b,  8,  1);
-  px(ctx, '#aaaaaa', 24, 41+b,  8,  1);
+  px(ctx, '#aaaaaa',  0, 41+b,  8,  1);
+  px(ctx, '#aaaaaa',  0, 43+b,  8,  1);
+  px(ctx, '#aaaaaa', 28, 41+b,  8,  1);
+  px(ctx, '#aaaaaa', 28, 43+b,  8,  1);
 }
 
 function drawStandBody(ctx, pal) {
