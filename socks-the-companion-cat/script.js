@@ -104,13 +104,13 @@ const AWAKE_STATES = new Set(['sit', 'watch', 'loaf', 'curl', 'purr', 'stand', '
    ═══════════════════════════════════════════════════════════════════ */
 const PALETTES = [
   // 0: black & grey (default — dark charcoal with golden eyes)
-  { body: '#3c3c3c', point: '#161616', eye: '#d4a818', nose: '#c47070', inner: '#2a1818' },
+  { body: '#3c3c3c', point: '#161616', eye: '#d4a818', nose: '#c47070', inner: '#525252' },
   // 1: classic Ragdoll (cream + grey-brown points)
-  { body: '#f5ead8', point: '#9e8a7a', eye: '#8ab4d8', nose: '#e8a0a0', inner: '#f5ead8' },
+  { body: '#f5ead8', point: '#9e8a7a', eye: '#8ab4d8', nose: '#e8a0a0', inner: '#c8b5a2' },
   // 2: silver tabby
-  { body: '#d8d8d0', point: '#606060', eye: '#90c080', nose: '#e8b0b0', inner: '#d8d8d0' },
+  { body: '#d8d8d0', point: '#606060', eye: '#90c080', nose: '#e8b0b0', inner: '#aaaaaa' },
   // 3: warm orange
-  { body: '#f5c880', point: '#c06030', eye: '#70b070', nose: '#f0a0a0', inner: '#f5c880' },
+  { body: '#f5c880', point: '#c06030', eye: '#70b070', nose: '#f0a0a0', inner: '#e0a060' },
 ];
 
 /* Per-palette backgrounds chosen to contrast the cat colour.
@@ -168,9 +168,11 @@ function drawSittingBody(ctx, pal, eyeOpen = true, headTilt = 0) {
   // Ear left
   px(ctx, pal.point, hx,    8,  6,  6);
   px(ctx, pal.point, hx+1,  6,  4,  4);
+  px(ctx, pal.inner, hx+1,  9,  3,  4);
   // Ear right
   px(ctx, pal.point, hx+20, 8,  6,  6);
   px(ctx, pal.point, hx+21, 6,  4,  4);
+  px(ctx, pal.inner, hx+21, 9,  3,  4);
   // Face — darker mask around eyes
   px(ctx, pal.point, hx+5, 13,  16, 8);
   // Eyes
@@ -209,7 +211,9 @@ function drawLoafBody(ctx, pal, eyeOpen = false) {
   // Head lower / settled
   px(ctx, pal.body,  20, 12, 24, 20);
   px(ctx, pal.point, 20,  8,  6,  8);
+  px(ctx, pal.inner, 21,  9,  3,  6);
   px(ctx, pal.point, 38,  8,  6,  8);
+  px(ctx, pal.inner, 39,  9,  3,  6);
   // Mask
   px(ctx, pal.point, 24, 16, 16, 8);
   if (eyeOpen) {
@@ -255,9 +259,11 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
   px(ctx, pal.body, 14,  8, 36, 20); // head block
   px(ctx, pal.body, 16,  6, 32,  4); // top rounding y=6-10
 
-  // Ears y=2-10
+  // Ears y=2-10 with lighter inner
   px(ctx, pal.point, 17,  2,  8,  8);
+  px(ctx, pal.inner, 18,  3,  5,  6);
   px(ctx, pal.point, 39,  2,  8,  8);
+  px(ctx, pal.inner, 40,  3,  5,  6);
 
   // Face mask
   px(ctx, pal.point, 20, 13, 24,  8);
@@ -317,9 +323,11 @@ function drawSleepBody(ctx, pal, b = 0) {
   px(ctx, pal.body,  4, 32+b, 28, 16); // head x=4-32, y=32-48 (wide & low)
   px(ctx, pal.body,  6, 30+b, 24,  4); // top rounding y=30-34
 
-  // Ears — moderate width, not too tall
+  // Ears — moderate width, not too tall, with lighter inner
   px(ctx, pal.point,  7, 24+b,  7,  6);
+  px(ctx, pal.inner,  8, 25+b,  4,  4);
   px(ctx, pal.point, 20, 24+b,  7,  6);
+  px(ctx, pal.inner, 21, 25+b,  4,  4);
 
   // Face mask — wide, in lower half of head
   px(ctx, pal.point,  8, 36+b, 20,  8);
@@ -360,7 +368,9 @@ function drawStandBody(ctx, pal) {
   // Head — alert
   px(ctx, pal.body,  20, 8, 24, 18);
   px(ctx, pal.point, 20, 4,  6,  8);
+  px(ctx, pal.inner, 21, 5,  3,  6);
   px(ctx, pal.point, 38, 4,  6,  8);
+  px(ctx, pal.inner, 39, 5,  3,  6);
   px(ctx, pal.point, 24, 14, 16, 6);
   px(ctx, pal.eye,   26, 14, 4,  4);
   px(ctx, pal.eye,   34, 14, 4,  4);
