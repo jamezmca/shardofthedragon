@@ -231,66 +231,66 @@ function drawLoafBody(ctx, pal, eyeOpen = false) {
 }
 
 function drawCurlBody(ctx, pal, eyeOpen = false) {
-  // Curl — tightened to match sit/loaf visual size (~36px wide, ~48px tall).
-  // Body x=18-42 matches head x=18-42, no neck. Floor at y=52.
+  // Compact curl — head x=14-50 matches body x=14-50, no neck.
+  // Floor at y≈52, ears at y=2 — matches sit/loaf visual height.
 
-  // ── BODY core x=18-42, y=30-46 ────────────────────────────────
-  px(ctx, pal.body, 18, 30, 24, 16);
-  px(ctx, pal.body, 20, 28, 20,  4); // top rounding
-  px(ctx, pal.body, 20, 46, 20,  4); // bottom rounding y=46-50
-  px(ctx, pal.body, 14, 34,  6, 10); // left end
-  px(ctx, pal.body, 42, 32,  4, 14); // right end cap
+  // ── BODY — core x=14-50, y=28-48 ─────────────────────────────
+  px(ctx, pal.body, 14, 28, 36, 20); // core
+  px(ctx, pal.body, 16, 26, 32,  4); // top rounding
+  px(ctx, pal.body, 16, 46, 32,  4); // bottom rounding y=46-50
+  px(ctx, pal.body, 10, 32,  6, 14); // left end
+  px(ctx, pal.body, 48, 30,  6, 18); // right end
 
-  // Haunches — clipped fully within body bounds
-  px(ctx, pal.point, 32, 28,  8,  4); // top strip x=32-40, within top rounding x=20-40 ✓
-  px(ctx, pal.point, 32, 32, 10, 14); // main x=32-42, within core/right-cap ✓
-  px(ctx, pal.point, 30, 30,  4, 14);
+  // Haunches — darker right ~40%
+  px(ctx, pal.point, 38, 26, 16, 26);
+  px(ctx, pal.point, 36, 28,  4, 22);
 
-  // Paws at floor
-  px(ctx, pal.point, 18, 48, 18,  4);
+  // Tucked paws along base
+  px(ctx, pal.point, 14, 48, 24,  4);
 
-  // Tail wrapping right side
-  px(ctx, pal.point, 42, 32,  4, 14); // right — overlays right cap, no bleed ✓
-  px(ctx, pal.point, 40, 44,  6,  4); // corner
-  px(ctx, pal.point, 20, 48, 22,  4); // bottom
-  px(ctx, pal.point, 12, 46,  8,  4); // left tip
+  // Tail wrapping right side, floor at y≈52
+  px(ctx, pal.point, 52, 30,  4, 18);
+  px(ctx, pal.point, 48, 46,  6,  4);
+  px(ctx, pal.point, 28, 48, 22,  4);
+  px(ctx, pal.point, 12, 48, 18,  3);
+  px(ctx, pal.point, 10, 46,  4,  4);
 
-  // ── HEAD x=18-42, y=12-30, no neck ────────────────────────────
-  px(ctx, pal.body, 18, 12, 24, 18);
-  px(ctx, pal.body, 20, 10, 20,  4); // top rounding y=10-14
+  // ── HEAD — x=14-50, y=8-28, no neck ──────────────────────────
+  px(ctx, pal.body, 14,  8, 36, 20); // head block
+  px(ctx, pal.body, 16,  6, 32,  4); // top rounding y=6-10
 
-  // Ears y=4-10 with inner
-  px(ctx, pal.point, 20,  4,  6,  6);
-  px(ctx, pal.inner, 21,  5,  3,  4);
-  px(ctx, pal.point, 36,  4,  6,  6);
-  px(ctx, pal.inner, 37,  5,  3,  4);
+  // Ears y=2-10 with lighter inner
+  px(ctx, pal.point, 17,  2,  8,  8);
+  px(ctx, pal.inner, 18,  3,  5,  6);
+  px(ctx, pal.point, 39,  2,  8,  8);
+  px(ctx, pal.inner, 40,  3,  5,  6);
 
   // Face mask
-  px(ctx, pal.point, 21, 17, 20,  8);
+  px(ctx, pal.point, 20, 13, 24,  8);
 
   // Eyes
   if (eyeOpen) {
-    px(ctx, pal.eye,   22, 18,  6,  4);
-    px(ctx, '#2a3a50', 23, 19,  4,  2);
-    px(ctx, '#ffffff', 24, 18,  1,  1);
-    px(ctx, pal.eye,   32, 18,  6,  4);
-    px(ctx, '#2a3a50', 33, 19,  4,  2);
-    px(ctx, '#ffffff', 34, 18,  1,  1);
+    px(ctx, pal.eye,   21, 14,  8,  4);
+    px(ctx, '#2a3a50', 22, 15,  5,  2);
+    px(ctx, '#ffffff', 23, 14,  1,  1);
+    px(ctx, pal.eye,   35, 14,  8,  4);
+    px(ctx, '#2a3a50', 36, 15,  5,  2);
+    px(ctx, '#ffffff', 37, 14,  1,  1);
   } else {
-    px(ctx, '#aaaaaa', 22, 20,  6,  2);
-    px(ctx, '#888888', 22, 22,  6,  1);
-    px(ctx, '#aaaaaa', 32, 20,  6,  2);
-    px(ctx, '#888888', 32, 22,  6,  1);
+    px(ctx, '#aaaaaa', 21, 16,  8,  2);
+    px(ctx, '#888888', 21, 18,  8,  1);
+    px(ctx, '#aaaaaa', 35, 16,  8,  2);
+    px(ctx, '#888888', 35, 18,  8,  1);
   }
 
-  px(ctx, pal.nose,  27, 24,  8,  3);
-  px(ctx, pal.point, 28, 27,  6,  1);
+  px(ctx, pal.nose,  27, 21, 10,  3);
+  px(ctx, pal.point, 28, 24,  8,  1);
 
-  // Whiskers
-  px(ctx, '#aaaaaa', 13, 23,  6,  1);
-  px(ctx, '#aaaaaa', 41, 23,  6,  1);
-  px(ctx, '#aaaaaa', 13, 25,  6,  1);
-  px(ctx, '#aaaaaa', 41, 25,  6,  1);
+  // Whiskers both sides
+  px(ctx, '#aaaaaa', 12, 20,  6,  1);
+  px(ctx, '#aaaaaa', 46, 20,  6,  1);
+  px(ctx, '#aaaaaa', 12, 22,  6,  1);
+  px(ctx, '#aaaaaa', 46, 22,  6,  1);
 }
 
 function drawSleepBody(ctx, pal, b = 0) {
