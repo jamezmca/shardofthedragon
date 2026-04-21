@@ -255,11 +255,9 @@ function drawCurlBody(ctx, pal, eyeOpen = false) {
   px(ctx, pal.body, 14,  8, 36, 20); // head block
   px(ctx, pal.body, 16,  6, 32,  4); // top rounding y=6-10
 
-  // Ears y=2-10 with pink inner
+  // Ears y=2-10
   px(ctx, pal.point, 17,  2,  8,  8);
-  px(ctx, '#c87878', 18,  3,  5,  6);
   px(ctx, pal.point, 39,  2,  8,  8);
-  px(ctx, '#c87878', 40,  3,  5,  6);
 
   // Face mask
   px(ctx, pal.point, 20, 13, 24,  8);
@@ -320,10 +318,8 @@ function drawSleepBody(ctx, pal, b = 0) {
   px(ctx, pal.body,  6, 30+b, 24,  4); // top rounding y=30-34
 
   // Ears — moderate width, not too tall
-  px(ctx, pal.point,  7, 24+b,  7,  6); // left ear x=7-14, y=24-30
-  px(ctx, '#c87878',  8, 25+b,  4,  4);
-  px(ctx, pal.point, 20, 24+b,  7,  6); // right ear x=20-27, y=24-30
-  px(ctx, '#c87878', 21, 25+b,  4,  4);
+  px(ctx, pal.point,  7, 24+b,  7,  6);
+  px(ctx, pal.point, 20, 24+b,  7,  6);
 
   // Face mask — wide, in lower half of head
   px(ctx, pal.point,  8, 36+b, 20,  8);
