@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #fff;
+      color: #111;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #date-label {
+      position: fixed;
+      top: 18px;
+      left: 22px;
+      font-size: 13px;
+      font-weight: 300;
+      color: #111;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+    }
+
+    #time {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      gap: 0.2em;
+      font-size: clamp(2.5rem, 10vw, 12rem);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 600px) {
+      #time {
+        flex-direction: column;
+        align-items: center;
+        font-size: clamp(4rem, 22vw, 10rem);
+        gap: 0.05em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="date-label">
+    <div id="day"></div>
+    <div id="date"></div>
+  </div>
+  <div id="time"></div>
+
+  <script>
+    const OFFSET_MS = 8 * 60 * 1000;
+
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      const now = new Date(Date.now() + OFFSET_MS);
+      const h = pad(now.getHours());
+      const m = pad(now.getMinutes());
+      const s = pad(now.getSeconds());
+      document.getElementById('time').innerHTML =
+        `<span class="field">${h}<span class="unit">H</span></span><span class="field">${m}<span class="unit">M</span></span><span class="field">${s}<span class="unit">S</span></span>`;
+      document.getElementById('day').textContent = days[now.getDay()];
+      document.getElementById('date').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>

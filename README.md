@@ -1,2 +1,20 @@
 # shardofthedragon
  Fun web projects
+
+
+ideas (general themes are societal resets i.e. emotional regulation, social norms, acceptance, shitty quizzes!!!!)
+- word typing speed (insults like gormless fool or vacuous oaf / or words + definitions)
+- gym workouts
+- game with words falling from ceiling and find them in the current string which is going across the top of the page, and give an accuary
+- cold feet meme
+- feel better about lonliness
+- financial literacy
+- math speed (q/s per second)
+- other helpful decision metrics
+- shooting arrows into the distance but sizee of object determines distance
+- pdf speak
+- skyrim messenger (daedric)
+- wow character lore (tales of warcraft)
+- clock for late people
+- This website is bigger and smaller than everything 
+- A0 First page is a0 and how it works, arrow keys to go bigger or smaller, scale and number up top, and borders visually show the halving and doubling, black lines as a border showing the other next half going off the page and changing from vertical  to horizontal overflow, in the page is what as at each size
