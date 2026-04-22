@@ -135,6 +135,7 @@ const html = `<!doctype html>
     <a href="https://github.com/jamezmca/shardofthedragon" target="_blank">github repo ⭐️</a>
 ${linksHtml}
     <a href="https://smoljames.com" target="_blank">smoljames.com</a>
+    <a href="https://www.badhunter.app" target="_blank">habit builder | gamified habit tracking</a>
     <a href="https://www.hyr.sh" target="_blank">resume builder</a>
     <a href="https://www.feelsgood.io" target="_blank">want to feel better?</a>
     <a href="https://www.theifsjournal.com" target="_blank">journaling inspired by Inside Out (IFS)</a>
