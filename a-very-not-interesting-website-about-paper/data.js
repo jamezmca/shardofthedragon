@@ -45,22 +45,22 @@ const FACTS = {
     fact: "This is the total surface area of adult human skin — about 2 m². Your skin is the largest organ in your body by area, and it replaces itself almost entirely every 27 days." },
 
   "-2":  { label: "A−2",
-    fact: "The regulation playing surface of a table tennis table is almost exactly this size (2.74 × 1.525 m = 4.18 m²). The sport was invented in Victorian England using books as a net and a champagne cork as a ball." },
+    fact: "LAMEThe regulation playing surface of a table tennis table is almost exactly this size (2.74 × 1.525 m = 4.18 m²). The sport was invented in Victorian England using books as a net and a champagne cork as a ball." },
 
   "-3":  { label: "A−3",
-    fact: "A baby grand piano occupies roughly 8 m² of floor space. Its strings, if laid end to end, would stretch about 30 metres — longer than a telephone pole is tall." },
+    fact: "LAMEA baby grand piano occupies roughly 8 m² of floor space. Its strings, if laid end to end, would stretch about 30 metres — longer than a telephone pole is tall." },
 
   "-4":  { label: "A−4",
-    fact: "A standard UK parking space is 2.4 × 4.8 m = 11.5 m², close to this area. Cars have roughly doubled in width since the 1970s, while the parking spaces designed then haven't changed." },
+    fact: "LAMEA standard UK parking space is 2.4 × 4.8 m = 11.5 m², close to this area. Cars have roughly doubled in width since the 1970s, while the parking spaces designed then haven't changed." },
 
   "-5":  { label: "A−5",
-    fact: "A regulation doubles badminton court is 13.4 × 6.1 m = 81.7 m²... but the singles court (closer to 32 m²) is roughly this size. A shuttlecock in professional play can reach over 400 km/h — the fastest hit ball in any racquet sport." },
+    fact: "LAMEA regulation doubles badminton court is 13.4 × 6.1 m = 81.7 m²... but the singles court (closer to 32 m²) is roughly this size. A shuttlecock in professional play can reach over 400 km/h — the fastest hit ball in any racquet sport." },
 
   "-6":  { label: "A−6",
     fact: "Around 64 m² — the floor area of a typical London underground train carriage. Each carriage holds around 145 people; at rush hour, that's over 2 people per square metre." },
 
   "-7":  { label: "A−7",
-    fact: "128 m² — roughly the floor area of a regulation volleyball court (18 × 9 m = 162 m²). Beach volleyball was added to the Olympics in 1996; indoor volleyball has been there since 1964." },
+    fact: "LAME128 m² — roughly the floor area of a regulation volleyball court (18 × 9 m = 162 m²). Beach volleyball was added to the Olympics in 1996; indoor volleyball has been there since 1964." },
 
   "-8":  { label: "A−8",
     fact: "About 256 m² — the footprint of the Rosetta Stone's source wall in the temple of Seti I. The stone itself is only 114 × 72 cm, but the decree it carries unlocked 3,000 years of Egyptian hieroglyphic silence." },
@@ -69,10 +69,10 @@ const FACTS = {
     fact: "Around 512 m² — approximately the footprint of the Parthenon's outer colonnade. Built in 438 BC without a single drop of mortar, its columns lean inward by fractions of a degree to correct for optical illusions." },
 
   "-10": { label: "A−10",
-    fact: "About 1,024 m² — close to the floor area of the Sistine Chapel ceiling (40 × 13.4 m = 536 m²... the whole building is closer). Michelangelo painted lying on his back for four years, completing over 300 figures." },
+    fact: "LAMEAbout 1,024 m² — close to the floor area of the Sistine Chapel ceiling (40 × 13.4 m = 536 m²... the whole building is closer). Michelangelo painted lying on his back for four years, completing over 300 figures." },
 
   "-11": { label: "A−11",
-    fact: "About 2,048 m² — slightly smaller than a regulation FIFA football pitch minimum (4,500 m²). The pitch size is deliberately not standardised; clubs historically made pitches narrower to suit defensive strategies." },
+    fact: "LAMEAbout 2,048 m² — slightly smaller than a regulation FIFA football pitch minimum (4,500 m²). The pitch size is deliberately not standardised; clubs historically made pitches narrower to suit defensive strategies." },
 
   "-12": { label: "A−12",
     fact: "4,096 m² — the approximate footprint of the Great Pyramid of Giza's base (230 × 230 m = 52,900 m², so this is much smaller — but it's the area of the internal Grand Gallery chamber complex)." },
@@ -84,10 +84,10 @@ const FACTS = {
     fact: "~16,000 m² — the exposed face of a typical Antarctic tabular iceberg when first calved. Most icebergs break off in fragments from 1,000 to 100,000 m². The exposed face is just the beginning: roughly 90% of the mass is submerged, sculpted by currents into shapes invisible from above. It was the hidden geometry of an iceberg that sank the Titanic, not the visible peak." },
 
   "-15": { label: "A−15",
-    fact: "~32,768 m² (3.3 ha) — roughly the floor area of all of IKEA's original Älmhult store and warehouse combined. The store opened in 1958 and famously served meatballs to keep customers shopping longer — a deliberate retail strategy." },
+    fact: "LAME~32,768 m² (3.3 ha) — roughly the floor area of all of IKEA's original Älmhult store and warehouse combined. The store opened in 1958 and famously served meatballs to keep customers shopping longer — a deliberate retail strategy." },
 
   "-16": { label: "A−16",
-    fact: "~6.5 ha — about the area of the Gardens of Versailles' Grand Canal alone. The full palace gardens cover 800 ha and required permanently diverting the Seine to keep their 1,400 fountains running." },
+    fact: "LAME~6.5 ha — about the area of the Gardens of Versailles' Grand Canal alone. The full palace gardens cover 800 ha and required permanently diverting the Seine to keep their 1,400 fountains running." },
 
   "-17": { label: "A−17",
     fact: "~13 ha — the approximate area enclosed by the Large Hadron Collider's ring at CERN (circumference 27 km, radius ~4.3 km, area of the enclosed circle ~58 km²... the tunnel itself is much smaller). This is actually close to the footprint of CERN's main campus." },
@@ -96,25 +96,25 @@ const FACTS = {
     fact: "~26 ha — the approximate footprint of Pando, a clonal colony of quaking aspen in Utah and the world's largest known organism by mass. Its ~47,000 trunks share a single root system and are genetically identical — one individual. The root system is estimated to be between 80,000 and one million years old, and the whole colony weighs roughly 6 million kg. It is currently under threat: overgrazing prevents new stems from establishing, and the existing trunks are ageing." },
 
   "-19": { label: "A−19",
-    fact: "~52 ha — the area of Central Park in New York. It took 20,000 workers, 10 million cartloads of material, and nearly 20 years to create what appears to be a natural landscape. Almost everything in it was designed and planted." },
+    fact: "LAME~52 ha — the area of Central Park in New York. It took 20,000 workers, 10 million cartloads of material, and nearly 20 years to create what appears to be a natural landscape. Almost everything in it was designed and planted." },
 
   "-20": { label: "A−20",
-    fact: "About 1 km² — the area of the City of London, the historic square mile. It contains the Bank of England and handles around 43% of global foreign exchange trading every day, despite having a residential population of only ~9,000 people." },
+    fact: "LAMEAbout 1 km² — the area of the City of London, the historic square mile. It contains the Bank of England and handles around 43% of global foreign exchange trading every day, despite having a residential population of only ~9,000 people." },
 
   "-21": { label: "A−21",
-    fact: "~2 km² — the floor area of Son Doong cave in Vietnam, the world's largest known cave by volume. Its main passage stretches over 5 km, with chambers reaching 200 m wide and 150 m tall — large enough to contain a 40-storey building. It has its own weather system, internal clouds, and a jungle sustained by two collapsed sections of ceiling that let in light. A local farmer knew of the entrance for decades but avoided it due to the sounds of rushing water inside. It was not fully explored until 2009." },
+    fact: "LAME~2 km² — the floor area of Son Doong cave in Vietnam, the world's largest known cave by volume. Its main passage stretches over 5 km, with chambers reaching 200 m wide and 150 m tall — large enough to contain a 40-storey building. It has its own weather system, internal clouds, and a jungle sustained by two collapsed sections of ceiling that let in light. A local farmer knew of the entrance for decades but avoided it due to the sounds of rushing water inside. It was not fully explored until 2009." },
 
   "-22": { label: "A−22",
     fact: "~4 km² — the sky footprint of a large starling murmuration at its broadest. A murmuration of a million birds moves in perfect coordinated waves with no leader: each bird tracks its 6–7 nearest neighbours and the pattern propagates through the flock at up to 100 km/h. The whole system is self-organised. Biologists believe the behaviour confuses predators by making it impossible to single out any individual. It is one of the clearest examples in nature of emergent collective intelligence." },
 
   "-23": { label: "A−23",
-    fact: "~8 km² — the approximate exposed area of the Burgess Shale formation in British Columbia, one of the most scientifically important fossil beds ever found. Laid down 508 million years ago in deep water, it preserved soft-bodied organisms — things that almost never fossilise — in extraordinary detail. Most of what we know about the Cambrian explosion, when virtually all animal body plans appeared within a few million years, comes from reading this single rock face." },
+    fact: "LAME~8 km² — the approximate exposed area of the Burgess Shale formation in British Columbia, one of the most scientifically important fossil beds ever found. Laid down 508 million years ago in deep water, it preserved soft-bodied organisms — things that almost never fossilise — in extraordinary detail. Most of what we know about the Cambrian explosion, when virtually all animal body plans appeared within a few million years, comes from reading this single rock face." },
 
   "-24": { label: "A−24",
     fact: "~16 km² — the scale of a large Siberian thermokarst lake, formed as permafrost thaws and the ground collapses. These lakes are growing rapidly across the Arctic as temperatures rise. Below each one, decomposing organic matter releases methane — a greenhouse gas 80× more potent than CO₂ over 20 years. The more they grow, the warmer it gets; the warmer it gets, the more they grow. Each lake is a small window into a feedback loop that has no natural off switch." },
 
   "-25": { label: "A−25",
-    fact: "~33 km² — the area of Manhattan island. In 1626, Peter Minuit reportedly purchased it from the Lenape people for 60 guilders' worth of trade goods — roughly $1,000 today. Manhattan's real estate is now worth over $1.7 trillion." },
+    fact: "LAME~33 km² — the area of Manhattan island. In 1626, Peter Minuit reportedly purchased it from the Lenape people for 60 guilders' worth of trade goods — roughly $1,000 today. Manhattan's real estate is now worth over $1.7 trillion." },
 
   "-30": { label: "A−30",
     fact: "~1,073 km² — roughly the area vaporised instantaneously by the Chicxulub impactor 66 million years ago. The asteroid struck at ~20 km/s and converted roughly this area of rock to superheated plasma in milliseconds, at temperatures exceeding the Sun's surface. The resulting crater is ~180 km in diameter. The impact triggered megatsunami, global wildfires, a years-long 'impact winter', and the extinction of ~75% of all species — including every non-avian dinosaur. It also created the conditions for the rise of mammals." },
@@ -129,7 +129,7 @@ const FACTS = {
     fact: "~1.1 million km² — close to the area of Egypt. Of this, 96% is desert, and 95% of the population lives on just 4% of the land, concentrated along the Nile — one of the most concentrated human settlements relative to country size in the world." },
 
   "-43": { label: "A−43",
-    fact: "~8.8 million km² — roughly the area of Brazil, the world's fifth-largest country. The Amazon rainforest, which covers about 60% of Brazil, produces around 20% of the world's oxygen and contains an estimated 10% of all species on Earth." },
+    fact: "LAME~8.8 million km² — roughly the area of Brazil, the world's fifth-largest country. The Amazon rainforest, which covers about 60% of Brazil, produces around 20% of the world's oxygen and contains an estimated 10% of all species on Earth." },
 
   "-47": { label: "A−47",
     fact: "~140 million km² — approximately the total land area of all Earth's continents. Liquid water covers 71% of the planet's surface; if you melted all the ice on Earth, sea levels would rise 65–70 metres, flooding every coastal city in the world." },
