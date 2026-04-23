@@ -10,7 +10,6 @@
 
     :root {
       --bar-h: 44px;
-      --btn-w: 46px;
     }
 
     body {
@@ -26,7 +25,6 @@
       flex-direction: column;
     }
 
-    /* ── stage: fills the space above the bar ── */
     #stage {
       flex: 1;
       position: relative;
@@ -36,111 +34,80 @@
       justify-content: center;
     }
 
-    /* ── the paper frame ── */
+    /* ── paper: always portrait, √2 ratio, as large as stage allows ── */
     #paper {
       position: relative;
       border: 1px solid #111;
-      padding: 32px 36px;
-      will-change: transform, opacity;
-    }
-
-    /* Size the paper to fill the stage while maintaining √2 ratio.
-       We use two options and let the browser pick via aspect-ratio + constraints. */
-    #paper.portrait {
+      /* size: fit within stage keeping 1:√2 ratio */
       aspect-ratio: 1 / 1.4142;
-      width: min(calc((100vh - var(--bar-h) - 20px) / 1.4142), calc(100vw - 20px));
-      height: auto;
+      width: min(
+        calc((100vh - var(--bar-h) - 24px) / 1.4142),
+        calc(100vw - 24px)
+      );
+      will-change: transform;
     }
 
-    #paper.landscape {
-      aspect-ratio: 1.4142 / 1;
-      height: min(calc(100vh - var(--bar-h) - 20px), calc((100vw - 20px) / 1.4142));
-      width: auto;
-    }
-
-    /* ghost lines: imply the other half of the parent sheet extends off-screen */
-    /* portrait → parent was landscape, join line goes right */
-    #paper.portrait::before,
-    #paper.portrait::after {
+    /* ghost lines: left and right borders extend upward off-screen,
+       implying the other half of the parent sheet is above */
+    #paper.has-parent::before,
+    #paper.has-parent::after {
       content: '';
       position: absolute;
-      background: #ccc;
-      width: 60px;
-      height: 1px;
-    }
-    #paper.portrait::before { top: -1px;  left: 100%; }
-    #paper.portrait::after  { bottom: -1px; left: 100%; }
-
-    /* landscape → parent was portrait, join line goes up */
-    #paper.landscape::before,
-    #paper.landscape::after {
-      content: '';
-      position: absolute;
-      background: #ccc;
       width: 1px;
-      height: 60px;
+      height: 80px;
+      background: #bbb;
+      bottom: 100%;
     }
-    #paper.landscape::before { left: -1px;  bottom: 100%; }
-    #paper.landscape::after  { right: -1px; bottom: 100%; }
+    #paper.has-parent::before { left: -1px; }
+    #paper.has-parent::after  { right: -1px; }
 
-    /* no ghost on A0 */
-    #paper.origin::before,
-    #paper.origin::after { display: none; }
-
-    /* ── divider line (split indicator) ── */
+    /* ── divider: horizontal line at 50% height ── */
     #divider {
       position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      height: 1px;
       background: #111;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 200ms ease;
+      transition: opacity 180ms ease;
     }
     #divider.show { opacity: 1; }
 
-    /* portrait split: horizontal line at 50% */
-    #divider.h-split {
-      left: 0; right: 0;
-      height: 1px;
-      top: 50%;
-    }
-    /* landscape split: vertical line at 50% */
-    #divider.v-split {
-      top: 0; bottom: 0;
-      width: 1px;
-      left: 50%;
+    /* ── paper content (opacity controlled separately from the frame) ── */
+    #paper-content {
+      padding: 32px 36px;
+      height: 100%;
+      overflow: hidden;
     }
 
-    /* ── content ── */
-    #paper h1 {
+    #paper-content h1 {
       font-size: 1rem;
       font-weight: normal;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    #paper .dims {
+    #paper-content .dims {
       font-family: monospace;
       font-size: 0.75rem;
       color: #777;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
-    #paper .body-text {
+    #paper-content .body-text p {
+      margin-bottom: 10px;
       max-width: 52ch;
     }
+    #paper-content .body-text p:last-child { margin-bottom: 0; }
 
-    #paper .body-text p {
-      margin-bottom: 10px;
-    }
-    #paper .body-text p:last-child { margin-bottom: 0; }
-
-    #paper .math {
+    #paper-content .math {
       font-family: monospace;
       font-size: 0.8em;
       background: #f7f7f7;
       padding: 10px 14px;
-      margin: 14px 0;
+      margin: 12px 0;
       border-left: 2px solid #ddd;
       white-space: pre-wrap;
     }
@@ -157,7 +124,7 @@
     }
 
     .nav-btn {
-      width: var(--btn-w);
+      width: 46px;
       height: 34px;
       border: 1.5px solid #333;
       background: #fff;
@@ -185,7 +152,6 @@
       background: #ccc;
       position: relative;
     }
-
     #scale-thumb {
       position: absolute;
       top: 50%;
@@ -196,10 +162,9 @@
       transform: translate(-50%, -50%);
       transition: left 0.25s ease;
     }
-
     #scale-thumb-label {
       position: absolute;
-      bottom: 8px;
+      bottom: 7px;
       transform: translateX(-50%);
       font-size: 0.6rem;
       color: #888;
@@ -208,7 +173,6 @@
       transition: left 0.25s ease;
       pointer-events: none;
     }
-
     #scale-end-l, #scale-end-r {
       font-size: 0.6rem;
       color: #aaa;
@@ -221,11 +185,13 @@
 <body>
 
 <div id="stage">
-  <div id="paper" class="origin">
+  <div id="paper">
     <div id="divider"></div>
-    <h1 id="paper-title">A0</h1>
-    <div class="dims" id="paper-dims"></div>
-    <div class="body-text" id="paper-body"></div>
+    <div id="paper-content">
+      <h1 id="paper-title"></h1>
+      <div class="dims" id="paper-dims"></div>
+      <div class="body-text" id="paper-body"></div>
+    </div>
   </div>
 </div>
 
@@ -244,169 +210,163 @@
 <script>
   const MIN_N = -80;
   const MAX_N = 83;
+  const STEP  = 300; // ms per animation phase
+  const S     = Math.SQRT2; // zoom scale factor
 
-  let current  = 0;
+  let current   = 0;
   let animating = false;
 
-  const paper    = document.getElementById('paper');
-  const divider  = document.getElementById('divider');
-  const titleEl  = document.getElementById('paper-title');
-  const dimsEl   = document.getElementById('paper-dims');
-  const bodyEl   = document.getElementById('paper-body');
-  const btnLeft  = document.getElementById('btn-left');
-  const btnRight = document.getElementById('btn-right');
-  const thumb    = document.getElementById('scale-thumb');
-  const thumbLbl = document.getElementById('scale-thumb-label');
+  const paper   = document.getElementById('paper');
+  const content = document.getElementById('paper-content');
+  const divider = document.getElementById('divider');
+  const titleEl = document.getElementById('paper-title');
+  const dimsEl  = document.getElementById('paper-dims');
+  const bodyEl  = document.getElementById('paper-body');
+  const btnL    = document.getElementById('btn-left');
+  const btnR    = document.getElementById('btn-right');
+  const thumb   = document.getElementById('scale-thumb');
+  const thumbLb = document.getElementById('scale-thumb-label');
 
-  // ── A0 body content ──────────────────────────────────────────────────
   const A0_BODY = `
 <p>A0 is the foundation of the ISO 216 paper standard. Its area is defined as exactly <strong>1 square metre</strong>.</p>
-<p>The system rests on one constraint: fold any sheet in half along its long side, and the result must have the same proportions as the original. This lets you halve endlessly without the shape ever changing.</p>
-<p>If a sheet has width <em>w</em> and height <em>h</em> (h &gt; w), the half-sheet has dimensions w × h/2. For the ratio to be preserved:</p>
-<div class="math">h / w = w / (h/2)  →  h² = 2w²  →  h/w = √2 ≈ 1.4142</div>
+<p>The system rests on one constraint: fold any sheet in half along its long side and the result must have the same proportions as the original. This lets you halve endlessly without the shape ever changing.</p>
+<p>If a sheet has width <em>w</em> and height <em>h</em> (h &gt; w), the half-sheet is w × h/2. For the ratio to be preserved:</p>
+<div class="math">h/w = w/(h/2)  →  h² = 2w²  →  h/w = √2 ≈ 1.4142</div>
 <p>Combined with area = 1 m²:</p>
-<div class="math">w × h = 1,   h = w√2
+<div class="math">w × h = 1,  h = w√2
 →  w = 2^(−1/4) ≈ 841 mm
 →  h = 2^(+1/4) ≈ 1189 mm</div>
 <p>For any size A<em>n</em>:</p>
 <div class="math">width  = 2^(−(2n+1)/4) m
 height = 2^(−(2n−1)/4) m
 area   = 2^(−n) m²</div>
-<p>A4 has area 2⁻⁴ = 1/16 m² → 210 × 297 mm. The ratio 297/210 ≈ 1.414. The same as A0.</p>
+<p>A4 has area 2⁻⁴ = 1/16 m² → 210 × 297 mm. Ratio: 297/210 ≈ 1.414. The same as A0.</p>
 <p>Use ← → to travel through the scale — left to go larger, right to go smaller.</p>`;
 
-  // ── orientation logic ────────────────────────────────────────────────
-  // A0 is portrait. Each step alternates: odd = landscape, even = portrait.
-  function isPortrait(n) { return Math.abs(n) % 2 === 0; }
-
-  function orientClass(n) {
-    if (n === 0) return 'origin';
-    return isPortrait(n) ? 'portrait' : 'landscape';
-  }
-
-  // ── content population ───────────────────────────────────────────────
+  // ── content ──────────────────────────────────────────────────────────
   function setContent(n) {
     if (n === 0) {
       titleEl.textContent = 'A0';
       dimsEl.textContent  = '841 × 1189 mm  ·  area = 1 m²';
       bodyEl.innerHTML    = A0_BODY;
+      paper.className     = '';
     } else {
       const { w, h, area } = getDimensions(n);
       const { label, fact } = getFact(n);
       titleEl.textContent = label;
       dimsEl.textContent  = `${formatDim(w)} × ${formatDim(h)}  ·  area = ${formatArea(area)}`;
       bodyEl.innerHTML    = `<p>${fact}</p>`;
+      paper.className     = 'has-parent';
     }
-    paper.className = orientClass(n);
   }
 
-  // ── scale bar ────────────────────────────────────────────────────────
   function updateBar(n) {
     const pct = ((n - MIN_N) / (MAX_N - MIN_N) * 100).toFixed(2) + '%';
     thumb.style.left    = pct;
-    thumbLbl.style.left = pct;
-    thumbLbl.textContent = getFact(n).label;
-    btnLeft.disabled  = n <= MIN_N;
-    btnRight.disabled = n >= MAX_N;
+    thumbLb.style.left  = pct;
+    thumbLb.textContent = getFact(n).label;
+    btnL.disabled = n <= MIN_N;
+    btnR.disabled = n >= MAX_N;
   }
 
   // ── animation ────────────────────────────────────────────────────────
-  // direction: +1 = right (smaller / zoom in), -1 = left (larger / zoom out)
+  // Going right (zoom in, dir=+1):
+  //   transform-origin: 50% 75%  (center of bottom half)
+  //   phase 1: translateY(-25%)              → re-center on bottom half
+  //   phase 2: translateY(-25%) scale(√2)    → zoom in so half fills frame
+  //   phase 3: translateY(-25%) scale(√2) rotate(-90deg)  → rotate to portrait
+  //
+  // Going left (zoom out, dir=-1):
+  //   transform-origin: 50% 50%
+  //   phase 1: rotate(90deg)                          → tilt back to landscape half
+  //   phase 2: rotate(90deg) scale(1/√2)              → shrink to half size
+  //   phase 3: rotate(90deg) scale(1/√2) translateY(25%)  → settle into bottom-half position
+  //
+  // In both cases: content is hidden before the animation starts
+  // and faded back in only after the snap + content update.
+
   function navigate(dir) {
     if (animating) return;
     const next = current + dir;
     if (next < MIN_N || next > MAX_N) return;
     animating = true;
 
-    const curPortrait = isPortrait(current);
-
-    // Position divider inside #paper before showing
-    divider.className = curPortrait ? 'h-split' : 'v-split';
-
-    // Determine transform-origin and exit transform
-    // Going right (zoom in): keep bottom half (portrait) or left half (landscape)
-    // Going left  (zoom out): reverse — scale down and drift away
-    let exitTransform, enterTransform;
-    const S = Math.SQRT2 * 1.05; // scale factor to fill frame with chosen half
-
+    // Build the three progressive transform strings
+    let t1, t2, t3, origin;
     if (dir === 1) {
-      // Zoom in: scale up so chosen half fills frame
-      if (curPortrait) {
-        // keep bottom half → origin at center of bottom half
-        paper.style.transformOrigin = '50% 75%';
-        exitTransform  = `scale(${S})`;
-        enterTransform = `scale(${1 / S})`;
-      } else {
-        // keep left half → origin at center of left half
-        paper.style.transformOrigin = '25% 50%';
-        exitTransform  = `scale(${S})`;
-        enterTransform = `scale(${1 / S})`;
-      }
+      origin = '50% 75%';
+      t1 = `translateY(-25%)`;
+      t2 = `translateY(-25%) scale(${S})`;
+      t3 = `translateY(-25%) scale(${S}) rotate(-90deg)`;
     } else {
-      // Zoom out: scale down and drift the opposite way
-      if (curPortrait) {
-        paper.style.transformOrigin = '50% 25%';
-        exitTransform  = `scale(${1 / S})`;
-        enterTransform = `scale(${S})`;
-      } else {
-        paper.style.transformOrigin = '75% 50%';
-        exitTransform  = `scale(${1 / S})`;
-        enterTransform = `scale(${S})`;
-      }
+      origin = '50% 50%';
+      t1 = `rotate(90deg)`;
+      t2 = `rotate(90deg) scale(${1 / S})`;
+      t3 = `rotate(90deg) scale(${1 / S}) translateY(25%)`;
     }
 
-    // Step 1: show divider line
+    const tr = (ms) => `transform ${ms}ms ease-in-out`;
+
+    // ── Phase 0: hide content, show divider ──
+    content.style.transition = 'opacity 150ms';
+    content.style.opacity    = '0';
     divider.classList.add('show');
 
-    // Step 2: animate exit (after short pause for divider to register)
-    setTimeout(() => {
-      paper.style.transition = 'transform 420ms ease-in, opacity 320ms 100ms ease-in';
-      paper.style.transform  = exitTransform;
-      paper.style.opacity    = '0';
-    }, 220);
+    paper.style.transformOrigin = origin;
 
-    // Step 3: swap content at peak, then enter
+    // ── Phase 1: translate ──
+    setTimeout(() => {
+      paper.style.transition = tr(STEP);
+      paper.style.transform  = t1;
+    }, 200);
+
+    // ── Phase 2: scale ──
+    setTimeout(() => {
+      paper.style.transition = tr(STEP);
+      paper.style.transform  = t2;
+    }, 200 + STEP);
+
+    // ── Phase 3: rotate ──
+    setTimeout(() => {
+      paper.style.transition = tr(STEP);
+      paper.style.transform  = t3;
+    }, 200 + STEP * 2);
+
+    // ── Snap: update content, reset transform, fade content in ──
     setTimeout(() => {
       current = next;
 
-      // reset instantly (no transition)
-      paper.style.transition = 'none';
-      paper.style.transform  = enterTransform;
-      paper.style.opacity    = '0';
+      paper.style.transition      = 'none';
+      paper.style.transform       = 'none';
+      paper.style.transformOrigin = '50% 50%';
+
+      divider.classList.remove('show');
 
       setContent(current);
       updateBar(current);
 
-      divider.classList.remove('show');
-      divider.className = '';
-
-      // Reset transform-origin to centre for enter
-      paper.style.transformOrigin = '50% 50%';
-
-      // Step 4: enter animation
+      // Two rAFs to ensure the browser has committed the snap before transitioning
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        paper.style.transition = 'transform 380ms ease-out, opacity 280ms ease-out';
-        paper.style.transform  = 'none';
-        paper.style.opacity    = '1';
+        content.style.transition = 'opacity 220ms ease';
+        content.style.opacity    = '1';
+        setTimeout(() => { animating = false; }, 250);
       }));
-
-      setTimeout(() => { animating = false; }, 420);
-    }, 760);
+    }, 200 + STEP * 3 + 40);
   }
 
-  // ── button handlers ──────────────────────────────────────────────────
+  // ── buttons + keyboard ───────────────────────────────────────────────
   function pressBtn(btn, dir) {
     btn.classList.add('pressed');
     setTimeout(() => btn.classList.remove('pressed'), 140);
     navigate(dir);
   }
 
-  btnLeft.addEventListener('click',  () => pressBtn(btnLeft,  -1));
-  btnRight.addEventListener('click', () => pressBtn(btnRight, +1));
+  btnL.addEventListener('click',  () => pressBtn(btnL, -1));
+  btnR.addEventListener('click',  () => pressBtn(btnR, +1));
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft')  { pressBtn(btnLeft,  -1); e.preventDefault(); }
-    if (e.key === 'ArrowRight') { pressBtn(btnRight, +1); e.preventDefault(); }
+    if (e.key === 'ArrowLeft')  { pressBtn(btnL, -1); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { pressBtn(btnR, +1); e.preventDefault(); }
   });
 
   // ── init ─────────────────────────────────────────────────────────────
