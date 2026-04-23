@@ -78,10 +78,10 @@ const FACTS = {
     fact: "4,096 m² — the approximate footprint of the Great Pyramid of Giza's base (230 × 230 m = 52,900 m², so this is much smaller — but it's the area of the internal Grand Gallery chamber complex)." },
 
   "-13": { label: "A−13",
-    fact: "8,192 m² — about the size of Trafalgar Square. Admiral Nelson's column, at its centre, was raised in 1843 — but the four famous lions at its base weren't added until 1867, cast from cannons salvaged from the wreck of the Royal George." },
+    fact: "~8,000 m² — the approximate total leaf area of a single mature oak tree. A large oak can carry 250,000 leaves, each around 30 cm². Packed into a canopy you can stand under, it deploys nearly 100 times more photosynthetic surface than the ground it shades — a solar collector hiding in plain sight." },
 
   "-14": { label: "A−14",
-    fact: "~16,384 m² (1.6 ha) — the area of the Uffizi Gallery in Florence. It holds over 100,000 works of art, of which fewer than 2,000 are on display at any time. The rest are in storage or on long-term loan." },
+    fact: "~16,000 m² — the exposed face of a typical Antarctic tabular iceberg when first calved. Most icebergs break off in fragments from 1,000 to 100,000 m². The exposed face is just the beginning: roughly 90% of the mass is submerged, sculpted by currents into shapes invisible from above. It was the hidden geometry of an iceberg that sank the Titanic, not the visible peak." },
 
   "-15": { label: "A−15",
     fact: "~32,768 m² (3.3 ha) — roughly the floor area of all of IKEA's original Älmhult store and warehouse combined. The store opened in 1958 and famously served meatballs to keep customers shopping longer — a deliberate retail strategy." },
@@ -93,7 +93,7 @@ const FACTS = {
     fact: "~13 ha — the approximate area enclosed by the Large Hadron Collider's ring at CERN (circumference 27 km, radius ~4.3 km, area of the enclosed circle ~58 km²... the tunnel itself is much smaller). This is actually close to the footprint of CERN's main campus." },
 
   "-18": { label: "A−18",
-    fact: "~26 ha — the area of Monaco, the second-smallest country in the world. The entire nation is smaller than many city parks, yet it has the highest density of millionaires and its own Formula 1 Grand Prix circuit." },
+    fact: "~26 ha — the approximate footprint of Pando, a clonal colony of quaking aspen in Utah and the world's largest known organism by mass. Its ~47,000 trunks share a single root system and are genetically identical — one individual. The root system is estimated to be between 80,000 and one million years old, and the whole colony weighs roughly 6 million kg. It is currently under threat: overgrazing prevents new stems from establishing, and the existing trunks are ageing." },
 
   "-19": { label: "A−19",
     fact: "~52 ha — the area of Central Park in New York. It took 20,000 workers, 10 million cartloads of material, and nearly 20 years to create what appears to be a natural landscape. Almost everything in it was designed and planted." },
@@ -102,28 +102,28 @@ const FACTS = {
     fact: "About 1 km² — the area of the City of London, the historic square mile. It contains the Bank of England and handles around 43% of global foreign exchange trading every day, despite having a residential population of only ~9,000 people." },
 
   "-21": { label: "A−21",
-    fact: "About 2 km² — the island of Alcatraz (0.07 km²) is much smaller, but this is roughly the combined area of all the golf courses on the Isle of Manhattan. Golf and Manhattan are not usually mentioned in the same sentence for good reason." },
+    fact: "~2 km² — the floor area of Son Doong cave in Vietnam, the world's largest known cave by volume. Its main passage stretches over 5 km, with chambers reaching 200 m wide and 150 m tall — large enough to contain a 40-storey building. It has its own weather system, internal clouds, and a jungle sustained by two collapsed sections of ceiling that let in light. A local farmer knew of the entrance for decades but avoided it due to the sounds of rushing water inside. It was not fully explored until 2009." },
 
   "-22": { label: "A−22",
-    fact: "~4 km² — the area of the Vatican City, the world's smallest internationally recognised state. It has its own post office, railway station, pharmacy, and radio station — all within an area smaller than many suburban neighbourhoods." },
+    fact: "~4 km² — the sky footprint of a large starling murmuration at its broadest. A murmuration of a million birds moves in perfect coordinated waves with no leader: each bird tracks its 6–7 nearest neighbours and the pattern propagates through the flock at up to 100 km/h. The whole system is self-organised. Biologists believe the behaviour confuses predators by making it impossible to single out any individual. It is one of the clearest examples in nature of emergent collective intelligence." },
 
   "-23": { label: "A−23",
-    fact: "~8 km² — approximately the area of San Marino, the world's oldest republic (founded 301 AD). It is surrounded entirely by Italy and claims to be the world's first constitutional republic." },
+    fact: "~8 km² — the approximate exposed area of the Burgess Shale formation in British Columbia, one of the most scientifically important fossil beds ever found. Laid down 508 million years ago in deep water, it preserved soft-bodied organisms — things that almost never fossilise — in extraordinary detail. Most of what we know about the Cambrian explosion, when virtually all animal body plans appeared within a few million years, comes from reading this single rock face." },
 
   "-24": { label: "A−24",
-    fact: "~16 km² — roughly the area of Bermuda (53 km², actually larger, but this is close to the area of Hamilton Parish). The Bermuda Triangle is an entirely media-invented phenomenon; Lloyd's of London doesn't charge higher insurance rates for ships sailing through it." },
+    fact: "~16 km² — the scale of a large Siberian thermokarst lake, formed as permafrost thaws and the ground collapses. These lakes are growing rapidly across the Arctic as temperatures rise. Below each one, decomposing organic matter releases methane — a greenhouse gas 80× more potent than CO₂ over 20 years. The more they grow, the warmer it gets; the warmer it gets, the more they grow. Each lake is a small window into a feedback loop that has no natural off switch." },
 
   "-25": { label: "A−25",
     fact: "~33 km² — the area of Manhattan island. In 1626, Peter Minuit reportedly purchased it from the Lenape people for 60 guilders' worth of trade goods — roughly $1,000 today. Manhattan's real estate is now worth over $1.7 trillion." },
 
   "-30": { label: "A−30",
-    fact: "~1,073 km² — approximately the area of Hong Kong. Despite its size, it is one of the world's most densely populated places and one of its most financially significant. Over 90% of daily trips are made on public transport — the highest rate on Earth." },
+    fact: "~1,073 km² — roughly the area vaporised instantaneously by the Chicxulub impactor 66 million years ago. The asteroid struck at ~20 km/s and converted roughly this area of rock to superheated plasma in milliseconds, at temperatures exceeding the Sun's surface. The resulting crater is ~180 km in diameter. The impact triggered megatsunami, global wildfires, a years-long 'impact winter', and the extinction of ~75% of all species — including every non-avian dinosaur. It also created the conditions for the rise of mammals." },
 
   "-33": { label: "A−33",
-    fact: "~8,589 km² — close to the area of Cyprus, the third-largest Mediterranean island. It has been divided since 1974 and contains Nicosia, the world's last capital city with a UN buffer zone running through its centre." },
+    fact: "~8,600 km² — the approximate area of the preserved dome of the Vredefort crater in South Africa, the largest confirmed meteorite impact structure on Earth. The original crater, formed 2.02 billion years ago, was ~300 km wide. The impactor is estimated to have been ~10–15 km across and released more energy than all of Earth's current nuclear arsenals combined, many times over. The deep rocks it exposed have since yielded some of the world's richest gold deposits." },
 
   "-37": { label: "A−37",
-    fact: "~137,438 km² — about the size of Greece. The Greek coastline stretches 13,676 km — more than any country in the Mediterranean and more than the entire West Coast of North America." },
+    fact: "~137,000 km² — the typical area of a large Mesoscale Convective System: a self-organising cluster of thunderstorms that grows into a continent-scale weather engine. The largest MCCs persist for over 24 hours, generate billions of lightning strikes, and produce more rainfall in a single event than many rivers carry in a year. They form spontaneously over warm continental plains — central North America, sub-Saharan Africa, the La Plata basin — with no single storm initiating them. The whole system emerges from the collective behaviour of smaller cells." },
 
   "-40": { label: "A−40",
     fact: "~1.1 million km² — close to the area of Egypt. Of this, 96% is desert, and 95% of the population lives on just 4% of the land, concentrated along the Nile — one of the most concentrated human settlements relative to country size in the world." },
