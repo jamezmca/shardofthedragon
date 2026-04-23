@@ -9,208 +9,212 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --border: 1px solid #111;
-      --pad: 18px;
-      --btn-size: 44px;
-      --bar-h: 48px;
-      --overflow-len: 60px; /* how far the "ghost" lines extend off-screen */
+      --bar-h: 44px;
+      --btn-w: 46px;
     }
 
     body {
       font-family: Georgia, serif;
       font-size: 15px;
-      line-height: 1.65;
+      line-height: 1.7;
       background: #fff;
       color: #111;
-      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* ── main area ── */
+    /* ── stage: fills the space above the bar ── */
     #stage {
       flex: 1;
       position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: var(--pad);
-      padding-bottom: calc(var(--bar-h) + var(--pad) + 10px);
-      overflow: hidden;
     }
 
-    /* ── paper frame ── */
+    /* ── the paper frame ── */
     #paper {
       position: relative;
-      border: var(--border);
-      padding: 28px 32px;
-      max-width: 680px;
-      width: 100%;
-      transition: none;
+      border: 1px solid #111;
+      padding: 32px 36px;
+      will-change: transform, opacity;
     }
 
-    /* ghost lines that imply the other half of the parent sheet */
-    #paper::before,
-    #paper::after {
+    /* Size the paper to fill the stage while maintaining √2 ratio.
+       We use two options and let the browser pick via aspect-ratio + constraints. */
+    #paper.portrait {
+      aspect-ratio: 1 / 1.4142;
+      width: min(calc((100vh - var(--bar-h) - 20px) / 1.4142), calc(100vw - 20px));
+      height: auto;
+    }
+
+    #paper.landscape {
+      aspect-ratio: 1.4142 / 1;
+      height: min(calc(100vh - var(--bar-h) - 20px), calc((100vw - 20px) / 1.4142));
+      width: auto;
+    }
+
+    /* ghost lines: imply the other half of the parent sheet extends off-screen */
+    /* portrait → parent was landscape, join line goes right */
+    #paper.portrait::before,
+    #paper.portrait::after {
       content: '';
       position: absolute;
-      background: #bbb;
-    }
-
-    /* portrait orientation: ghost extends upward (top edge → sky) */
-    #paper.portrait::before {
-      width: 1px;
-      left: -1px;
-      bottom: 100%;
-      height: var(--overflow-len);
-    }
-    #paper.portrait::after {
-      width: 1px;
-      right: -1px;
-      bottom: 100%;
-      height: var(--overflow-len);
-    }
-
-    /* landscape orientation: ghost extends rightward */
-    #paper.landscape::before {
+      background: #ccc;
+      width: 60px;
       height: 1px;
-      top: -1px;
-      left: 100%;
-      width: var(--overflow-len);
     }
+    #paper.portrait::before { top: -1px;  left: 100%; }
+    #paper.portrait::after  { bottom: -1px; left: 100%; }
+
+    /* landscape → parent was portrait, join line goes up */
+    #paper.landscape::before,
     #paper.landscape::after {
-      height: 1px;
-      bottom: -1px;
-      left: 100%;
-      width: var(--overflow-len);
+      content: '';
+      position: absolute;
+      background: #ccc;
+      width: 1px;
+      height: 60px;
     }
+    #paper.landscape::before { left: -1px;  bottom: 100%; }
+    #paper.landscape::after  { right: -1px; bottom: 100%; }
 
-    /* A0 has no ghost (it is the origin) */
+    /* no ghost on A0 */
     #paper.origin::before,
     #paper.origin::after { display: none; }
 
-    /* ── content inside paper ── */
+    /* ── divider line (split indicator) ── */
+    #divider {
+      position: absolute;
+      background: #111;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+    #divider.show { opacity: 1; }
+
+    /* portrait split: horizontal line at 50% */
+    #divider.h-split {
+      left: 0; right: 0;
+      height: 1px;
+      top: 50%;
+    }
+    /* landscape split: vertical line at 50% */
+    #divider.v-split {
+      top: 0; bottom: 0;
+      width: 1px;
+      left: 50%;
+    }
+
+    /* ── content ── */
     #paper h1 {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: normal;
-      letter-spacing: 0.04em;
-      margin-bottom: 14px;
-      border-bottom: var(--border);
-      padding-bottom: 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
     }
 
     #paper .dims {
-      font-size: 0.8rem;
-      color: #555;
-      margin-bottom: 14px;
       font-family: monospace;
+      font-size: 0.75rem;
+      color: #777;
+      margin-bottom: 18px;
+    }
+
+    #paper .body-text {
+      max-width: 52ch;
     }
 
     #paper .body-text p {
       margin-bottom: 10px;
     }
-
     #paper .body-text p:last-child { margin-bottom: 0; }
 
     #paper .math {
       font-family: monospace;
-      font-size: 0.85em;
-      background: #f5f5f5;
-      padding: 8px 12px;
-      margin: 12px 0;
-      border-left: 2px solid #ccc;
+      font-size: 0.8em;
+      background: #f7f7f7;
+      padding: 10px 14px;
+      margin: 14px 0;
+      border-left: 2px solid #ddd;
       white-space: pre-wrap;
     }
 
-    /* ── nav buttons ── */
-    #nav {
-      position: fixed;
-      bottom: calc(var(--bar-h) + 10px);
-      left: 50%;
-      transform: translateX(-50%);
+    /* ── bottom bar ── */
+    #bottom-bar {
+      height: var(--bar-h);
+      border-top: 1px solid #111;
       display: flex;
-      gap: 6px;
-      z-index: 10;
+      align-items: center;
+      padding: 0 10px;
+      gap: 10px;
+      flex-shrink: 0;
     }
 
     .nav-btn {
-      width: var(--btn-size);
-      height: var(--btn-size);
+      width: var(--btn-w);
+      height: 34px;
       border: 1.5px solid #333;
       background: #fff;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
-      box-shadow: 0 3px 0 #999, 0 4px 6px rgba(0,0,0,0.15);
-      transition: box-shadow 0.08s, transform 0.08s;
+      border-radius: 5px;
+      box-shadow: 0 3px 0 #aaa, 0 4px 5px rgba(0,0,0,0.12);
+      transition: box-shadow 0.07s, transform 0.07s;
       user-select: none;
-      -webkit-user-select: none;
+      flex-shrink: 0;
       color: #111;
     }
-
-    .nav-btn:active {
-      box-shadow: 0 1px 0 #999, 0 2px 3px rgba(0,0,0,0.15);
+    .nav-btn:active, .nav-btn.pressed {
+      box-shadow: 0 1px 0 #aaa, 0 1px 3px rgba(0,0,0,0.12);
       transform: translateY(2px);
     }
-
-    /* ── scale bar ── */
-    #scale-bar-wrap {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--bar-h);
-      display: flex;
-      align-items: center;
-      padding: 0 var(--pad);
-      border-top: var(--border);
-      background: #fff;
-      gap: 10px;
-    }
-
-    #scale-label-left {
-      font-size: 0.65rem;
-      color: #888;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    #scale-label-right {
-      font-size: 0.65rem;
-      color: #888;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
     #scale-track {
       flex: 1;
-      height: 2px;
-      background: #ddd;
+      height: 1px;
+      background: #ccc;
       position: relative;
     }
 
     #scale-thumb {
       position: absolute;
       top: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #111;
-      transition: left 0.2s ease;
+      transform: translate(-50%, -50%);
+      transition: left 0.25s ease;
     }
 
-    #scale-tick-label {
+    #scale-thumb-label {
       position: absolute;
-      top: 10px;
+      bottom: 8px;
       transform: translateX(-50%);
       font-size: 0.6rem;
-      color: #555;
+      color: #888;
       white-space: nowrap;
-      transition: left 0.2s ease;
+      font-family: monospace;
+      transition: left 0.25s ease;
+      pointer-events: none;
+    }
+
+    #scale-end-l, #scale-end-r {
+      font-size: 0.6rem;
+      color: #aaa;
+      font-family: monospace;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -218,140 +222,196 @@
 
 <div id="stage">
   <div id="paper" class="origin">
+    <div id="divider"></div>
     <h1 id="paper-title">A0</h1>
     <div class="dims" id="paper-dims"></div>
     <div class="body-text" id="paper-body"></div>
   </div>
 </div>
 
-<div id="nav">
-  <button class="nav-btn" id="btn-left" aria-label="Larger (previous)">&#8592;</button>
-  <button class="nav-btn" id="btn-right" aria-label="Smaller (next)">&#8594;</button>
-</div>
-
-<div id="scale-bar-wrap">
-  <span id="scale-label-left">universe</span>
+<div id="bottom-bar">
+  <button class="nav-btn" id="btn-left"  aria-label="Larger">&#8592;</button>
+  <button class="nav-btn" id="btn-right" aria-label="Smaller">&#8594;</button>
+  <span id="scale-end-l">universe</span>
   <div id="scale-track">
     <div id="scale-thumb"></div>
-    <span id="scale-tick-label"></span>
+    <span id="scale-thumb-label"></span>
   </div>
-  <span id="scale-label-right">planck</span>
+  <span id="scale-end-r">planck</span>
 </div>
 
 <script src="data.js"></script>
 <script>
-  // Index range: negative = larger than A0, positive = smaller
-  // We cap navigation at practical extremes
-  const MIN_N = -80; // ~observable universe scale
-  const MAX_N = 83;  // ~Planck length scale
+  const MIN_N = -80;
+  const MAX_N = 83;
 
-  let current = 0;
+  let current  = 0;
+  let animating = false;
 
-  // ── A0 intro content ──────────────────────────────────────────────────────
+  const paper    = document.getElementById('paper');
+  const divider  = document.getElementById('divider');
+  const titleEl  = document.getElementById('paper-title');
+  const dimsEl   = document.getElementById('paper-dims');
+  const bodyEl   = document.getElementById('paper-body');
+  const btnLeft  = document.getElementById('btn-left');
+  const btnRight = document.getElementById('btn-right');
+  const thumb    = document.getElementById('scale-thumb');
+  const thumbLbl = document.getElementById('scale-thumb-label');
+
+  // ── A0 body content ──────────────────────────────────────────────────
   const A0_BODY = `
-<p>A0 is the foundation of the ISO 216 paper standard. Its area is defined to be exactly <strong>1 square metre</strong>.</p>
+<p>A0 is the foundation of the ISO 216 paper standard. Its area is defined as exactly <strong>1 square metre</strong>.</p>
+<p>The system rests on one constraint: fold any sheet in half along its long side, and the result must have the same proportions as the original. This lets you halve endlessly without the shape ever changing.</p>
+<p>If a sheet has width <em>w</em> and height <em>h</em> (h &gt; w), the half-sheet has dimensions w × h/2. For the ratio to be preserved:</p>
+<div class="math">h / w = w / (h/2)  →  h² = 2w²  →  h/w = √2 ≈ 1.4142</div>
+<p>Combined with area = 1 m²:</p>
+<div class="math">w × h = 1,   h = w√2
+→  w = 2^(−1/4) ≈ 841 mm
+→  h = 2^(+1/4) ≈ 1189 mm</div>
+<p>For any size A<em>n</em>:</p>
+<div class="math">width  = 2^(−(2n+1)/4) m
+height = 2^(−(2n−1)/4) m
+area   = 2^(−n) m²</div>
+<p>A4 has area 2⁻⁴ = 1/16 m² → 210 × 297 mm. The ratio 297/210 ≈ 1.414. The same as A0.</p>
+<p>Use ← → to travel through the scale — left to go larger, right to go smaller.</p>`;
 
-<p>The system is built on one elegant constraint: when you fold a sheet in half along its longer side, the resulting half-sheet must have the <em>same aspect ratio</em> as the original. This means you can keep halving indefinitely and the shape never changes — only the size.</p>
+  // ── orientation logic ────────────────────────────────────────────────
+  // A0 is portrait. Each step alternates: odd = landscape, even = portrait.
+  function isPortrait(n) { return Math.abs(n) % 2 === 0; }
 
-<p>If a sheet has width <em>w</em> and height <em>h</em> (with h &gt; w), the half-sheet has width <em>h/2</em> and height <em>w</em>. For the ratios to match:</p>
+  function orientClass(n) {
+    if (n === 0) return 'origin';
+    return isPortrait(n) ? 'portrait' : 'landscape';
+  }
 
-<div class="math">h / w  =  w / (h/2)
-⟹  h / w  =  2w / h
-⟹  h²  =  2w²
-⟹  h / w  =  √2  ≈  1.4142</div>
-
-<p>Every A-size sheet has this ratio. Combined with the area constraint for A0:</p>
-
-<div class="math">w × h = 1 m²
-h = w√2
-
-⟹  w²√2 = 1
-⟹  w = 1 / 2^(1/4) ≈ 0.8409 m  (841 mm)
-⟹  h = 2^(1/4)     ≈ 1.1892 m  (1189 mm)</div>
-
-<p>For any size A<em>n</em>, the dimensions follow directly:</p>
-
-<div class="math">width  of Aₙ  =  2^(−(2n+1)/4)  metres
-height of Aₙ  =  2^(−(2n−1)/4)  metres
-area   of Aₙ  =  2^(−n)         square metres</div>
-
-<p>So A4 — the sheet on your desk — has area 2⁻⁴ = 1/16 m², giving dimensions 210 × 297 mm. The ratio 297/210 ≈ 1.4143. The same ratio as A0 (1189/841 ≈ 1.4138). The system holds.</p>
-
-<p>Use the arrow keys below to travel through the scale — left for larger, right for smaller.</p>
-`;
-
-  function getContent(n) {
+  // ── content population ───────────────────────────────────────────────
+  function setContent(n) {
     if (n === 0) {
-      return { title: "A0", dims: "841 × 1189 mm  ·  area = 1 m²", body: A0_BODY };
+      titleEl.textContent = 'A0';
+      dimsEl.textContent  = '841 × 1189 mm  ·  area = 1 m²';
+      bodyEl.innerHTML    = A0_BODY;
+    } else {
+      const { w, h, area } = getDimensions(n);
+      const { label, fact } = getFact(n);
+      titleEl.textContent = label;
+      dimsEl.textContent  = `${formatDim(w)} × ${formatDim(h)}  ·  area = ${formatArea(area)}`;
+      bodyEl.innerHTML    = `<p>${fact}</p>`;
+    }
+    paper.className = orientClass(n);
+  }
+
+  // ── scale bar ────────────────────────────────────────────────────────
+  function updateBar(n) {
+    const pct = ((n - MIN_N) / (MAX_N - MIN_N) * 100).toFixed(2) + '%';
+    thumb.style.left    = pct;
+    thumbLbl.style.left = pct;
+    thumbLbl.textContent = getFact(n).label;
+    btnLeft.disabled  = n <= MIN_N;
+    btnRight.disabled = n >= MAX_N;
+  }
+
+  // ── animation ────────────────────────────────────────────────────────
+  // direction: +1 = right (smaller / zoom in), -1 = left (larger / zoom out)
+  function navigate(dir) {
+    if (animating) return;
+    const next = current + dir;
+    if (next < MIN_N || next > MAX_N) return;
+    animating = true;
+
+    const curPortrait = isPortrait(current);
+
+    // Position divider inside #paper before showing
+    divider.className = curPortrait ? 'h-split' : 'v-split';
+
+    // Determine transform-origin and exit transform
+    // Going right (zoom in): keep bottom half (portrait) or left half (landscape)
+    // Going left  (zoom out): reverse — scale down and drift away
+    let exitTransform, enterTransform;
+    const S = Math.SQRT2 * 1.05; // scale factor to fill frame with chosen half
+
+    if (dir === 1) {
+      // Zoom in: scale up so chosen half fills frame
+      if (curPortrait) {
+        // keep bottom half → origin at center of bottom half
+        paper.style.transformOrigin = '50% 75%';
+        exitTransform  = `scale(${S})`;
+        enterTransform = `scale(${1 / S})`;
+      } else {
+        // keep left half → origin at center of left half
+        paper.style.transformOrigin = '25% 50%';
+        exitTransform  = `scale(${S})`;
+        enterTransform = `scale(${1 / S})`;
+      }
+    } else {
+      // Zoom out: scale down and drift the opposite way
+      if (curPortrait) {
+        paper.style.transformOrigin = '50% 25%';
+        exitTransform  = `scale(${1 / S})`;
+        enterTransform = `scale(${S})`;
+      } else {
+        paper.style.transformOrigin = '75% 50%';
+        exitTransform  = `scale(${1 / S})`;
+        enterTransform = `scale(${S})`;
+      }
     }
 
-    const { w, h, area } = getDimensions(n);
-    const { label, fact } = getFact(n);
+    // Step 1: show divider line
+    divider.classList.add('show');
 
-    const areaDisplay = (() => {
-      if (area >= 1e6)        return `${(area/1e6).toExponential(2)} km²`;
-      if (area >= 1)          return `${area.toFixed(4)} m²`;
-      if (area >= 1e-4)       return `${(area*1e4).toFixed(4)} cm²`;
-      if (area >= 1e-6)       return `${(area*1e6).toFixed(4)} mm²`;
-      if (area >= 1e-12)      return `${(area*1e12).toFixed(4)} μm²`;
-      if (area >= 1e-18)      return `${(area*1e18).toFixed(4)} nm²`;
-      return `${area.toExponential(3)} m²`;
-    })();
+    // Step 2: animate exit (after short pause for divider to register)
+    setTimeout(() => {
+      paper.style.transition = 'transform 420ms ease-in, opacity 320ms 100ms ease-in';
+      paper.style.transform  = exitTransform;
+      paper.style.opacity    = '0';
+    }, 220);
 
-    const formula = n >= 0
-      ? `A${n}: area = 2^(−${n}) m² = ${area.toExponential(3)} m²`
-      : `A−${Math.abs(n)}: area = 2^${Math.abs(n)} m² = ${area.toExponential(3)} m²`;
+    // Step 3: swap content at peak, then enter
+    setTimeout(() => {
+      current = next;
 
-    const body = `
-<p>${fact}</p>
-<div class="math">${formula}</div>
-<p>Dimensions: ${formatDim(w)} × ${formatDim(h)} · area: ${areaDisplay}</p>
-`;
-    return { title: label, dims: `${formatDim(w)} × ${formatDim(h)}  ·  area = ${areaDisplay}`, body };
+      // reset instantly (no transition)
+      paper.style.transition = 'none';
+      paper.style.transform  = enterTransform;
+      paper.style.opacity    = '0';
+
+      setContent(current);
+      updateBar(current);
+
+      divider.classList.remove('show');
+      divider.className = '';
+
+      // Reset transform-origin to centre for enter
+      paper.style.transformOrigin = '50% 50%';
+
+      // Step 4: enter animation
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        paper.style.transition = 'transform 380ms ease-out, opacity 280ms ease-out';
+        paper.style.transform  = 'none';
+        paper.style.opacity    = '1';
+      }));
+
+      setTimeout(() => { animating = false; }, 420);
+    }, 760);
   }
 
-  function orientationClass(n) {
-    // A0 is portrait. Each step the orientation alternates.
-    // n even → portrait, n odd → landscape (same rule for negative)
-    if (n === 0) return 'origin';
-    return Math.abs(n) % 2 === 0 ? 'portrait' : 'landscape';
+  // ── button handlers ──────────────────────────────────────────────────
+  function pressBtn(btn, dir) {
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 140);
+    navigate(dir);
   }
 
-  function render() {
-    const { title, dims, body } = getContent(current);
-    document.getElementById('paper-title').textContent = title;
-    document.getElementById('paper-dims').textContent = dims;
-    document.getElementById('paper-body').innerHTML = body;
-
-    const paper = document.getElementById('paper');
-    paper.className = orientationClass(current);
-
-    // Scale bar: map current to 0..1 between MIN_N and MAX_N
-    // MIN_N = largest (left), MAX_N = smallest (right)
-    const pct = (current - MIN_N) / (MAX_N - MIN_N); // 0 at universe, 1 at planck
-    const thumbLeft = (pct * 100).toFixed(2) + '%';
-    document.getElementById('scale-thumb').style.left = thumbLeft;
-    document.getElementById('scale-tick-label').style.left = thumbLeft;
-    document.getElementById('scale-tick-label').textContent = title;
-
-    document.getElementById('btn-left').disabled  = current <= MIN_N;
-    document.getElementById('btn-right').disabled = current >= MAX_N;
-  }
-
-  document.getElementById('btn-left').addEventListener('click', () => {
-    if (current > MIN_N) { current--; render(); }
-  });
-
-  document.getElementById('btn-right').addEventListener('click', () => {
-    if (current < MAX_N) { current++; render(); }
-  });
+  btnLeft.addEventListener('click',  () => pressBtn(btnLeft,  -1));
+  btnRight.addEventListener('click', () => pressBtn(btnRight, +1));
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft'  && current > MIN_N) { current--; render(); }
-    if (e.key === 'ArrowRight' && current < MAX_N) { current++; render(); }
+    if (e.key === 'ArrowLeft')  { pressBtn(btnLeft,  -1); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { pressBtn(btnRight, +1); e.preventDefault(); }
   });
 
-  render();
+  // ── init ─────────────────────────────────────────────────────────────
+  setContent(0);
+  updateBar(0);
 </script>
 </body>
 </html>
