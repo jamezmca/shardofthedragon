@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>notoid</title>
+  <meta name="description" content="Export Google Keep notes from an Android emulator into a single high-resolution PNG image. Perfect for printing, sharing, and archiving notes.">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f8fafc;
+    }
+
+    #app {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      color: #1e293b;
+      padding: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      #app { padding: 2rem; }
+    }
+
+    #exportBtn {
+      padding: 1rem;
+      background: #f9f9fe;
+      color: #2e333a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    #exportBtn:hover { border-color: #cbd5e1; }
+
+    #exportBtn .btn-label {
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    #export {
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+      background: #f9f9fe;
+      color: #2e333a;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .icon-group {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .icon-btn {
+      padding: 0.65rem 0.625rem;
+      border-radius: 0.375rem;
+      background: #ebeef5;
+      color: #5a5f67;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-wrap {
+      width: 100%;
+      position: relative;
+    }
+
+    #title-container {
+      opacity: 0;
+      z-index: -1;
+    }
+
+    #title-container h2 {
+      font-size: 1.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    #title {
+      position: absolute;
+      inset: 0;
+      outline: none;
+      border: none;
+      resize: none;
+      font-weight: 500;
+      font-size: 1.875rem;
+      background: transparent;
+      color: #2e333a;
+      font-family: inherit;
+      line-height: 1.4;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .body-wrap {
+      width: 100%;
+      flex: 1;
+      position: relative;
+    }
+
+    #body-container {
+      opacity: 0;
+      z-index: -1;
+      min-height: 80px;
+    }
+
+    #body-container p {
+      line-height: 1.5;
+      font-size: 1rem;
+    }
+
+    #body {
+      outline: none;
+      border: none;
+      resize: none;
+      position: absolute;
+      inset: 0;
+      background: transparent;
+      color: #2e333a;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .note-footer {
+      margin-left: auto;
+      opacity: 0.1;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <button id="exportBtn">
+      <span class="btn-label">Export to PNG</span>
+      <!-- download icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" fill="currentColor">
+        <path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+      </svg>
+    </button>
+
+    <div id="export">
+      <div class="header-row">
+        <!-- arrow-left icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16" fill="currentColor">
+          <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/>
+        </svg>
+        <div class="icon-group">
+          <div class="icon-btn">
+            <!-- thumbtack icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="12" height="12" fill="currentColor">
+              <path d="M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z"/>
+            </svg>
+          </div>
+          <div class="icon-btn">
+            <!-- bell icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+              <path d="M12 0C10.9 0 10 .9 10 2v1.07A8 8 0 0 0 4 11v4l-2 2v1h20v-1l-2-2v-4a8 8 0 0 0-6-7.93V2c0-1.1-.9-2-2-2zm-2 20c0 1.1.9 2 2 2s2-.9 2-2h-4z"/>
+            </svg>
+          </div>
+          <div class="icon-btn">
+            <!-- ellipsis-vertical icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 16" width="5" height="14" fill="currentColor">
+              <circle cx="2" cy="2" r="2"/>
+              <circle cx="2" cy="8" r="2"/>
+              <circle cx="2" cy="14" r="2"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="title-wrap">
+        <div id="title-container">
+          <h2>noob</h2>
+        </div>
+        <textarea id="title" placeholder="Title" rows="1"></textarea>
+      </div>
+
+      <div class="body-wrap">
+        <div id="body-container"></div>
+        <textarea id="body" placeholder="Note"></textarea>
+      </div>
+
+      <div class="note-footer">
+        <p>shardofthedragon.com/notoid</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const title = document.getElementById('title')
+    const titleCont = document.getElementById('title-container')
+    const body = document.getElementById('body')
+    const bodyCont = document.getElementById('body-container')
+
+    title.addEventListener('input', e => {
+      const text = e.target.value
+      let newInnerHTML = ''
+      text.split('\n').forEach(val => {
+        newInnerHTML += `<h2>${val || 'noob'}</h2>`
+      })
+      titleCont.innerHTML = newInnerHTML || '.'
+    })
+
+    body.addEventListener('input', e => {
+      const text = e.target.value
+      let newInnerHTML = ''
+      text.split('\n').forEach(val => {
+        newInnerHTML += `<p>${val || ' '}</p>`
+      })
+      bodyCont.innerHTML = newInnerHTML || '.'
+    })
+
+    function cardRoundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath()
+      ctx.moveTo(x + r, y)
+      ctx.lineTo(x + w - r, y)
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r)
+      ctx.lineTo(x + w, y + h - r)
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
+      ctx.lineTo(x + r, y + h)
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r)
+      ctx.lineTo(x, y + r)
+      ctx.quadraticCurveTo(x, y, x + r, y)
+      ctx.closePath()
+    }
+
+    function getWrappedLines(ctx, text, maxWidth) {
+      const result = []
+      for (const segment of text.split('\n')) {
+        if (!segment) { result.push(''); continue }
+        const words = segment.split(' ')
+        let line = ''
+        for (const word of words) {
+          const test = line ? line + ' ' + word : word
+          if (ctx.measureText(test).width > maxWidth && line) {
+            result.push(line)
+            line = word
+          } else {
+            line = test
+          }
+        }
+        result.push(line)
+      }
+      return result
+    }
+
+    async function exportToPng() {
+      if (document.fonts?.ready) await document.fonts.ready
+
+      const source = document.getElementById('export')
+      const sourceRect = source.getBoundingClientRect()
+      const width = Math.ceil(sourceRect.width)
+      const height = Math.ceil(sourceRect.height)
+      const pixelRatio = 3
+      const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+
+      // Measure an element relative to the card origin
+      function rel(el) {
+        const r = el.getBoundingClientRect()
+        return { x: r.left - sourceRect.left, y: r.top - sourceRect.top, w: r.width, h: r.height }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width * pixelRatio
+      canvas.height = height * pixelRatio
+      const ctx = canvas.getContext('2d')
+      ctx.scale(pixelRatio, pixelRatio)
+
+      // Card background + border
+      ctx.fillStyle = '#f9f9fe'
+      cardRoundRect(ctx, 0, 0, width, height, 8)
+      ctx.fill()
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      cardRoundRect(ctx, 0.5, 0.5, width - 1, height - 1, 8)
+      ctx.stroke()
+
+      // Arrow-left icon — measured from DOM
+      const arrowSvg = source.querySelector('.header-row > svg')
+      const ar = rel(arrowSvg)
+      const arrowScale = Math.min(ar.w / 448, ar.h / 512)
+      const arrowOx = ar.x + (ar.w - 448 * arrowScale) / 2
+      const arrowOy = ar.y + (ar.h - 512 * arrowScale) / 2
+      ctx.save()
+      ctx.fillStyle = '#2e333a'
+      ctx.translate(arrowOx, arrowOy)
+      ctx.scale(arrowScale, arrowScale)
+      ctx.fill(new Path2D('M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z'))
+      ctx.restore()
+
+      // Icon buttons — measured from DOM, no guessing
+      const iconPaths = [
+        { path: 'M32 32C32 14.3 46.3 0 64 0H320c17.7 0 32 14.3 32 32s-14.3 32-32 32H290.5l11.4 148.2c36.7 19.9 65.7 53.2 79.5 94.7l1 3c3.3 9.8 1.6 20.5-4.4 28.8s-15.7 13.3-26 13.3H32c-10.3 0-19.9-4.9-26-13.3s-7.7-19.1-4.4-28.8l1-3c13.8-41.5 42.8-74.8 79.5-94.7L93.5 64H64C46.3 64 32 49.7 32 32zM160 384h64v96c0 17.7-14.3 32-32 32s-32-14.3-32-32V384z', vw: 384, vh: 512 },
+        { path: 'M12 0C10.9 0 10 .9 10 2v1.07A8 8 0 0 0 4 11v4l-2 2v1h20v-1l-2-2v-4a8 8 0 0 0-6-7.93V2c0-1.1-.9-2-2-2zm-2 20c0 1.1.9 2 2 2s2-.9 2-2h-4z', vw: 24, vh: 24 },
+        { path: 'M2 0a2 2 0 1 1 0 4A2 2 0 0 1 2 0zm0 6a2 2 0 1 1 0 4A2 2 0 0 1 2 6zm0 6a2 2 0 1 1 0 4A2 2 0 0 1 2 12z', vw: 4, vh: 16 },
+      ]
+
+      source.querySelectorAll('.icon-btn').forEach((btn, i) => {
+        const br = rel(btn)
+        ctx.fillStyle = '#ebeef5'
+        cardRoundRect(ctx, br.x, br.y, br.w, br.h, 6)
+        ctx.fill()
+        const iconSvg = btn.querySelector('svg')
+        const ir = rel(iconSvg)
+        const { vw, vh } = iconPaths[i]
+        const scale = Math.min(ir.w / vw, ir.h / vh)
+        const ox = ir.x + (ir.w - vw * scale) / 2
+        const oy = ir.y + (ir.h - vh * scale) / 2
+        ctx.save()
+        ctx.fillStyle = '#5a5f67'
+        ctx.translate(ox, oy)
+        ctx.scale(scale, scale)
+        ctx.fill(new Path2D(iconPaths[i].path))
+        ctx.restore()
+      })
+
+      // Title — position from DOM
+      const titleWrap = source.querySelector('.title-wrap')
+      const titleR = rel(titleWrap)
+      const titleFS = parseFloat(getComputedStyle(title).fontSize)
+      if (title.value) {
+        ctx.fillStyle = '#2e333a'
+        ctx.font = `500 ${titleFS}px ${font}`
+        ctx.textBaseline = 'top'
+        let ty = titleR.y
+        for (const line of getWrappedLines(ctx, title.value, titleR.w)) {
+          ctx.fillText(line, titleR.x, ty)
+          ty += titleFS * 1.4
+        }
+      }
+
+      // Body — position from DOM
+      const bodyWrap = source.querySelector('.body-wrap')
+      const bodyR = rel(bodyWrap)
+      const bodyFS = parseFloat(getComputedStyle(body).fontSize)
+      if (body.value) {
+        ctx.fillStyle = '#2e333a'
+        ctx.font = `${bodyFS}px ${font}`
+        ctx.textBaseline = 'top'
+        let by = bodyR.y
+        for (const line of getWrappedLines(ctx, body.value, bodyR.w)) {
+          ctx.fillText(line, bodyR.x, by)
+          by += bodyFS * 1.5
+        }
+      }
+
+      // Footer — position from DOM
+      const footerEl = source.querySelector('.note-footer')
+      const fr = rel(footerEl)
+      ctx.fillStyle = '#2e333a'
+      ctx.globalAlpha = 0.1
+      ctx.font = `12px ${font}`
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'top'
+      ctx.fillText('shardofthedragon.com/notoid', fr.x + fr.w, fr.y)
+
+      const a = document.createElement('a')
+      a.href = canvas.toDataURL('image/png')
+      a.download = 'export.png'
+      a.click()
+    }
+
+    document.getElementById('exportBtn').addEventListener('click', exportToPng)
+
+    // Persist to localStorage
+    title.value = localStorage.getItem('notoid-title') || ''
+    body.value = localStorage.getItem('notoid-body') || ''
+    title.dispatchEvent(new Event('input'))
+    body.dispatchEvent(new Event('input'))
+
+    title.addEventListener('input', () => localStorage.setItem('notoid-title', title.value))
+    body.addEventListener('input', () => localStorage.setItem('notoid-body', body.value))
+  </script>
+</body>
+</html>

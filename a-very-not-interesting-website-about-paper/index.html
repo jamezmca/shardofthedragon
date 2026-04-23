@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Very Not Interesting Website About Paper</title>
+  <meta name="description" content="The ISO 216 paper system, explored one halving at a time — from the Planck length to the observable universe.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --border: 1px solid #111;
+      --pad: 18px;
+      --btn-size: 44px;
+      --bar-h: 48px;
+      --overflow-len: 60px; /* how far the "ghost" lines extend off-screen */
+    }
+
+    body {
+      font-family: Georgia, serif;
+      font-size: 15px;
+      line-height: 1.65;
+      background: #fff;
+      color: #111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── main area ── */
+    #stage {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--pad);
+      padding-bottom: calc(var(--bar-h) + var(--pad) + 10px);
+      overflow: hidden;
+    }
+
+    /* ── paper frame ── */
+    #paper {
+      position: relative;
+      border: var(--border);
+      padding: 28px 32px;
+      max-width: 680px;
+      width: 100%;
+      transition: none;
+    }
+
+    /* ghost lines that imply the other half of the parent sheet */
+    #paper::before,
+    #paper::after {
+      content: '';
+      position: absolute;
+      background: #bbb;
+    }
+
+    /* portrait orientation: ghost extends upward (top edge → sky) */
+    #paper.portrait::before {
+      width: 1px;
+      left: -1px;
+      bottom: 100%;
+      height: var(--overflow-len);
+    }
+    #paper.portrait::after {
+      width: 1px;
+      right: -1px;
+      bottom: 100%;
+      height: var(--overflow-len);
+    }
+
+    /* landscape orientation: ghost extends rightward */
+    #paper.landscape::before {
+      height: 1px;
+      top: -1px;
+      left: 100%;
+      width: var(--overflow-len);
+    }
+    #paper.landscape::after {
+      height: 1px;
+      bottom: -1px;
+      left: 100%;
+      width: var(--overflow-len);
+    }
+
+    /* A0 has no ghost (it is the origin) */
+    #paper.origin::before,
+    #paper.origin::after { display: none; }
+
+    /* ── content inside paper ── */
+    #paper h1 {
+      font-size: 1.1rem;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      margin-bottom: 14px;
+      border-bottom: var(--border);
+      padding-bottom: 8px;
+    }
+
+    #paper .dims {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 14px;
+      font-family: monospace;
+    }
+
+    #paper .body-text p {
+      margin-bottom: 10px;
+    }
+
+    #paper .body-text p:last-child { margin-bottom: 0; }
+
+    #paper .math {
+      font-family: monospace;
+      font-size: 0.85em;
+      background: #f5f5f5;
+      padding: 8px 12px;
+      margin: 12px 0;
+      border-left: 2px solid #ccc;
+      white-space: pre-wrap;
+    }
+
+    /* ── nav buttons ── */
+    #nav {
+      position: fixed;
+      bottom: calc(var(--bar-h) + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .nav-btn {
+      width: var(--btn-size);
+      height: var(--btn-size);
+      border: 1.5px solid #333;
+      background: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      box-shadow: 0 3px 0 #999, 0 4px 6px rgba(0,0,0,0.15);
+      transition: box-shadow 0.08s, transform 0.08s;
+      user-select: none;
+      -webkit-user-select: none;
+      color: #111;
+    }
+
+    .nav-btn:active {
+      box-shadow: 0 1px 0 #999, 0 2px 3px rgba(0,0,0,0.15);
+      transform: translateY(2px);
+    }
+
+    /* ── scale bar ── */
+    #scale-bar-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bar-h);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--pad);
+      border-top: var(--border);
+      background: #fff;
+      gap: 10px;
+    }
+
+    #scale-label-left {
+      font-size: 0.65rem;
+      color: #888;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #scale-label-right {
+      font-size: 0.65rem;
+      color: #888;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #scale-track {
+      flex: 1;
+      height: 2px;
+      background: #ddd;
+      position: relative;
+    }
+
+    #scale-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #111;
+      transition: left 0.2s ease;
+    }
+
+    #scale-tick-label {
+      position: absolute;
+      top: 10px;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      color: #555;
+      white-space: nowrap;
+      transition: left 0.2s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="paper" class="origin">
+    <h1 id="paper-title">A0</h1>
+    <div class="dims" id="paper-dims"></div>
+    <div class="body-text" id="paper-body"></div>
+  </div>
+</div>
+
+<div id="nav">
+  <button class="nav-btn" id="btn-left" aria-label="Larger (previous)">&#8592;</button>
+  <button class="nav-btn" id="btn-right" aria-label="Smaller (next)">&#8594;</button>
+</div>
+
+<div id="scale-bar-wrap">
+  <span id="scale-label-left">universe</span>
+  <div id="scale-track">
+    <div id="scale-thumb"></div>
+    <span id="scale-tick-label"></span>
+  </div>
+  <span id="scale-label-right">planck</span>
+</div>
+
+<script src="data.js"></script>
+<script>
+  // Index range: negative = larger than A0, positive = smaller
+  // We cap navigation at practical extremes
+  const MIN_N = -80; // ~observable universe scale
+  const MAX_N = 83;  // ~Planck length scale
+
+  let current = 0;
+
+  // ── A0 intro content ──────────────────────────────────────────────────────
+  const A0_BODY = `
+<p>A0 is the foundation of the ISO 216 paper standard. Its area is defined to be exactly <strong>1 square metre</strong>.</p>
+
+<p>The system is built on one elegant constraint: when you fold a sheet in half along its longer side, the resulting half-sheet must have the <em>same aspect ratio</em> as the original. This means you can keep halving indefinitely and the shape never changes — only the size.</p>
+
+<p>If a sheet has width <em>w</em> and height <em>h</em> (with h &gt; w), the half-sheet has width <em>h/2</em> and height <em>w</em>. For the ratios to match:</p>
+
+<div class="math">h / w  =  w / (h/2)
+⟹  h / w  =  2w / h
+⟹  h²  =  2w²
+⟹  h / w  =  √2  ≈  1.4142</div>
+
+<p>Every A-size sheet has this ratio. Combined with the area constraint for A0:</p>
+
+<div class="math">w × h = 1 m²
+h = w√2
+
+⟹  w²√2 = 1
+⟹  w = 1 / 2^(1/4) ≈ 0.8409 m  (841 mm)
+⟹  h = 2^(1/4)     ≈ 1.1892 m  (1189 mm)</div>
+
+<p>For any size A<em>n</em>, the dimensions follow directly:</p>
+
+<div class="math">width  of Aₙ  =  2^(−(2n+1)/4)  metres
+height of Aₙ  =  2^(−(2n−1)/4)  metres
+area   of Aₙ  =  2^(−n)         square metres</div>
+
+<p>So A4 — the sheet on your desk — has area 2⁻⁴ = 1/16 m², giving dimensions 210 × 297 mm. The ratio 297/210 ≈ 1.4143. The same ratio as A0 (1189/841 ≈ 1.4138). The system holds.</p>
+
+<p>Use the arrow keys below to travel through the scale — left for larger, right for smaller.</p>
+`;
+
+  function getContent(n) {
+    if (n === 0) {
+      return { title: "A0", dims: "841 × 1189 mm  ·  area = 1 m²", body: A0_BODY };
+    }
+
+    const { w, h, area } = getDimensions(n);
+    const { label, fact } = getFact(n);
+
+    const areaDisplay = (() => {
+      if (area >= 1e6)        return `${(area/1e6).toExponential(2)} km²`;
+      if (area >= 1)          return `${area.toFixed(4)} m²`;
+      if (area >= 1e-4)       return `${(area*1e4).toFixed(4)} cm²`;
+      if (area >= 1e-6)       return `${(area*1e6).toFixed(4)} mm²`;
+      if (area >= 1e-12)      return `${(area*1e12).toFixed(4)} μm²`;
+      if (area >= 1e-18)      return `${(area*1e18).toFixed(4)} nm²`;
+      return `${area.toExponential(3)} m²`;
+    })();
+
+    const formula = n >= 0
+      ? `A${n}: area = 2^(−${n}) m² = ${area.toExponential(3)} m²`
+      : `A−${Math.abs(n)}: area = 2^${Math.abs(n)} m² = ${area.toExponential(3)} m²`;
+
+    const body = `
+<p>${fact}</p>
+<div class="math">${formula}</div>
+<p>Dimensions: ${formatDim(w)} × ${formatDim(h)} · area: ${areaDisplay}</p>
+`;
+    return { title: label, dims: `${formatDim(w)} × ${formatDim(h)}  ·  area = ${areaDisplay}`, body };
+  }
+
+  function orientationClass(n) {
+    // A0 is portrait. Each step the orientation alternates.
+    // n even → portrait, n odd → landscape (same rule for negative)
+    if (n === 0) return 'origin';
+    return Math.abs(n) % 2 === 0 ? 'portrait' : 'landscape';
+  }
+
+  function render() {
+    const { title, dims, body } = getContent(current);
+    document.getElementById('paper-title').textContent = title;
+    document.getElementById('paper-dims').textContent = dims;
+    document.getElementById('paper-body').innerHTML = body;
+
+    const paper = document.getElementById('paper');
+    paper.className = orientationClass(current);
+
+    // Scale bar: map current to 0..1 between MIN_N and MAX_N
+    // MIN_N = largest (left), MAX_N = smallest (right)
+    const pct = (current - MIN_N) / (MAX_N - MIN_N); // 0 at universe, 1 at planck
+    const thumbLeft = (pct * 100).toFixed(2) + '%';
+    document.getElementById('scale-thumb').style.left = thumbLeft;
+    document.getElementById('scale-tick-label').style.left = thumbLeft;
+    document.getElementById('scale-tick-label').textContent = title;
+
+    document.getElementById('btn-left').disabled  = current <= MIN_N;
+    document.getElementById('btn-right').disabled = current >= MAX_N;
+  }
+
+  document.getElementById('btn-left').addEventListener('click', () => {
+    if (current > MIN_N) { current--; render(); }
+  });
+
+  document.getElementById('btn-right').addEventListener('click', () => {
+    if (current < MAX_N) { current++; render(); }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft'  && current > MIN_N) { current--; render(); }
+    if (e.key === 'ArrowRight' && current < MAX_N) { current++; render(); }
+  });
+
+  render();
+</script>
+</body>
+</html>
