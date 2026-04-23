@@ -117,33 +117,27 @@
       height: var(--bar-h);
       border-top: 1px solid #111;
       display: flex;
-      align-items: center;
-      padding: 0 10px;
-      gap: 10px;
+      align-items: stretch;
       flex-shrink: 0;
     }
 
     .nav-btn {
-      width: 46px;
-      height: 34px;
-      border: 1.5px solid #333;
+      border: none;
+      border-right: 1px solid #111;
       background: #fff;
       cursor: pointer;
       font-size: 0.9rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 5px;
-      box-shadow: 0 3px 0 #aaa, 0 4px 5px rgba(0,0,0,0.12);
-      transition: box-shadow 0.07s, transform 0.07s;
+      padding: 0 16px;
       user-select: none;
       flex-shrink: 0;
       color: #111;
+      border-radius: 0;
+      box-shadow: none;
     }
-    .nav-btn:active, .nav-btn.pressed {
-      box-shadow: 0 1px 0 #aaa, 0 1px 3px rgba(0,0,0,0.12);
-      transform: translateY(2px);
-    }
+    .nav-btn:active, .nav-btn.pressed { background: #f0f0f0; }
     .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
     #scale-track {
@@ -173,6 +167,14 @@
       transition: left 0.25s ease;
       pointer-events: none;
     }
+    #scale-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
     #scale-end-l, #scale-end-r {
       font-size: 0.6rem;
       color: #aaa;
@@ -198,12 +200,14 @@
 <div id="bottom-bar">
   <button class="nav-btn" id="btn-left"  aria-label="Larger">&#8592;</button>
   <button class="nav-btn" id="btn-right" aria-label="Smaller">&#8594;</button>
-  <span id="scale-end-l">universe</span>
-  <div id="scale-track">
-    <div id="scale-thumb"></div>
-    <span id="scale-thumb-label"></span>
+  <div id="scale-wrap">
+    <span id="scale-end-l">universe</span>
+    <div id="scale-track">
+      <div id="scale-thumb"></div>
+      <span id="scale-thumb-label"></span>
+    </div>
+    <span id="scale-end-r">planck</span>
   </div>
-  <span id="scale-end-r">planck</span>
 </div>
 
 <script src="data.js"></script>
