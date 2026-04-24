@@ -485,12 +485,16 @@ function renderFrame(state, frameIdx) {
   const frames = ANIMATIONS[state];
   if (!frames) return;
   const f = frames[frameIdx % frames.length];
-  const breath = Math.round(Math.sin(breathPhase) * 1); // 0 or 1 px shift
-  f(ctx, pal, blink, breath);
+  f(ctx, pal, blink, 0);
 
-  // Ear twitch overlay
+  // Ear twitch overlay — position varies by pose
   if (earTwitch) {
-    px(ctx, pal.point, 18, 6, 8, 4);
+    if (state === 'sleep') {
+      px(ctx, pal.point,  5, 22, 7, 4); // left ear in sleep pose
+      px(ctx, pal.point, 18, 22, 7, 4); // right ear in sleep pose
+    } else {
+      px(ctx, pal.point, 18, 6, 8, 4);
+    }
   }
   // Tail flick overlay (for sleep/curl)
   if (tailFlick && (state === 'sleep' || state === 'curl')) {
@@ -648,6 +652,7 @@ function tick(now) {
 
   // Render
   renderFrame(currentState, frameIdx);
+
 
   // State transition
   if (now >= stateEndTime) {
