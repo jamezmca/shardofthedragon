@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>The Wayfinder's Inn</title>
-  <meta name="description" content="Come sit in a cozy tavern, have an ale, and listen to the merrymaking. It'll be okay.">
+  <meta name="description"
+    content="Come sit in a cozy tavern, have an ale, and listen to the merrymaking. It'll be okay.">
   <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
       background: #080402;
@@ -24,7 +32,10 @@
       transition: transform 0.45s ease;
       will-change: transform;
     }
-    #wrap.panning { transition: none; }
+
+    #wrap.panning {
+      transition: none;
+    }
 
     #scene {
       display: block;
@@ -71,12 +82,15 @@
         align-items: center;
         gap: 4px;
       }
+
       #wayfarers {
         flex: 1;
       }
+
       #btn-group {
         display: contents;
       }
+
       #btn-audio {
         flex-basis: 100%;
         text-align: center;
@@ -95,9 +109,18 @@
       user-select: none;
       touch-action: manipulation;
     }
-    .btn:hover  { border-color: #c89050; }
-    .btn:active { background: rgba(40, 20, 8, 0.95); }
-    .btn:focus  { outline: none; }
+
+    .btn:hover {
+      border-color: #c89050;
+    }
+
+    .btn:active {
+      background: rgba(40, 20, 8, 0.95);
+    }
+
+    .btn:focus {
+      outline: none;
+    }
 
     #dpad {
       display: flex;
@@ -106,491 +129,516 @@
       pointer-events: none;
       transition: opacity 0.2s;
     }
-    #dpad.active { opacity: 1; pointer-events: auto; }
-    .dpad-btn { padding: 5px 10px; }
+
+    #dpad.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dpad-btn {
+      padding: 5px 10px;
+    }
   </style>
 </head>
+
 <body>
 
-<div id="wrap">
-  <canvas id="scene" width="380" height="120"></canvas>
-</div>
-
-<div id="controls">
-  <span id="wayfarers">wayfarers: —</span>
-  <div id="btn-group">
-    <div id="nav-group">
-      <button class="btn" id="btn-zoom">fit</button>
-      <div id="dpad">
-        <button class="btn dpad-btn" id="btn-left">←</button>
-        <button class="btn dpad-btn" id="btn-right">→</button>
-      </div>
-    </div>
-    <button class="btn" id="btn-audio">tavern music: off</button>
+  <div id="wrap">
+    <canvas id="scene" width="380" height="120"></canvas>
   </div>
-</div>
 
-<audio id="aud" src="public/taverns-of-azeroth.mp3" loop preload="auto"></audio>
+  <div id="controls">
+    <span id="wayfarers">wayfarers: —</span>
+    <div id="btn-group">
+      <div id="nav-group">
+        <button class="btn" id="btn-zoom">fit</button>
+        <div id="dpad">
+          <button class="btn dpad-btn" id="btn-left">←</button>
+          <button class="btn dpad-btn" id="btn-right">→</button>
+        </div>
+      </div>
+      <button class="btn" id="btn-audio">tavern music: off</button>
+    </div>
+  </div>
 
-<script>
-  const cv  = document.getElementById('scene');
-  const ctx = cv.getContext('2d');
-  const W = 380, H = 120;
+  <audio id="aud" src="public/taverns-of-azeroth.mp3" loop preload="auto"></audio>
 
-  function p(c, x, y, w, h) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
+  <script>
+    const cv = document.getElementById('scene');
+    const ctx = cv.getContext('2d');
+    const W = 380, H = 120;
 
-  // ── STATIC SCENE ──────────────────────────────────────────────────────
+    function p(c, x, y, w, h) { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); }
 
-  function drawRoom() {
+    // ── STATIC SCENE ──────────────────────────────────────────────────────
 
-    // ── CEILING ──────────────────────────────────────────────────────
-    p('#120904', 0, 0, W, 16);
-    [2, 5, 9, 13].forEach(y => p('#0e0702', 0, y, W, 1));
-    [76, 188, 296].forEach(bx => {
-      p('#2c1808', bx,    0, 14, 22);
-      p('#3e2410', bx+1,  0,  3, 22);
-      p('#1e1004', bx+11, 0,  3, 22);
-    });
+    function drawRoom() {
 
-    // ── REAR WALL ────────────────────────────────────────────────────
-    p('#221308', 0, 16, W, 74);
-    [46, 105, 162, 218, 265, 330, 372].forEach(wx => p('#1c1006', wx, 16, 1, 74));
+      // ── CEILING ──────────────────────────────────────────────────────
+      p('#120904', 0, 0, W, 16);
+      [2, 5, 9, 13].forEach(y => p('#0e0702', 0, y, W, 1));
+      [76, 188, 296].forEach(bx => {
+        p('#2c1808', bx, 0, 14, 22);
+        p('#3e2410', bx + 1, 0, 3, 22);
+        p('#1e1004', bx + 11, 0, 3, 22);
+      });
 
-    // ── FIREPLACE ────────────────────────────────────────────────────
-    p('#3c2c1c', 8, 16, 84, 74);
-    [
-      [8,16,18,9],[26,16,16,9],[42,16,20,9],[62,16,16,9],[78,16,14,9],
-      [8,25,14,9],[22,25,20,9],[42,25,16,9],[58,25,14,9],[72,25,20,9],
-      [8,34,20,9],[66,34,26,9],
-      [8,43,18,9],[66,43,26,9],
-      [8,52,22,9],[64,52,28,9],
-      [8,61,20,9],[66,61,26,9],
-      [8,70,84,10],
-    ].forEach(([x, y, w, h]) => {
-      p('#4e3a26', x, y, w, h);
-      p('#5e4a32', x, y, w, 1);
-      p('#3a2818', x, y+1, 1, h-1);
-      p('#2e2010', x+w-1, y+1, 1, h-1);
-    });
-    for (let my = 16; my < 90; my += 9) p('#251a0c', 8, my, 84, 1);
-    [18,26,38,48,58,66,74,82].forEach(mx => p('#251a0c', mx, 16, 1, 74));
+      // ── REAR WALL ────────────────────────────────────────────────────
+      p('#221308', 0, 16, W, 74);
+      [46, 105, 162, 218, 265, 330, 372].forEach(wx => p('#1c1006', wx, 16, 1, 74));
 
-    p('#6a3e1a', 4,  13, 92, 5);
-    p('#8a5224', 4,  13, 92, 2);
-    p('#3a2010', 4,  17, 92, 1);
+      // ── FIREPLACE ────────────────────────────────────────────────────
+      p('#3c2c1c', 8, 16, 84, 74);
+      [
+        [8, 16, 18, 9], [26, 16, 16, 9], [42, 16, 20, 9], [62, 16, 16, 9], [78, 16, 14, 9],
+        [8, 25, 14, 9], [22, 25, 20, 9], [42, 25, 16, 9], [58, 25, 14, 9], [72, 25, 20, 9],
+        [8, 34, 20, 9], [66, 34, 26, 9],
+        [8, 43, 18, 9], [66, 43, 26, 9],
+        [8, 52, 22, 9], [64, 52, 28, 9],
+        [8, 61, 20, 9], [66, 61, 26, 9],
+        [8, 70, 84, 10],
+      ].forEach(([x, y, w, h]) => {
+        p('#4e3a26', x, y, w, h);
+        p('#5e4a32', x, y, w, 1);
+        p('#3a2818', x, y + 1, 1, h - 1);
+        p('#2e2010', x + w - 1, y + 1, 1, h - 1);
+      });
+      for (let my = 16; my < 90; my += 9) p('#251a0c', 8, my, 84, 1);
+      [18, 26, 38, 48, 58, 66, 74, 82].forEach(mx => p('#251a0c', mx, 16, 1, 74));
 
-    // Firebox opening: x=28–64, y=34–84
-    p('#0c0806', 28, 34, 36, 50);
-    p('#181008', 26, 33, 40,  2);
-    p('#181008', 26, 33,  2, 50);
-    p('#181008', 64, 33,  2, 50);
+      p('#6a3e1a', 4, 13, 92, 5);
+      p('#8a5224', 4, 13, 92, 2);
+      p('#3a2010', 4, 17, 92, 1);
 
-    // ── BAR ──────────────────────────────────────────────────────────
-    p('#3a2010', 242, 16, 136, 5);
-    p('#5a3416', 242, 16, 136, 2);
-    [[252,15],[278,13],[306,15],[332,13],[356,15]].forEach(([kx, kh]) => {
-      p('#5c3214', kx,    18, 16, kh);
-      p('#7a4420', kx+2,  18, 12,  2);
-      p('#3a1e08', kx,    20,  2, kh-2);
-      p('#3a1e08', kx+14, 20,  2, kh-2);
-      p('#3a1e08', kx,    18 + Math.floor(kh/2), 16, 1);
-    });
-    p('#6e3e18', 242, 56, 136,  8);
-    p('#8c5222', 242, 56, 136,  2);
-    p('#3a2010', 242, 63, 136,  1);
-    p('#4c2e10', 242, 64, 136, 26);
-    [268,296,324,352].forEach(bx => p('#3a2008', bx, 65, 2, 24));
-    p('#3a2010', 246, 100, 128, 4);
-    p('#5a3416', 246, 100, 128, 2);
-    [[254,84],[282,84],[310,84],[338,84]].forEach(([sx, sy]) => {
-      p('#4a2c10', sx,    sy,   16,  3);
-      p('#6a3e18', sx+1,  sy,   14,  1);
-      p('#2e1a08', sx+6,  sy+3,  4, 22);
-      p('#221006', sx+4,  sy+23, 8,  2);
-    });
-    p('#7a5828', 268, 51, 7, 6);
-    p('#8a6838', 268, 51, 7, 1);
-    p('#7a5828', 275, 53, 3, 3);
+      // Firebox opening: x=28–64, y=34–84
+      p('#0c0806', 28, 34, 36, 50);
+      p('#181008', 26, 33, 40, 2);
+      p('#181008', 26, 33, 2, 50);
+      p('#181008', 64, 33, 2, 50);
 
-    // ── WALL SCONCES ─────────────────────────────────────────────────
-    [[110,22],[170,22],[228,22]].forEach(([cx, cy]) => {
-      p('#4a3020', cx-2, cy+5,  8, 3);
-      p('#d8d0a8', cx,   cy,    4, 8);
-      p('#b8b090', cx+1, cy,    2, 8);
-    });
+      // ── BAR ──────────────────────────────────────────────────────────
+      p('#3a2010', 242, 16, 136, 5);
+      p('#5a3416', 242, 16, 136, 2);
+      [[252, 15], [278, 13], [306, 15], [332, 13], [356, 15]].forEach(([kx, kh]) => {
+        p('#5c3214', kx, 18, 16, kh);
+        p('#7a4420', kx + 2, 18, 12, 2);
+        p('#3a1e08', kx, 20, 2, kh - 2);
+        p('#3a1e08', kx + 14, 20, 2, kh - 2);
+        p('#3a1e08', kx, 18 + Math.floor(kh / 2), 16, 1);
+      });
+      p('#6e3e18', 242, 56, 136, 8);
+      p('#8c5222', 242, 56, 136, 2);
+      p('#3a2010', 242, 63, 136, 1);
+      p('#4c2e10', 242, 64, 136, 26);
+      [268, 296, 324, 352].forEach(bx => p('#3a2008', bx, 65, 2, 24));
+      p('#3a2010', 246, 100, 128, 4);
+      p('#5a3416', 246, 100, 128, 2);
+      [[254, 84], [282, 84], [310, 84], [338, 84]].forEach(([sx, sy]) => {
+        p('#4a2c10', sx, sy, 16, 3);
+        p('#6a3e18', sx + 1, sy, 14, 1);
+        p('#2e1a08', sx + 6, sy + 3, 4, 22);
+        p('#221006', sx + 4, sy + 23, 8, 2);
+      });
+      p('#7a5828', 268, 51, 7, 6);
+      p('#8a6838', 268, 51, 7, 1);
+      p('#7a5828', 275, 53, 3, 3);
 
-    // ── HANGING LANTERN ──────────────────────────────────────────────
-    p('#3a2010', 148,  4,  4,  5);
-    p('#5a3416', 144,  9, 12,  2);
-    p('#4a2c10', 144, 11, 12, 10);
-    p('#3a2010', 143, 11,  2, 10);
-    p('#3a2010', 155, 11,  2, 10);
-    p('#3a2010', 144, 20, 12,  2);
+      // ── WALL SCONCES ─────────────────────────────────────────────────
+      [[110, 22], [170, 22], [228, 22]].forEach(([cx, cy]) => {
+        p('#4a3020', cx - 2, cy + 5, 8, 3);
+        p('#d8d0a8', cx, cy, 4, 8);
+        p('#b8b090', cx + 1, cy, 2, 8);
+      });
 
-    // ── TABLE ────────────────────────────────────────────────────────
-    p('#543010', 138, 73, 60, 5);
-    p('#7a4420', 138, 73, 60, 2);
-    p('#301808', 150, 78,  5, 14);
-    p('#301808', 184, 78,  5, 14);
-    // (mug drawn by drawTableMug)
+      // ── HANGING LANTERN ──────────────────────────────────────────────
+      p('#3a2010', 148, 4, 4, 5);
+      p('#5a3416', 144, 9, 12, 2);
+      p('#4a2c10', 144, 11, 12, 10);
+      p('#3a2010', 143, 11, 2, 10);
+      p('#3a2010', 155, 11, 2, 10);
+      p('#3a2010', 144, 20, 12, 2);
 
-    // ── FLOOR ────────────────────────────────────────────────────────
-    p('#160c04', 0, 90, W, 30);
-    [93,98,104,110,116].forEach(fy => p('#1c1006', 0, fy, W, 1));
-    [42,100,158,214,268,322,362].forEach(fx => p('#100802', fx, 90, 2, 30));
-    p('#1e1006', 6, 90, 88, 30);
-  }
+      // ── TABLE ────────────────────────────────────────────────────────
+      p('#543010', 138, 73, 60, 5);
+      p('#7a4420', 138, 73, 60, 2);
+      p('#301808', 150, 78, 5, 14);
+      p('#301808', 184, 78, 5, 14);
+      // (mug drawn by drawTableMug)
 
-  // ── ANIMATED FIRE ─────────────────────────────────────────────────────
-  // Zones (inside firebox x=28–64, y=34–84):
-  //   flames:    x=30–62, y=36–63
-  //   front log: x=30–62, y=62–69  (overlaps flame base — fire rises from wood)
-  //   back log:  x=30–62, y=67–74
-  //   coal bed:  x=30–62, y=72–84
+      // ── FLOOR ────────────────────────────────────────────────────────
+      p('#160c04', 0, 90, W, 30);
+      [93, 98, 104, 110, 116].forEach(fy => p('#1c1006', 0, fy, W, 1));
+      [42, 100, 158, 214, 268, 322, 362].forEach(fx => p('#100802', fx, 90, 2, 30));
+      p('#1e1006', 6, 90, 88, 30);
+    }
 
-  function drawFire(t) {
-    const FX = 30, FY = 36, FW = 32, FH = 27; // flame zone
+    // ── ANIMATED FIRE ─────────────────────────────────────────────────────
+    // Zones (inside firebox x=28–64, y=34–84):
+    //   flames:    x=30–62, y=36–63
+    //   front log: x=30–62, y=62–69  (overlaps flame base — fire rises from wood)
+    //   back log:  x=30–62, y=67–74
+    //   coal bed:  x=30–62, y=72–84
 
-    p('#0c0806', FX, FY, FW, FH + 18); // re-darken firebox interior
+    function drawFire(t) {
+      const FX = 30, FY = 36, FW = 32, FH = 27; // flame zone
 
-    // ── FLAMES ──
-    for (let layer = 0; layer < 5; layer++) {
-      const speed   = 2.0 + layer * 0.38;
-      const stagger = layer * (FH / 5);
-      for (let x = FX; x < FX + FW; x++) {
-        const col      = x - FX;
-        const progress = ((t * speed + stagger + col * 0.28) % FH);
-        const baseY    = FY + (FH - 1) - Math.round(progress);
-        const wobble   = Math.sin(col * 0.62 + t * 2.4 + layer * 1.4) * 2.4;
-        const py       = Math.round(baseY + wobble);
-        if (py < FY || py >= FY + FH) continue;
-        const heat = progress / FH;
-        let c;
-        if      (heat > 0.70) c = `rgba(255,248,168,${Math.min(0.95,((heat-0.70)/0.30)*0.9+0.06).toFixed(2)})`;
-        else if (heat > 0.42) c = `rgba(255,128,18,${(0.52+((heat-0.42)/0.28)*0.38).toFixed(2)})`;
-        else if (heat > 0.18) c = `rgba(210,38,8,${(0.22+((heat-0.18)/0.24)*0.30).toFixed(2)})`;
-        else                  c = `rgba(110,14,4,${(heat/0.18*0.20).toFixed(2)})`;
-        ctx.fillStyle = c;
-        ctx.fillRect(x, py, 1, 1);
+      p('#0c0806', FX, FY, FW, FH + 18); // re-darken firebox interior
+
+      // ── FLAMES ──
+      for (let layer = 0; layer < 5; layer++) {
+        const speed = 2.0 + layer * 0.38;
+        const stagger = layer * (FH / 5);
+        for (let x = FX; x < FX + FW; x++) {
+          const col = x - FX;
+          const progress = ((t * speed + stagger + col * 0.28) % FH);
+          const baseY = FY + (FH - 1) - Math.round(progress);
+          const wobble = Math.sin(col * 0.62 + t * 2.4 + layer * 1.4) * 2.4;
+          const py = Math.round(baseY + wobble);
+          if (py < FY || py >= FY + FH) continue;
+          const heat = progress / FH;
+          let c;
+          if (heat > 0.70) c = `rgba(255,248,168,${Math.min(0.95, ((heat - 0.70) / 0.30) * 0.9 + 0.06).toFixed(2)})`;
+          else if (heat > 0.42) c = `rgba(255,128,18,${(0.52 + ((heat - 0.42) / 0.28) * 0.38).toFixed(2)})`;
+          else if (heat > 0.18) c = `rgba(210,38,8,${(0.22 + ((heat - 0.18) / 0.24) * 0.30).toFixed(2)})`;
+          else c = `rgba(110,14,4,${(heat / 0.18 * 0.20).toFixed(2)})`;
+          ctx.fillStyle = c;
+          ctx.fillRect(x, py, 1, 1);
+        }
       }
+
+      // ── FRONT LOG (sits over flame base, fire appears to rise from it) ──
+      p('#231208', 30, 62, 32, 8); // log body
+      p('#2e1a0c', 30, 62, 32, 1); // top rim highlight
+      p('#160c04', 30, 69, 32, 1); // bottom shadow
+      // Bark patches
+      p('#160a04', 34, 63, 5, 2);
+      p('#160a04', 45, 63, 4, 2);
+      p('#160a04', 54, 63, 4, 2);
+      // End grain (left/right cut faces)
+      p('#3a2010', 30, 63, 2, 5);
+      p('#3a2010', 60, 63, 2, 5);
+
+      // ── BACK LOG ──
+      p('#1a0c04', 30, 67, 32, 8);
+      p('#221006', 30, 67, 32, 1);
+      p('#120804', 30, 74, 32, 1);
+      p('#110804', 38, 68, 5, 2);
+      p('#110804', 50, 68, 6, 2);
+
+      // Glowing gap between logs + charred cracks (animated)
+      const eg = 0.55 + 0.35 * Math.sin(t * 2.3);
+      const eg2 = 0.45 + 0.35 * Math.sin(t * 1.8 + 1.4);
+      p(`rgba(255,100,12,${eg.toFixed(2)})`, 30, 66, 32, 1); // gap glow between logs
+      p(`rgba(255,65,6,${eg2.toFixed(2)})`, 35, 64, 5, 1); // crack in front log
+      p(`rgba(255,65,6,${eg.toFixed(2)})`, 50, 64, 6, 1); // crack in front log
+      p(`rgba(220,45,4,${eg2.toFixed(2)})`, 40, 68, 5, 1); // crack in back log
+
+      // ── COAL BED ──
+      p('#180c04', 30, 74, 32, 10);
+      for (let ex = 30; ex < 62; ex++) {
+        const g1 = 0.28 + 0.22 * Math.sin(ex * 0.72 + t * 3.2);
+        const g2 = 0.18 + 0.18 * Math.sin(ex * 0.44 + t * 2.0 + 1.6);
+        p(`rgba(255,65,5,${g1.toFixed(2)})`, ex, 74, 1, 3);
+        p(`rgba(180,30,2,${g2.toFixed(2)})`, ex, 78, 1, 4);
+      }
+      // Bright ember spots in coal bed
+      [[32, 75], [38, 76], [46, 74], [52, 76], [58, 75]].forEach(([ex, ey]) => {
+        const sp = 0.5 + 0.5 * Math.sin(ex * 1.1 + t * 4.2);
+        p(`rgba(255,140,20,${(sp * 0.7).toFixed(2)})`, ex, ey, 2, 1);
+      });
     }
 
-    // ── FRONT LOG (sits over flame base, fire appears to rise from it) ──
-    p('#231208', 30, 62, 32,  8); // log body
-    p('#2e1a0c', 30, 62, 32,  1); // top rim highlight
-    p('#160c04', 30, 69, 32,  1); // bottom shadow
-    // Bark patches
-    p('#160a04', 34, 63, 5, 2);
-    p('#160a04', 45, 63, 4, 2);
-    p('#160a04', 54, 63, 4, 2);
-    // End grain (left/right cut faces)
-    p('#3a2010', 30, 63, 2, 5);
-    p('#3a2010', 60, 63, 2, 5);
+    // ── GLOW OVERLAYS ─────────────────────────────────────────────────────
 
-    // ── BACK LOG ──
-    p('#1a0c04', 30, 67, 32,  8);
-    p('#221006', 30, 67, 32,  1);
-    p('#120804', 30, 74, 32,  1);
-    p('#110804', 38, 68, 5, 2);
-    p('#110804', 50, 68, 6, 2);
+    function drawGlow(t) {
+      const pulse = 0.06 + 0.02 * Math.sin(t * 1.35);
+      p(`rgba(255,85,16,${(pulse * 1.6).toFixed(3)})`, 6, 90, 88, 30);
+      p(`rgba(255,75,12,${pulse.toFixed(3)})`, 0, 36, 14, 54);
+      p(`rgba(200,65,10,${(pulse * 0.65).toFixed(3)})`, 0, 0, 110, 16);
 
-    // Glowing gap between logs + charred cracks (animated)
-    const eg  = 0.55 + 0.35 * Math.sin(t * 2.3);
-    const eg2 = 0.45 + 0.35 * Math.sin(t * 1.8 + 1.4);
-    p(`rgba(255,100,12,${eg.toFixed(2)})`,  30, 66, 32,  1); // gap glow between logs
-    p(`rgba(255,65,6,${eg2.toFixed(2)})`,   35, 64, 5,   1); // crack in front log
-    p(`rgba(255,65,6,${eg.toFixed(2)})`,    50, 64, 6,   1); // crack in front log
-    p(`rgba(220,45,4,${eg2.toFixed(2)})`,   40, 68, 5,   1); // crack in back log
-
-    // ── COAL BED ──
-    p('#180c04', 30, 74, 32, 10);
-    for (let ex = 30; ex < 62; ex++) {
-      const g1 = 0.28 + 0.22 * Math.sin(ex * 0.72 + t * 3.2);
-      const g2 = 0.18 + 0.18 * Math.sin(ex * 0.44 + t * 2.0 + 1.6);
-      p(`rgba(255,65,5,${g1.toFixed(2)})`,  ex, 74, 1, 3);
-      p(`rgba(180,30,2,${g2.toFixed(2)})`,  ex, 78, 1, 4);
+      const lp = 0.65 + 0.35 * Math.sin(t * 2.4 + Math.sin(t * 5.3) * 0.4);
+      p(`rgba(240,185,65,${(lp * 0.72).toFixed(2)})`, 145, 12, 8, 9);
+      p(`rgba(220,145,35,${(lp * 0.10).toFixed(2)})`, 118, 0, 58, 16);
+      p(`rgba(220,145,35,${(lp * 0.05).toFixed(2)})`, 128, 16, 40, 60);
     }
-    // Bright ember spots in coal bed
-    [[32,75],[38,76],[46,74],[52,76],[58,75]].forEach(([ex, ey]) => {
-      const sp = 0.5 + 0.5 * Math.sin(ex * 1.1 + t * 4.2);
-      p(`rgba(255,140,20,${(sp*0.7).toFixed(2)})`, ex, ey, 2, 1);
+
+    function drawTableMug(t) {
+      const MX = 162, MY = 67;
+      const wobbleElapsed = t - mugWobbleT;
+      const wx = (mugWobbleT > -90 && wobbleElapsed < 1.4)
+        ? Math.round(Math.sin(wobbleElapsed * 20) * Math.exp(-wobbleElapsed * 4.5)) : 0;
+      const X = MX + wx;
+
+      // Original mug model unchanged
+      p('#7a5828', X, MY, 6, 7);
+      p('#8a6838', X, MY, 6, 1);
+      p('#7a5828', X + 6, MY + 2, 3, 3);
+      p('#6a4818', X + 7, MY + 3, 1, 2);
+
+      // Froth sits on top of rim — 2 tiers, disappear top-first as mug empties
+      // Tier 2 (top): visible when mugFill > 0.5
+      if (mugFill > 0.5) p('#f0ece0', X + 2, MY - 2, 2, 1);
+      // Tier 1 (bottom): visible when mugFill > 0
+      if (mugFill > 0) p('#f0ece0', X + 1, MY - 1, 4, 1);
+    }
+
+    function drawCandleFlicker(t) {
+      [[110, 18], [170, 18], [228, 18]].forEach(([cx, cy], i) => {
+        if (!candleOn[i]) return; // snuffed
+        const f = 0.58 + 0.42 * Math.sin(t * 4.6 + i * 2.8 + Math.sin(t * 8.5 + i) * 0.7);
+        const fh = 3 + (Math.sin(t * 3.9 + i * 2.0) > 0 ? 1 : 0);
+        p(`rgba(255,175,40,${(f * 0.09).toFixed(2)})`, cx - 7, cy - 5, 18, 16);
+        p(`rgba(255,235,110,${f.toFixed(2)})`, cx + 1, cy - fh, 2, fh + 1);
+        p(`rgba(255,115,22,${f.toFixed(2)})`, cx + 1, cy - fh + 1, 2, fh);
+      });
+    }
+
+    // ── BAR CAT ───────────────────────────────────────────────────────────
+
+    let catBlink = false;
+    let catNextEvt = 3200; // ms until next blink event
+
+    function drawBarCat(t) {
+      const CX = 244;
+      const BAR = 56;
+
+      const bo = '#c87830';
+      const dk = '#7a3810';
+      const ey = '#68b040'; // green
+      const ns = '#d88888';
+
+      // Ears
+      p(dk, CX + 1, BAR - 13, 2, 4);
+      p(dk, CX + 5, BAR - 13, 2, 4);
+
+      // Head (8px wide)
+      p(bo, CX, BAR - 11, 8, 6);
+      p(dk, CX + 1, BAR - 10, 6, 5);
+      p(bo, CX, BAR - 11, 8, 1);
+
+      // Eyes or blink
+      if (!catBlink) {
+        p(ey, CX + 1, BAR - 9, 2, 2);
+        p(ey, CX + 5, BAR - 9, 2, 2);
+        const gx = Math.sin(t * 0.38) > 0 ? 1 : 0;
+        const gy = Math.sin(t * 0.27) > 0 ? 1 : 0;
+        p('#111', CX + 1 + gx, BAR - 9 + gy, 1, 1);
+        p('#111', CX + 5 + gx, BAR - 9 + gy, 1, 1);
+      } else {
+        p(dk, CX + 1, BAR - 8, 2, 1);
+        p(dk, CX + 5, BAR - 8, 2, 1);
+      }
+
+      // Nose
+      p(ns, CX + 3, BAR - 7, 2, 1);
+
+      // Body (11px wide — wider than 8px head, seated/plump)
+      p(bo, CX - 1, BAR - 6, 11, 6);
+      p(dk, CX - 1, BAR - 6, 2, 6);
+      p(dk, CX + 8, BAR - 6, 2, 6);
+
+      // Paws
+      p(dk, CX, BAR - 1, 2, 1);
+      p(dk, CX + 6, BAR - 1, 2, 1);
+
+      // Tail — gentle sway
+      const sw = Math.sin(t * 0.9) * 1.3;
+      p(dk, CX + 10, Math.round(BAR - 4), 2, 2);
+      p(dk, CX + 12, Math.round(BAR - 3 + sw * 0.5), 2, 2);
+      p(dk, CX + 14, Math.round(BAR - 3 + sw), 2, 2);
+    }
+
+    // ── RENDER LOOP ───────────────────────────────────────────────────────
+
+    // ── INTERACTIVE STATE ─────────────────────────────────────────────────
+    let mugFill = 1.0;  // 0=empty 1=full
+    let mugWobbleT = -99;  // t when wobble started
+    let mugEmptyT = -99;  // t when mug became empty
+
+    const candleOn = [true, true, true];
+    const candleRelightT = [0, 0, 0]; // t when each candle relights
+
+    const held = { left: false, right: false };
+    const PAN_SPEED = 0.9; // canvas pixels per frame
+
+    let prevNow = 0;
+
+    function frame() {
+      const now = performance.now();
+      const dt = prevNow ? now - prevNow : 0;
+      prevNow = now;
+      const t = now / 1000;
+
+      // Pan movement
+      if (zoomed && (held.left || held.right)) {
+        if (held.left) panX += PAN_SPEED;
+        if (held.right) panX -= PAN_SPEED;
+        applyTransform(true);
+      }
+
+      // Cat blink timer
+      catNextEvt -= dt;
+      if (catNextEvt <= 0) {
+        catBlink = !catBlink;
+        catNextEvt = catBlink ? 180 : 2600 + Math.random() * 2800;
+      }
+
+      // Mug drain + refill
+      if (mugWobbleT > -90 && mugFill > 0) {
+        mugFill = Math.max(0, mugFill - dt / 1500);
+      }
+      if (mugFill === 0 && mugEmptyT < -90 && mugWobbleT > -90) mugEmptyT = t;
+      if (mugEmptyT > -90 && t - mugEmptyT > 4.0) {
+        mugFill = 1.0; mugWobbleT = -99; mugEmptyT = -99;
+      }
+
+      // Candle relight
+      for (let i = 0; i < 3; i++) {
+        if (!candleOn[i] && t >= candleRelightT[i]) candleOn[i] = true;
+      }
+
+      drawRoom();
+      drawFire(t);
+      drawGlow(t);
+      drawCandleFlicker(t);
+      drawTableMug(t);
+      drawBarCat(t);
+      requestAnimationFrame(frame);
+    }
+
+    // ── ZOOM + PAN ────────────────────────────────────────────────────────
+
+    let zoomed = false;
+    let panX = 0, panY = 0; // offset in canvas-pixel space
+
+    // Fireplace center: canvas (50, 52). Canvas center: (190, 60).
+    const FP_PAN_X = 190 - 50; // 140
+    const FP_PAN_Y = 60 - 52; // 8
+
+    function getScale() {
+      return zoomed
+        ? Math.max(window.innerWidth / W, window.innerHeight / H)
+        : Math.min(window.innerWidth / W, window.innerHeight / H);
+    }
+
+    function clampPan() {
+      const s = getScale();
+      const maxX = Math.max(0, (W - window.innerWidth / s) / 2);
+      const maxY = Math.max(0, (H - window.innerHeight / s) / 2);
+      panX = Math.max(-maxX, Math.min(maxX, panX));
+      panY = Math.max(-maxY, Math.min(maxY, panY));
+    }
+
+    function applyTransform(instant = false) {
+      clampPan();
+      const s = getScale();
+      const wrap = document.getElementById('wrap');
+      if (instant) {
+        wrap.classList.add('panning');
+      } else {
+        wrap.classList.remove('panning');
+      }
+      wrap.style.transform = `translate(${panX * s}px, ${panY * s}px) scale(${s})`;
+    }
+
+    document.getElementById('btn-zoom').addEventListener('click', () => {
+      zoomed = !zoomed;
+      panX = zoomed ? FP_PAN_X : 0;
+      panY = zoomed ? FP_PAN_Y : 0;
+      document.getElementById('btn-zoom').textContent = zoomed ? 'cover' : 'fit';
+      document.getElementById('dpad').classList.toggle('active', zoomed);
+      applyTransform(false);
     });
-  }
 
-  // ── GLOW OVERLAYS ─────────────────────────────────────────────────────
+    window.addEventListener('resize', () => applyTransform(true));
 
-  function drawGlow(t) {
-    const pulse = 0.06 + 0.02 * Math.sin(t * 1.35);
-    p(`rgba(255,85,16,${(pulse * 1.6).toFixed(3)})`,  6,  90, 88, 30);
-    p(`rgba(255,75,12,${pulse.toFixed(3)})`,           0,  36, 14, 54);
-    p(`rgba(200,65,10,${(pulse * 0.65).toFixed(3)})`,  0,   0,110, 16);
+    // ── DPAD BUTTONS ──────────────────────────────────────────────────────
 
-    const lp = 0.65 + 0.35 * Math.sin(t * 2.4 + Math.sin(t * 5.3) * 0.4);
-    p(`rgba(240,185,65,${(lp * 0.72).toFixed(2)})`, 145, 12,  8,  9);
-    p(`rgba(220,145,35,${(lp * 0.10).toFixed(2)})`, 118,  0, 58, 16);
-    p(`rgba(220,145,35,${(lp * 0.05).toFixed(2)})`, 128, 16, 40, 60);
-  }
-
-  function drawTableMug(t) {
-    const MX = 162, MY = 67;
-    const wobbleElapsed = t - mugWobbleT;
-    const wx = (mugWobbleT > -90 && wobbleElapsed < 1.4)
-      ? Math.round(Math.sin(wobbleElapsed * 20) * Math.exp(-wobbleElapsed * 4.5)) : 0;
-    const X = MX + wx;
-
-    // Original mug model unchanged
-    p('#7a5828', X,   MY,   6, 7);
-    p('#8a6838', X,   MY,   6, 1);
-    p('#7a5828', X+6, MY+2, 3, 3);
-    p('#6a4818', X+7, MY+3, 1, 2);
-
-    // Froth sits on top of rim — 2 tiers, disappear top-first as mug empties
-    // Tier 2 (top): visible when mugFill > 0.5
-    if (mugFill > 0.5) p('#f0ece0', X+2, MY-2, 2, 1);
-    // Tier 1 (bottom): visible when mugFill > 0
-    if (mugFill > 0)   p('#f0ece0', X+1, MY-1, 4, 1);
-  }
-
-  function drawCandleFlicker(t) {
-    [[110,18],[170,18],[228,18]].forEach(([cx, cy], i) => {
-      if (!candleOn[i]) return; // snuffed
-      const f  = 0.58 + 0.42 * Math.sin(t * 4.6 + i * 2.8 + Math.sin(t * 8.5 + i) * 0.7);
-      const fh = 3 + (Math.sin(t * 3.9 + i * 2.0) > 0 ? 1 : 0);
-      p(`rgba(255,175,40,${(f * 0.09).toFixed(2)})`, cx-7, cy-5, 18, 16);
-      p(`rgba(255,235,110,${f.toFixed(2)})`, cx+1, cy-fh, 2, fh+1);
-      p(`rgba(255,115,22,${f.toFixed(2)})`,  cx+1, cy-fh+1, 2, fh);
+    ['left', 'right'].forEach(dir => {
+      const btn = document.getElementById('btn-' + dir);
+      const on = () => { held[dir] = true; };
+      const off = () => { held[dir] = false; };
+      btn.addEventListener('mousedown', on);
+      btn.addEventListener('touchstart', e => { e.preventDefault(); on(); }, { passive: false });
+      btn.addEventListener('mouseup', off);
+      btn.addEventListener('mouseleave', off);
+      btn.addEventListener('touchend', off);
+      btn.addEventListener('touchcancel', off);
     });
-  }
+    document.addEventListener('mouseup', () => Object.keys(held).forEach(k => held[k] = false));
 
-  // ── BAR CAT ───────────────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') { held.left = true; e.preventDefault(); }
+      if (e.key === 'ArrowRight') { held.right = true; e.preventDefault(); }
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft') held.left = false;
+      if (e.key === 'ArrowRight') held.right = false;
+    });
 
-  let catBlink    = false;
-  let catNextEvt  = 3200; // ms until next blink event
+    // ── CLICK INTERACTIONS ────────────────────────────────────────────────
 
-  function drawBarCat(t) {
-    const CX  = 244;
-    const BAR = 56;
-
-    const bo = '#c87830';
-    const dk = '#7a3810';
-    const ey = '#68b040'; // green
-    const ns = '#d88888';
-
-    // Ears
-    p(dk, CX+1, BAR-13, 2, 4);
-    p(dk, CX+5, BAR-13, 2, 4);
-
-    // Head (8px wide)
-    p(bo, CX,   BAR-11, 8, 6);
-    p(dk, CX+1, BAR-10, 6, 5);
-    p(bo, CX,   BAR-11, 8, 1);
-
-    // Eyes or blink
-    if (!catBlink) {
-      p(ey, CX+1, BAR-9, 2, 2);
-      p(ey, CX+5, BAR-9, 2, 2);
-      const gx = Math.sin(t * 0.38) > 0 ? 1 : 0;
-      const gy = Math.sin(t * 0.27) > 0 ? 1 : 0;
-      p('#111', CX+1+gx, BAR-9+gy, 1, 1);
-      p('#111', CX+5+gx, BAR-9+gy, 1, 1);
-    } else {
-      p(dk, CX+1, BAR-8, 2, 1);
-      p(dk, CX+5, BAR-8, 2, 1);
+    function toCanvas(clientX, clientY) {
+      const r = cv.getBoundingClientRect();
+      return [(clientX - r.left) / r.width * W, (clientY - r.top) / r.height * H];
     }
 
-    // Nose
-    p(ns, CX+3, BAR-7, 2, 1);
+    cv.addEventListener('click', e => {
+      const [cx, cy] = toCanvas(e.clientX, e.clientY);
+      const t = performance.now() / 1000;
 
-    // Body (11px wide — wider than 8px head, seated/plump)
-    p(bo, CX-1, BAR-6, 11, 6);
-    p(dk, CX-1, BAR-6,  2, 6);
-    p(dk, CX+8, BAR-6,  2, 6);
+      // Mug on table (x=160–174, y=64–76)
+      if (cx >= 160 && cx < 175 && cy >= 64 && cy < 76 && mugFill > 0) {
+        mugWobbleT = t;
+        mugEmptyT = -99;
+      }
 
-    // Paws
-    p(dk, CX,   BAR-1, 2, 1);
-    p(dk, CX+6, BAR-1, 2, 1);
+      // Candles — hit area around each sconce
+      [[107, 14, 12, 18], [167, 14, 12, 18], [225, 14, 12, 18]].forEach(([hx, hy, hw, hh], i) => {
+        if (cx >= hx && cx < hx + hw && cy >= hy && cy < hy + hh && candleOn[i]) {
+          candleOn[i] = false;
+          candleRelightT[i] = t + 5 + Math.random() * 3;
+        }
+      });
 
-    // Tail — gentle sway
-    const sw = Math.sin(t * 0.9) * 1.3;
-    p(dk, CX+10, Math.round(BAR-4),          2, 2);
-    p(dk, CX+12, Math.round(BAR-3+sw*0.5),   2, 2);
-    p(dk, CX+14, Math.round(BAR-3+sw),       2, 2);
-  }
-
-  // ── RENDER LOOP ───────────────────────────────────────────────────────
-
-  // ── INTERACTIVE STATE ─────────────────────────────────────────────────
-  let mugFill      = 1.0;  // 0=empty 1=full
-  let mugWobbleT   = -99;  // t when wobble started
-  let mugEmptyT    = -99;  // t when mug became empty
-
-  const candleOn       = [true, true, true];
-  const candleRelightT = [0, 0, 0]; // t when each candle relights
-
-  const held = { left: false, right: false };
-  const PAN_SPEED = 0.9; // canvas pixels per frame
-
-  let prevNow = 0;
-
-  function frame() {
-    const now = performance.now();
-    const dt  = prevNow ? now - prevNow : 0;
-    prevNow   = now;
-    const t   = now / 1000;
-
-    // Pan movement
-    if (zoomed && (held.left || held.right)) {
-      if (held.left)  panX += PAN_SPEED;
-      if (held.right) panX -= PAN_SPEED;
-      applyTransform(true);
-    }
-
-    // Cat blink timer
-    catNextEvt -= dt;
-    if (catNextEvt <= 0) {
-      catBlink   = !catBlink;
-      catNextEvt = catBlink ? 180 : 2600 + Math.random() * 2800;
-    }
-
-    // Mug drain + refill
-    if (mugWobbleT > -90 && mugFill > 0) {
-      mugFill = Math.max(0, mugFill - dt / 1500);
-    }
-    if (mugFill === 0 && mugEmptyT < -90 && mugWobbleT > -90) mugEmptyT = t;
-    if (mugEmptyT > -90 && t - mugEmptyT > 4.0) {
-      mugFill = 1.0; mugWobbleT = -99; mugEmptyT = -99;
-    }
-
-    // Candle relight
-    for (let i = 0; i < 3; i++) {
-      if (!candleOn[i] && t >= candleRelightT[i]) candleOn[i] = true;
-    }
-
-    drawRoom();
-    drawFire(t);
-    drawGlow(t);
-    drawCandleFlicker(t);
-    drawTableMug(t);
-    drawBarCat(t);
-    requestAnimationFrame(frame);
-  }
-
-  // ── ZOOM + PAN ────────────────────────────────────────────────────────
-
-  let zoomed = false;
-  let panX = 0, panY = 0; // offset in canvas-pixel space
-
-  // Fireplace center: canvas (50, 52). Canvas center: (190, 60).
-  const FP_PAN_X = 190 - 50; // 140
-  const FP_PAN_Y = 60  - 52; // 8
-
-  function getScale() {
-    return zoomed
-      ? Math.max(window.innerWidth / W, window.innerHeight / H)
-      : Math.min(window.innerWidth / W, window.innerHeight / H);
-  }
-
-  function clampPan() {
-    const s    = getScale();
-    const maxX = Math.max(0, (W - window.innerWidth  / s) / 2);
-    const maxY = Math.max(0, (H - window.innerHeight / s) / 2);
-    panX = Math.max(-maxX, Math.min(maxX, panX));
-    panY = Math.max(-maxY, Math.min(maxY, panY));
-  }
-
-  function applyTransform(instant = false) {
-    clampPan();
-    const s    = getScale();
-    const wrap = document.getElementById('wrap');
-    if (instant) {
-      wrap.classList.add('panning');
-    } else {
-      wrap.classList.remove('panning');
-    }
-    wrap.style.transform = `translate(${panX * s}px, ${panY * s}px) scale(${s})`;
-  }
-
-  document.getElementById('btn-zoom').addEventListener('click', () => {
-    zoomed = !zoomed;
-    panX = zoomed ? FP_PAN_X : 0;
-    panY = zoomed ? FP_PAN_Y : 0;
-    document.getElementById('btn-zoom').textContent = zoomed ? 'cover' : 'fit';
-    document.getElementById('dpad').classList.toggle('active', zoomed);
-    applyTransform(false);
-  });
-
-  window.addEventListener('resize', () => applyTransform(true));
-
-  // ── DPAD BUTTONS ──────────────────────────────────────────────────────
-
-  ['left','right'].forEach(dir => {
-    const btn = document.getElementById('btn-' + dir);
-    const on  = () => { held[dir] = true; };
-    const off = () => { held[dir] = false; };
-    btn.addEventListener('mousedown',   on);
-    btn.addEventListener('touchstart',  e => { e.preventDefault(); on(); }, { passive: false });
-    btn.addEventListener('mouseup',     off);
-    btn.addEventListener('mouseleave',  off);
-    btn.addEventListener('touchend',    off);
-    btn.addEventListener('touchcancel', off);
-  });
-  document.addEventListener('mouseup', () => Object.keys(held).forEach(k => held[k] = false));
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft')  { held.left  = true; e.preventDefault(); }
-    if (e.key === 'ArrowRight') { held.right = true; e.preventDefault(); }
-  });
-  document.addEventListener('keyup', e => {
-    if (e.key === 'ArrowLeft')  held.left  = false;
-    if (e.key === 'ArrowRight') held.right = false;
-  });
-
-  // ── CLICK INTERACTIONS ────────────────────────────────────────────────
-
-  function toCanvas(clientX, clientY) {
-    const r = cv.getBoundingClientRect();
-    return [(clientX - r.left) / r.width * W, (clientY - r.top) / r.height * H];
-  }
-
-  cv.addEventListener('click', e => {
-    const [cx, cy] = toCanvas(e.clientX, e.clientY);
-    const t = performance.now() / 1000;
-
-    // Mug on table (x=160–174, y=64–76)
-    if (cx >= 160 && cx < 175 && cy >= 64 && cy < 76 && mugFill > 0) {
-      mugWobbleT = t;
-      mugEmptyT  = -99;
-    }
-
-    // Candles — hit area around each sconce
-    [[107,14,12,18],[167,14,12,18],[225,14,12,18]].forEach(([hx,hy,hw,hh], i) => {
-      if (cx >= hx && cx < hx+hw && cy >= hy && cy < hy+hh && candleOn[i]) {
-        candleOn[i]       = false;
-        candleRelightT[i] = t + 5 + Math.random() * 3;
+      // Cat (x=242–262, y=42–57)
+      if (cx >= 242 && cx < 262 && cy >= 42 && cy < 57) {
+        catBlink = true;
+        catNextEvt = 220;
       }
     });
 
-    // Cat (x=242–262, y=42–57)
-    if (cx >= 242 && cx < 262 && cy >= 42 && cy < 57) {
-      catBlink   = true;
-      catNextEvt = 220;
-    }
-  });
+    // ── AUDIO ─────────────────────────────────────────────────────────────
 
-  // ── AUDIO ─────────────────────────────────────────────────────────────
+    const aud = document.getElementById('aud');
+    let playing = false;
 
-  const aud     = document.getElementById('aud');
-  let   playing = false;
+    document.getElementById('btn-audio').addEventListener('click', () => {
+      playing = !playing;
+      playing ? aud.play().catch(() => { }) : aud.pause();
+      document.getElementById('btn-audio').textContent = playing ? 'tavern music: on' : 'tavern music: off';
+    });
 
-  document.getElementById('btn-audio').addEventListener('click', () => {
-    playing = !playing;
-    playing ? aud.play().catch(() => {}) : aud.pause();
-    document.getElementById('btn-audio').textContent = playing ? 'tavern music: on' : 'tavern music: off';
-  });
+    // ── INIT ──────────────────────────────────────────────────────────────
+    applyTransform(true);
+    frame();
+  </script>
 
-  // ── INIT ──────────────────────────────────────────────────────────────
-  applyTransform(true);
-  frame();
-</script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'
+    import { getDatabase, ref, push, onDisconnect, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'
+
+    const app = initializeApp({ databaseURL: 'https://the-wayfinders-inn-default-rtdb.firebaseio.com' })
+    const db = getDatabase(app)
+    const room = ref(db, 'inn')
+    const me = push(room)
+    onDisconnect(me).remove()
+
+    onValue(room, snap => {
+      const count = Math.max(snap.size ?? 0, 2)   // +1 so you're never alone
+      document.getElementById('wayfarers').textContent = 'wayfarers: ' + count
+    })
+  </script>
 </body>
+
 </html>
