@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>The Wayfinder's Inn</title>
   <meta name="description" content="Come sit in a cozy tavern, have an ale, and listen to the merrymaking. It'll be okay.">
   <style>
@@ -51,7 +52,7 @@
       cursor: pointer;
       letter-spacing: 0.08em;
       user-select: none;
-      touch-action: none;
+      touch-action: manipulation;
     }
     .btn:hover  { border-color: #c89050; }
     .btn:active { background: rgba(40, 20, 8, 0.95); }
@@ -541,35 +542,7 @@
     document.getElementById('btn-audio').textContent = playing ? 'tavern music: on' : 'tavern music: off';
   });
 
-  // ── FAVICON ───────────────────────────────────────────────────────────
-
-  function makeFavicon() {
-    const fc = document.createElement('canvas');
-    fc.width = fc.height = 32;
-    const fx = fc.getContext('2d');
-    const f  = (c, x, y, w, h) => { fx.fillStyle = c; fx.fillRect(x, y, w, h); };
-
-    // Froth (3x scale: 2px→6px top, 4px→12px bottom)
-    f('#f0ece0', 12, 2,  6, 3); // top tier
-    f('#f0ece0',  9, 5, 12, 3); // bottom tier
-
-    // Mug body
-    f('#7a5828',  6, 8, 18, 21);
-    f('#8a6838',  6, 8, 18,  3); // rim highlight
-
-    // Handle
-    f('#7a5828', 24, 14, 6, 9);
-    fx.clearRect(26, 17, 3, 6); // handle gap
-
-    const link = document.createElement('link');
-    link.rel  = 'icon';
-    link.type = 'image/png';
-    link.href = fc.toDataURL();
-    document.head.appendChild(link);
-  }
-
   // ── INIT ──────────────────────────────────────────────────────────────
-  makeFavicon();
   applyTransform(true);
   frame();
 </script>
