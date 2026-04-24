@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Wayfinder's Inn</title>
+  <meta name="description" content="Come sit in a cozy tavern, have an ale, and listen to the merrymaking. It'll be okay.">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -54,6 +55,7 @@
     }
     .btn:hover  { border-color: #c89050; }
     .btn:active { background: rgba(40, 20, 8, 0.95); }
+    .btn:focus  { outline: none; }
 
     #dpad {
       display: flex;
@@ -78,10 +80,10 @@
     <button class="btn dpad-btn" id="btn-left">←</button>
     <button class="btn dpad-btn" id="btn-right">→</button>
   </div>
-  <button class="btn" id="btn-audio">music: off</button>
+  <button class="btn" id="btn-audio">tavern music: off</button>
 </div>
 
-<audio id="aud" src="soundtrack.mp3" loop></audio>
+<audio id="aud" src="public/taverns-of-azeroth.mp3" loop preload="auto"></audio>
 
 <script>
   const cv  = document.getElementById('scene');
@@ -183,10 +185,7 @@
     p('#7a4420', 138, 73, 60, 2);
     p('#301808', 150, 78,  5, 14);
     p('#301808', 184, 78,  5, 14);
-    p('#7a5828', 162, 67,  6,  7);
-    p('#8a6838', 162, 67,  6,  1);
-    p('#7a5828', 168, 69,  3,  3);
-    p('#6a4818', 169, 70,  1,  2);
+    // (mug drawn by drawTableMug)
 
     // ── FLOOR ────────────────────────────────────────────────────────
     p('#160c04', 0, 90, W, 30);
@@ -285,8 +284,29 @@
     p(`rgba(220,145,35,${(lp * 0.05).toFixed(2)})`, 128, 16, 40, 60);
   }
 
+  function drawTableMug(t) {
+    const MX = 162, MY = 67;
+    const wobbleElapsed = t - mugWobbleT;
+    const wx = (mugWobbleT > -90 && wobbleElapsed < 1.4)
+      ? Math.round(Math.sin(wobbleElapsed * 20) * Math.exp(-wobbleElapsed * 4.5)) : 0;
+    const X = MX + wx;
+
+    // Original mug model unchanged
+    p('#7a5828', X,   MY,   6, 7);
+    p('#8a6838', X,   MY,   6, 1);
+    p('#7a5828', X+6, MY+2, 3, 3);
+    p('#6a4818', X+7, MY+3, 1, 2);
+
+    // Froth sits on top of rim — 2 tiers, disappear top-first as mug empties
+    // Tier 2 (top): visible when mugFill > 0.5
+    if (mugFill > 0.5) p('#f0ece0', X+2, MY-2, 2, 1);
+    // Tier 1 (bottom): visible when mugFill > 0
+    if (mugFill > 0)   p('#f0ece0', X+1, MY-1, 4, 1);
+  }
+
   function drawCandleFlicker(t) {
     [[110,18],[170,18],[228,18]].forEach(([cx, cy], i) => {
+      if (!candleOn[i]) return; // snuffed
       const f  = 0.58 + 0.42 * Math.sin(t * 4.6 + i * 2.8 + Math.sin(t * 8.5 + i) * 0.7);
       const fh = 3 + (Math.sin(t * 3.9 + i * 2.0) > 0 ? 1 : 0);
       p(`rgba(255,175,40,${(f * 0.09).toFixed(2)})`, cx-7, cy-5, 18, 16);
@@ -352,6 +372,14 @@
 
   // ── RENDER LOOP ───────────────────────────────────────────────────────
 
+  // ── INTERACTIVE STATE ─────────────────────────────────────────────────
+  let mugFill      = 1.0;  // 0=empty 1=full
+  let mugWobbleT   = -99;  // t when wobble started
+  let mugEmptyT    = -99;  // t when mug became empty
+
+  const candleOn       = [true, true, true];
+  const candleRelightT = [0, 0, 0]; // t when each candle relights
+
   const held = { left: false, right: false };
   const PAN_SPEED = 0.9; // canvas pixels per frame
 
@@ -377,10 +405,25 @@
       catNextEvt = catBlink ? 180 : 2600 + Math.random() * 2800;
     }
 
+    // Mug drain + refill
+    if (mugWobbleT > -90 && mugFill > 0) {
+      mugFill = Math.max(0, mugFill - dt / 1500);
+    }
+    if (mugFill === 0 && mugEmptyT < -90 && mugWobbleT > -90) mugEmptyT = t;
+    if (mugEmptyT > -90 && t - mugEmptyT > 4.0) {
+      mugFill = 1.0; mugWobbleT = -99; mugEmptyT = -99;
+    }
+
+    // Candle relight
+    for (let i = 0; i < 3; i++) {
+      if (!candleOn[i] && t >= candleRelightT[i]) candleOn[i] = true;
+    }
+
     drawRoom();
     drawFire(t);
     drawGlow(t);
     drawCandleFlicker(t);
+    drawTableMug(t);
     drawBarCat(t);
     requestAnimationFrame(frame);
   }
@@ -446,6 +489,47 @@
   });
   document.addEventListener('mouseup', () => Object.keys(held).forEach(k => held[k] = false));
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft')  { held.left  = true; e.preventDefault(); }
+    if (e.key === 'ArrowRight') { held.right = true; e.preventDefault(); }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft')  held.left  = false;
+    if (e.key === 'ArrowRight') held.right = false;
+  });
+
+  // ── CLICK INTERACTIONS ────────────────────────────────────────────────
+
+  function toCanvas(clientX, clientY) {
+    const r = cv.getBoundingClientRect();
+    return [(clientX - r.left) / r.width * W, (clientY - r.top) / r.height * H];
+  }
+
+  cv.addEventListener('click', e => {
+    const [cx, cy] = toCanvas(e.clientX, e.clientY);
+    const t = performance.now() / 1000;
+
+    // Mug on table (x=160–174, y=64–76)
+    if (cx >= 160 && cx < 175 && cy >= 64 && cy < 76 && mugFill > 0) {
+      mugWobbleT = t;
+      mugEmptyT  = -99;
+    }
+
+    // Candles — hit area around each sconce
+    [[107,14,12,18],[167,14,12,18],[225,14,12,18]].forEach(([hx,hy,hw,hh], i) => {
+      if (cx >= hx && cx < hx+hw && cy >= hy && cy < hy+hh && candleOn[i]) {
+        candleOn[i]       = false;
+        candleRelightT[i] = t + 5 + Math.random() * 3;
+      }
+    });
+
+    // Cat (x=242–262, y=42–57)
+    if (cx >= 242 && cx < 262 && cy >= 42 && cy < 57) {
+      catBlink   = true;
+      catNextEvt = 220;
+    }
+  });
+
   // ── AUDIO ─────────────────────────────────────────────────────────────
 
   const aud     = document.getElementById('aud');
@@ -454,7 +538,7 @@
   document.getElementById('btn-audio').addEventListener('click', () => {
     playing = !playing;
     playing ? aud.play().catch(() => {}) : aud.pause();
-    document.getElementById('btn-audio').textContent = playing ? 'music: on' : 'music: off';
+    document.getElementById('btn-audio').textContent = playing ? 'tavern music: on' : 'tavern music: off';
   });
 
   // ── INIT ──────────────────────────────────────────────────────────────
