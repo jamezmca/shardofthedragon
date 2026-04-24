@@ -35,11 +35,52 @@
     #controls {
       position: fixed;
       bottom: 16px;
+      left: 16px;
       right: 16px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 6px;
       z-index: 10;
+    }
+
+    #btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #nav-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    #wayfarers {
+      display: block;
+      font-family: monospace;
+      font-size: 10px;
+      color: #7a5030;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 540px) {
+      #controls {
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+      }
+      #wayfarers {
+        flex: 1;
+      }
+      #btn-group {
+        display: contents;
+      }
+      #btn-audio {
+        flex-basis: 100%;
+        text-align: center;
+      }
     }
 
     .btn {
@@ -76,12 +117,17 @@
 </div>
 
 <div id="controls">
-  <button class="btn" id="btn-zoom">fit</button>
-  <div id="dpad">
-    <button class="btn dpad-btn" id="btn-left">←</button>
-    <button class="btn dpad-btn" id="btn-right">→</button>
+  <span id="wayfarers">wayfarers: —</span>
+  <div id="btn-group">
+    <div id="nav-group">
+      <button class="btn" id="btn-zoom">fit</button>
+      <div id="dpad">
+        <button class="btn dpad-btn" id="btn-left">←</button>
+        <button class="btn dpad-btn" id="btn-right">→</button>
+      </div>
+    </div>
+    <button class="btn" id="btn-audio">tavern music: off</button>
   </div>
-  <button class="btn" id="btn-audio">tavern music: off</button>
 </div>
 
 <audio id="aud" src="public/taverns-of-azeroth.mp3" loop preload="auto"></audio>
