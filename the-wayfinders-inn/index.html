@@ -306,7 +306,7 @@
 
     const bo = '#c87830';
     const dk = '#7a3810';
-    const ey = '#4a2408'; // dark brown
+    const ey = '#68b040'; // green
     const ns = '#d88888';
 
     // Ears
@@ -322,6 +322,10 @@
     if (!catBlink) {
       p(ey, CX+1, BAR-9, 2, 2);
       p(ey, CX+5, BAR-9, 2, 2);
+      const gx = Math.sin(t * 0.38) > 0 ? 1 : 0;
+      const gy = Math.sin(t * 0.27) > 0 ? 1 : 0;
+      p('#111', CX+1+gx, BAR-9+gy, 1, 1);
+      p('#111', CX+5+gx, BAR-9+gy, 1, 1);
     } else {
       p(dk, CX+1, BAR-8, 2, 1);
       p(dk, CX+5, BAR-8, 2, 1);
