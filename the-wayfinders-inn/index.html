@@ -541,7 +541,35 @@
     document.getElementById('btn-audio').textContent = playing ? 'tavern music: on' : 'tavern music: off';
   });
 
+  // ── FAVICON ───────────────────────────────────────────────────────────
+
+  function makeFavicon() {
+    const fc = document.createElement('canvas');
+    fc.width = fc.height = 32;
+    const fx = fc.getContext('2d');
+    const f  = (c, x, y, w, h) => { fx.fillStyle = c; fx.fillRect(x, y, w, h); };
+
+    // Froth (3x scale: 2px→6px top, 4px→12px bottom)
+    f('#f0ece0', 12, 2,  6, 3); // top tier
+    f('#f0ece0',  9, 5, 12, 3); // bottom tier
+
+    // Mug body
+    f('#7a5828',  6, 8, 18, 21);
+    f('#8a6838',  6, 8, 18,  3); // rim highlight
+
+    // Handle
+    f('#7a5828', 24, 14, 6, 9);
+    fx.clearRect(26, 17, 3, 6); // handle gap
+
+    const link = document.createElement('link');
+    link.rel  = 'icon';
+    link.type = 'image/png';
+    link.href = fc.toDataURL();
+    document.head.appendChild(link);
+  }
+
   // ── INIT ──────────────────────────────────────────────────────────────
+  makeFavicon();
   applyTransform(true);
   frame();
 </script>
