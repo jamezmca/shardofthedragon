@@ -18,3 +18,4 @@ ideas (general themes are societal resets i.e. emotional regulation, social norm
 - clock for late people
 - This website is bigger and smaller than everything 
 - A0 First page is a0 and how it works, arrow keys to go bigger or smaller, scale and number up top, and borders visually show the halving and doubling, black lines as a border showing the other next half going off the page and changing from vertical  to horizontal overflow, in the page is what as at each size
+- a website with pixel sheep that has literally everything you need to know about sheep
