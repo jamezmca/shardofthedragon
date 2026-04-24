@@ -490,8 +490,11 @@ function renderFrame(state, frameIdx) {
   // Ear twitch overlay — position varies by pose
   if (earTwitch) {
     if (state === 'sleep') {
-      px(ctx, pal.point,  5, 22, 7, 4); // left ear in sleep pose
-      px(ctx, pal.point, 18, 22, 7, 4); // right ear in sleep pose
+      // Fold ears in half: cover top 3px with body colour, add a crease at the fold
+      px(ctx, pal.body,  7, 24, 7, 3);  // hide top half of left ear
+      px(ctx, pal.body, 20, 24, 7, 3);  // hide top half of right ear
+      px(ctx, pal.point, 7, 27, 7, 1);  // fold crease left
+      px(ctx, pal.point,20, 27, 7, 1);  // fold crease right
     } else {
       px(ctx, pal.point, 18, 6, 8, 4);
     }
