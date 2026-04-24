@@ -12,7 +12,7 @@ ideas (general themes are societal resets i.e. emotional regulation, social norm
 - math speed (q/s per second)
 - other helpful decision metrics
 - shooting arrows into the distance but sizee of object determines distance
-- pdf speak
+- pdf encode / decode
 - skyrim messenger (daedric)
 - wow character lore (tales of warcraft)
 - clock for late people
