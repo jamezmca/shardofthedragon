@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <title>The Wayfinder's Inn</title>
+  <title>The Wayfinder's Inn | a warm place to rest in from the cold</title>
   <meta name="description"
     content="Come sit in a cozy tavern, have an ale, and listen to the merrymaking. It'll be okay.">
   <style>
@@ -628,16 +628,28 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'
     import { getDatabase, ref, push, onDisconnect, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'
 
+    const wayfEl = document.getElementById('wayfarers')
+    const setCount = n => wayfEl.textContent = 'wayfarers: ' + (n >= 100 ? '100+' : n)
+
     const app = initializeApp({ databaseURL: 'https://the-wayfinders-inn-default-rtdb.firebaseio.com' })
     const db = getDatabase(app)
-    const room = ref(db, 'inn')
-    const me = push(room)
-    onDisconnect(me).remove()
 
-    onValue(room, snap => {
-      const count = Math.max(snap.size ?? 0, 2)   // +1 so you're never alone
-      document.getElementById('wayfarers').textContent = 'wayfarers: ' + count
-    })
+    function connect() {
+      try {
+        const room = ref(db, 'inn')
+        const me = push(room, true)
+        onDisconnect(me).remove()
+
+        onValue(room, snap => setCount(Object.keys(snap.val() || {}).length + 1),
+          () => { setCount(100); setTimeout(connect, 60000) }
+        )
+      } catch {
+        setCount(100)
+        setTimeout(connect, 60000)
+      }
+    }
+
+    connect()
   </script>
 </body>
 
