@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Is My Relationship Toxic?</title>
+  <meta name="description" content="A 50-question quiz based on Dr. John Gottman's Four Horsemen — the most reliable predictors of relationship breakdown.">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Georgia, serif;
+      font-size: 15px;
+      line-height: 1.65;
+      background: #fff;
+      color: #111;
+    }
+
+    #app {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    header {
+      padding: 48px 0 32px;
+      border-bottom: 1px solid #e0e0e0;
+      margin-bottom: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: normal;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      font-size: 13px;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* ── Progress ──────────────────────────────────────────────────── */
+    #progress-wrap {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 10px 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #progress-track {
+      flex: 1;
+      height: 3px;
+      background: #eee;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    #progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #111;
+      border-radius: 2px;
+      transition: width 0.2s ease;
+    }
+
+    #progress-label {
+      font-size: 11px;
+      color: #aaa;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: right;
+    }
+
+    /* ── Questions ─────────────────────────────────────────────────── */
+    .question {
+      padding: 20px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .q-text {
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .q-num {
+      color: #bbb;
+      margin-right: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+    }
+
+    .answer-group {
+      display: flex;
+      gap: 0;
+    }
+
+    .answer-btn {
+      flex: 1;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-right: none;
+      cursor: pointer;
+      color: #666;
+      text-align: center;
+      transition: background 0.1s, color 0.1s;
+      user-select: none;
+      touch-action: manipulation;
+      letter-spacing: 0.02em;
+    }
+
+    .answer-btn:first-child { border-radius: 4px 0 0 4px; }
+    .answer-btn:last-child  { border-radius: 0 4px 4px 0; border-right: 1px solid #ddd; }
+
+    .answer-btn:hover { background: #f5f5f5; }
+
+    .answer-btn.selected {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+      z-index: 1;
+      position: relative;
+    }
+    .answer-btn.selected + .answer-btn { border-left-color: #111; }
+
+    /* ── Submit ────────────────────────────────────────────────────── */
+    #submit-wrap {
+      padding: 32px 0 0;
+    }
+
+    #submit-btn {
+      padding: 10px 28px;
+      font-size: 14px;
+      font-family: Georgia, serif;
+      background: #111;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+    }
+
+    #submit-btn:disabled {
+      background: #ddd;
+      color: #aaa;
+      cursor: default;
+    }
+
+    #submit-btn:not(:disabled):hover { background: #333; }
+
+    /* ── Results ───────────────────────────────────────────────────── */
+    #results {
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 2px solid #111;
+    }
+
+    #results h2 {
+      font-size: 19px;
+      font-weight: normal;
+      margin-bottom: 28px;
+    }
+
+    .score-row {
+      margin-bottom: 22px;
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .score-name {
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+    }
+
+    .score-tag {
+      font-size: 11px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .score-tag.low      { color: #3a8a3a; }
+    .score-tag.moderate { color: #c07020; }
+    .score-tag.high     { color: #b02020; }
+
+    .score-track {
+      height: 6px;
+      background: #eee;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .score-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .score-bar.low      { background: #3a8a3a; }
+    .score-bar.moderate { background: #c07020; }
+    .score-bar.high     { background: #b02020; }
+
+    .therapy-box {
+      margin: 28px 0;
+      padding: 16px 20px;
+      border: 1px solid #b02020;
+      background: #fff8f8;
+      font-size: 13px;
+      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #4a0000;
+    }
+
+    .therapy-box strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+    /* ── Horsemen explainer ────────────────────────────────────────── */
+    #explainer {
+      margin-top: 44px;
+      padding-top: 32px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    #explainer h3 {
+      font-size: 14px;
+      font-weight: normal;
+      color: #888;
+      margin-bottom: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .horseman {
+      margin-bottom: 24px;
+    }
+
+    .horseman h4 {
+      font-size: 14px;
+      margin-bottom: 5px;
+      letter-spacing: 0.02em;
+    }
+
+    .horseman p {
+      font-size: 13px;
+      color: #555;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+    }
+
+    .horseman .antidote {
+      font-size: 12px;
+      color: #3a8a3a;
+      margin-top: 3px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Is My Relationship Toxic?</h1>
+    <p>50 questions based on Dr. John Gottman's Four Horsemen — the most reliable predictors of relationship breakdown. Answer honestly.</p>
+  </header>
+
+  <div id="progress-wrap">
+    <div id="progress-track"><div id="progress-fill"></div></div>
+    <span id="progress-label">0 / 50 answered</span>
+  </div>
+
+  <div id="questions"></div>
+
+  <div id="submit-wrap">
+    <button id="submit-btn" disabled>See My Results</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+  const QUESTIONS = [
+    { text: "When I'm upset, I find myself attacking my partner's character rather than addressing a specific behaviour.", cat: 0 },
+    { text: "I sometimes roll my eyes or sigh loudly while my partner is speaking.", cat: 1 },
+    { text: "When my partner raises a concern, I immediately explain why it isn't my fault.", cat: 2 },
+    { text: "During arguments, I shut down and stop responding.", cat: 3 },
+    { text: "I use phrases like \"you always\" or \"you never\" when arguing with my partner.", cat: 0 },
+    { text: "I feel superior to my partner in important ways.", cat: 1 },
+    { text: "I see myself as the victim in most of our disagreements.", cat: 2 },
+    { text: "I give my partner the silent treatment when I'm upset.", cat: 3 },
+    { text: "I bring up my partner's past mistakes to illustrate who they fundamentally are as a person.", cat: 0 },
+    { text: "I use sarcasm to make a point to my partner.", cat: 1 },
+    { text: "I respond to complaints by pointing out something my partner did wrong.", cat: 2 },
+    { text: "I check out mentally or look at my phone during difficult conversations.", cat: 3 },
+    { text: "I describe my partner using words like \"selfish,\" \"lazy,\" or \"inconsiderate.\"", cat: 0 },
+    { text: "I sometimes mock or mimic my partner during arguments.", cat: 1 },
+    { text: "I make excuses rather than acknowledging my part in a conflict.", cat: 2 },
+    { text: "I avoid my partner when I'm upset rather than talking it through.", cat: 3 },
+    { text: "I tell my partner what is wrong with them as a person, not just what they did.", cat: 0 },
+    { text: "I dismiss my partner's concerns as petty or unimportant.", cat: 1 },
+    { text: "I interrupt my partner to defend myself before they've finished speaking.", cat: 2 },
+    { text: "I refuse to discuss certain topics, shutting down any attempt at conversation.", cat: 3 },
+    { text: "I criticise my partner's personality or character rather than a specific behaviour.", cat: 0 },
+    { text: "I have called my partner names during disagreements.", cat: 1 },
+    { text: "I rarely admit I'm wrong, even when I suspect I might be.", cat: 2 },
+    { text: "When things get heated, I pretend nothing is wrong rather than engaging.", cat: 3 },
+    { text: "I make sweeping negative statements about who my partner is as a person.", cat: 0 },
+    { text: "I feel genuine disgust toward my partner at times.", cat: 1 },
+    { text: "I deflect blame back to my partner when they raise an issue with me.", cat: 2 },
+    { text: "I leave the room or remove myself to avoid a difficult conversation.", cat: 3 },
+    { text: "I point out my partner's flaws in front of friends or family.", cat: 0 },
+    { text: "I use a condescending tone or speak to my partner as if they should know better.", cat: 1 },
+    { text: "I keep a mental score of who does more or contributes more in the relationship.", cat: 2 },
+    { text: "I delay conversations about problems indefinitely to avoid facing them.", cat: 3 },
+    { text: "I believe my partner has deep personality flaws that are the root cause of our problems.", cat: 0 },
+    { text: "I make jokes at my partner's expense, even with others present.", cat: 1 },
+    { text: "When criticised, I feel under attack and respond accordingly.", cat: 2 },
+    { text: "I become monosyllabic or completely non-responsive when I'm upset.", cat: 3 },
+    { text: "I frequently correct or criticise my partner, even in casual conversation.", cat: 0 },
+    { text: "I belittle or dismiss my partner's interests, opinions, or achievements.", cat: 1 },
+    { text: "I struggle to accept responsibility for my role in conflicts.", cat: 2 },
+    { text: "I hold grievances in rather than raising them with my partner.", cat: 3 },
+    { text: "I believe my partner's negative qualities are unlikely to change.", cat: 0 },
+    { text: "I treat my partner as if they are less intelligent or capable than me.", cat: 1 },
+    { text: "I feel that my partner is almost always the one at fault in our arguments.", cat: 2 },
+    { text: "I feel so overwhelmed during arguments that I mentally shut down completely.", cat: 3 },
+    { text: "I label my partner negatively rather than describing what they specifically did.", cat: 0 },
+    { text: "I find it difficult to genuinely respect my partner.", cat: 1 },
+    { text: "I find it difficult to hear criticism from my partner without becoming defensive.", cat: 2 },
+    { text: "I use busyness or distraction to avoid emotionally engaging with my partner.", cat: 3 },
+    { text: "After an argument, I dwell on what is wrong with my partner rather than the issue itself.", cat: 0 },
+    { text: "I feel a sense of moral superiority — contempt — toward my partner sometimes.", cat: 1 },
+  ];
+
+  const CATS = [
+    { name: 'Criticism',     antidote: 'Antidote: Gentle start-up — complain about a behaviour, not a character.' },
+    { name: 'Contempt',      antidote: 'Antidote: Build a culture of appreciation and respect.' },
+    { name: 'Defensiveness', antidote: 'Antidote: Take responsibility, even for part of the problem.' },
+    { name: 'Stonewalling',  antidote: 'Antidote: Physiological self-soothing — take a break, then return.' },
+  ];
+
+  const OPTIONS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'];
+  const answers = new Array(QUESTIONS.length).fill(null);
+
+  // Build questions
+  const container = document.getElementById('questions');
+  QUESTIONS.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.innerHTML = `
+      <div class="q-text"><span class="q-num">${i + 1}.</span>${q.text}</div>
+      <div class="answer-group" data-i="${i}">
+        ${OPTIONS.map((opt, j) => `<button class="answer-btn" data-v="${j}">${opt}</button>`).join('')}
+      </div>`;
+    container.appendChild(div);
+  });
+
+  // Delegated click
+  container.addEventListener('click', e => {
+    const btn = e.target.closest('.answer-btn');
+    if (!btn) return;
+    const group = btn.closest('.answer-group');
+    const i = +group.dataset.i;
+    const v = +btn.dataset.v;
+    answers[i] = v;
+    group.querySelectorAll('.answer-btn').forEach((b, j) => b.classList.toggle('selected', j === v));
+    const done = answers.filter(a => a !== null).length;
+    document.getElementById('progress-fill').style.width = (done / QUESTIONS.length * 100) + '%';
+    document.getElementById('progress-label').textContent = `${done} / ${QUESTIONS.length} answered`;
+    document.getElementById('submit-btn').disabled = done < QUESTIONS.length;
+  });
+
+  document.getElementById('submit-btn').addEventListener('click', () => {
+    // Tally scores
+    const totals = [0, 0, 0, 0];
+    const counts = [0, 0, 0, 0];
+    QUESTIONS.forEach((q, i) => { totals[q.cat] += answers[i]; counts[q.cat]++; });
+    const pcts  = totals.map((s, i) => s / (counts[i] * 4));
+    const level = p => p < 0.30 ? 'low' : p < 0.60 ? 'moderate' : 'high';
+    const label = p => p < 0.30 ? 'Low' : p < 0.60 ? 'Moderate' : 'High';
+    const anyHigh = pcts.some(p => p >= 0.60);
+    const contemptHigh = pcts[1] >= 0.60;
+
+    const therapyMsg = contemptHigh
+      ? '<strong>Consider speaking to a couples therapist.</strong> Contempt is the single strongest predictor of relationship breakdown in Gottman\'s research. A therapist can help you both rebuild respect and repair the dynamic before it causes lasting damage.'
+      : '<strong>Consider speaking to a couples therapist.</strong> Scores this high across multiple horsemen suggest patterns that are difficult to break without outside support. A few sessions can make a significant difference.';
+
+    const scoresHTML = CATS.map((cat, i) => `
+      <div class="score-row">
+        <div class="score-header">
+          <span class="score-name">${cat.name}</span>
+          <span class="score-tag ${level(pcts[i])}">${label(pcts[i])}</span>
+        </div>
+        <div class="score-track">
+          <div class="score-bar ${level(pcts[i])}" style="width:${Math.round(pcts[i]*100)}%"></div>
+        </div>
+      </div>`).join('');
+
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = `
+      <h2>Your Results</h2>
+      ${scoresHTML}
+      ${anyHigh ? `<div class="therapy-box">${therapyMsg}</div>` : ''}
+      <div id="explainer">
+        <h3>The Four Horsemen</h3>
+        <div class="horseman">
+          <h4>Criticism</h4>
+          <p>Attacking your partner's character or personality rather than raising a specific complaint. "You're so selfish" instead of "I felt hurt when you didn't call." Criticism makes the partner feel attacked as a person, not just their behaviour.</p>
+          <p class="antidote">${CATS[0].antidote}</p>
+        </div>
+        <div class="horseman">
+          <h4>Contempt</h4>
+          <p>Treating your partner from a position of superiority — eye-rolling, sneering, mockery, sarcasm meant to wound. Contempt communicates disgust and is the single most corrosive of the four. Gottman calls it "sulphuric acid for love."</p>
+          <p class="antidote">${CATS[1].antidote}</p>
+        </div>
+        <div class="horseman">
+          <h4>Defensiveness</h4>
+          <p>Responding to a complaint with a counter-complaint or by playing the victim, rather than engaging with what's being raised. It tells your partner their concern doesn't matter and escalates conflict rather than resolving it.</p>
+          <p class="antidote">${CATS[2].antidote}</p>
+        </div>
+        <div class="horseman">
+          <h4>Stonewalling</h4>
+          <p>Withdrawing completely from an interaction — going silent, shutting down, leaving. Often driven by emotional overwhelm. While it feels like self-protection, it leaves the other person with nowhere to go and nothing to work with.</p>
+          <p class="antidote">${CATS[3].antidote}</p>
+        </div>
+        <p style="font-size:12px;color:#aaa;margin-top:28px;font-family:-apple-system,sans-serif;">Based on research by Dr. John Gottman, <em>Why Marriages Succeed or Fail</em> (1994). This quiz is not a clinical tool.</p>
+      </div>`;
+
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Results shown below';
+  });
+</script>
+</body>
+</html>

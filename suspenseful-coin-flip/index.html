@@ -57,6 +57,15 @@
 
     .coin-back { transform: rotateY(180deg); }
 
+    /* ── Leaf canvas ───────────────────────────────────────────────── */
+    #leaf-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      image-rendering: pixelated;
+    }
+
     .coin-svg {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
@@ -179,6 +188,7 @@
     </div>
   </div>
 
+  <canvas id="leaf-canvas"></canvas>
   <div id="result-text">HEADS</div>
 
   <div id="nav-bar">
@@ -219,6 +229,67 @@
     const IDLE_SPD = 90;
     const FLIP_SPD = 540;
 
+    // ── Leaves ────────────────────────────────────────────────────────
+    const leafCv  = document.getElementById('leaf-canvas');
+    const leafCtx = leafCv.getContext('2d');
+
+    function resizeLeafCanvas() {
+      leafCv.width  = window.innerWidth;
+      leafCv.height = window.innerHeight;
+    }
+    resizeLeafCanvas();
+    window.addEventListener('resize', resizeLeafCanvas);
+
+    const LEAF_SPEED    = 600;  // px/s, all identical
+    const LEAF_INTERVAL = 1400; // ms between spawns
+    const LEAF_PX       = 2;    // pixel size
+
+    // Terraria-style leaf sprite pattern
+    const LEAF_PAT = [
+      [0,1,0],
+      [1,1,1],
+      [1,1,1],
+      [0,1,0],
+    ];
+    const LEAF_COLORS_T = ['#4a8c30', '#3a7428', '#5aa040', '#2a6020'];
+
+    let leafPool = [];
+    let lastLeaf = -Infinity;
+
+    function drawLeafSprite(x, y, color) {
+      leafCtx.fillStyle = color;
+      for (let r = 0; r < LEAF_PAT.length; r++)
+        for (let c = 0; c < LEAF_PAT[r].length; c++)
+          if (LEAF_PAT[r][c])
+            leafCtx.fillRect(Math.round(x + c * LEAF_PX), Math.round(y + r * LEAF_PX), LEAF_PX, LEAF_PX);
+    }
+
+    function spawnLeaf() {
+      leafPool.push({
+        x:     Math.random() * window.innerWidth,
+        y:     window.innerHeight + 10,
+        color: LEAF_COLORS_T[Math.floor(Math.random() * LEAF_COLORS_T.length)],
+      });
+    }
+
+    function updateLeaves(t, dt) {
+      if (state === 'drifting' && t - lastLeaf > LEAF_INTERVAL) {
+        spawnLeaf(); lastLeaf = t;
+      }
+      leafCtx.clearRect(0, 0, leafCv.width, leafCv.height);
+      for (let i = leafPool.length - 1; i >= 0; i--) {
+        const lf = leafPool[i];
+        lf.y -= LEAF_SPEED * dt;
+        if (lf.y < -20) { leafPool.splice(i, 1); continue; }
+        drawLeafSprite(lf.x, lf.y, lf.color);
+      }
+    }
+
+    function clearLeaves() {
+      leafPool = [];
+      leafCtx.clearRect(0, 0, leafCv.width, leafCv.height);
+    }
+
     function setMins(n) {
       mins = Math.max(0, Math.min(99, n));
       minsEl.textContent = mins;
@@ -240,6 +311,7 @@
       nbFlip.style.display = 'none';
       coinY = 0;
       state = 'idle';
+      clearLeaves();
     }
 
     function flash(id) {
@@ -304,6 +376,7 @@
       }
 
       coinWrap.style.transform = `translateY(${coinY}px) rotateY(${coinA}deg)`;
+      updateLeaves(t, dt);
       requestAnimationFrame(frame);
     }
 
@@ -312,7 +385,7 @@
       if (e.key === 'ArrowDown') { e.preventDefault(); if (state === 'idle')   { setMins(mins - 1); flash('key-down'); } }
       if (e.key === ' ')         { e.preventDefault();
         if (state === 'idle')   { startFlip(); flash('key-space'); }
-        if (state === 'result') { doReset();   flash('key-reset'); }
+        else if (state === 'result') { doReset(); flash('key-reset'); }
       }
     });
 
