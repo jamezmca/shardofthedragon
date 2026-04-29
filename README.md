@@ -21,3 +21,7 @@ ideas (general themes are societal resets i.e. emotional regulation, social norm
 - a website with pixel sheep that has literally everything you need to know about sheep
 
 - like the tavern one, do a vertical book shelf one
+- validation conversion
+- the suscpensful coin flip (just goes for randomly ages)
+- the grape scape (shows the relative scale of our local universe
+- the earth scroll scale (positions contents by number of earths))
