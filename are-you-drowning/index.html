@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Are You Drowning?</title>
+  <meta name="description" content="A very important quiz to help you determine if you are, in fact, drowning.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f0f8ff;
+      color: #0d2b45;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Droplets ──────────────────────────────────────────────────── */
+    .drop {
+      position: fixed;
+      width: 10px; height: 14px;
+      background: #7ec8e3;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      opacity: 0.25;
+      pointer-events: none;
+      animation: drip linear infinite;
+    }
+
+    @keyframes drip {
+      0%   { transform: translateY(-20px); opacity: 0; }
+      10%  { opacity: 0.3; }
+      90%  { opacity: 0.3; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    #header {
+      text-align: center;
+      padding: 52px 20px 32px;
+      position: relative;
+    }
+
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(32px, 6vw, 52px);
+      color: #0077b6;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 0 rgba(0,119,182,0.15);
+    }
+
+    #header p {
+      font-size: 15px;
+      color: #4a8ab5;
+      max-width: 420px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* ── Quiz container ────────────────────────────────────────────── */
+    #quiz {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+
+    .question {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,100,160,0.08);
+      border: 1px solid #d6eaf8;
+    }
+
+    .q-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #7ec8e3;
+      margin-bottom: 6px;
+    }
+
+    .q-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0d2b45;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .opt-btn {
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1.5px solid #b8d9f0;
+      background: #f0f8ff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2a6a96;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .opt-btn:hover { background: #dbeef8; border-color: #7ec8e3; }
+
+    .opt-btn.selected {
+      background: #0077b6;
+      border-color: #0077b6;
+      color: #fff;
+    }
+
+    /* ── Submit ────────────────────────────────────────────────────── */
+    #submit-wrap {
+      text-align: center;
+      padding: 8px 20px 48px;
+    }
+
+    #submit-btn {
+      font-family: 'Pacifico', cursive;
+      font-size: 18px;
+      padding: 14px 40px;
+      background: #0077b6;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #005c8e;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    #submit-btn:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #005c8e; }
+    #submit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #005c8e; }
+    #submit-btn:disabled { background: #b8d9f0; box-shadow: 0 4px 0 #96c0d8; color: #fff; cursor: default; transform: none; }
+
+    /* ── Wave ──────────────────────────────────────────────────────── */
+    #wave-wrap {
+      display: none;
+      line-height: 0;
+      margin-top: 8px;
+      margin-bottom: -2px;
+    }
+
+    #wave-wrap svg { display: block; width: 100%; }
+
+    /* ── Results ───────────────────────────────────────────────────── */
+    #results {
+      display: none;
+      background: linear-gradient(180deg, #0096c7 0%, #0077b6 40%, #023e8a 100%);
+      padding: 48px 20px 72px;
+      text-align: center;
+      position: relative;
+    }
+
+    #results-inner {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .verdict-emoji {
+      font-size: 64px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .verdict-title {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(22px, 5vw, 34px);
+      color: #fff;
+      margin-bottom: 18px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .verdict-body {
+      font-size: 15px;
+      color: #caf0f8;
+      line-height: 1.75;
+      background: rgba(0,0,0,0.15);
+      border-radius: 16px;
+      padding: 20px 24px;
+      text-align: left;
+    }
+
+    .verdict-body p + p { margin-top: 10px; }
+
+    /* bubble decorations */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- falling droplets -->
+  <script>
+    for (let i = 0; i < 18; i++) {
+      const d = document.createElement('div');
+      d.className = 'drop';
+      const s = 6 + Math.random() * 10;
+      d.style.cssText = `
+        left:${Math.random()*100}vw;
+        width:${s}px; height:${s*1.4}px;
+        animation-duration:${4 + Math.random()*8}s;
+        animation-delay:${-Math.random()*12}s;
+      `;
+      document.body.appendChild(d);
+    }
+  </script>
+
+  <div id="header">
+    <h1>💧 Are You Drowning?</h1>
+    <p>A critically important quiz. Please answer honestly. Lives may depend on it (yours, specifically).</p>
+  </div>
+
+  <div id="quiz"></div>
+
+  <div id="submit-wrap">
+    <button id="submit-btn" disabled>Find Out</button>
+  </div>
+
+  <div id="wave-wrap">
+    <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z" fill="#0096c7"/>
+    </svg>
+  </div>
+
+  <div id="results">
+    <div class="bubble" style="width:120px;height:120px;top:20px;left:5%"></div>
+    <div class="bubble" style="width:60px;height:60px;top:60px;right:8%"></div>
+    <div class="bubble" style="width:80px;height:80px;bottom:40px;left:12%"></div>
+    <div id="results-inner">
+      <span class="verdict-emoji" id="verdict-emoji">🌊</span>
+      <div class="verdict-title" id="verdict-title"></div>
+      <div class="verdict-body" id="verdict-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const Qs = [
+      {
+        id: 'happy',
+        text: 'Are you happy?',
+        opts: ['Yes 😊', 'Mostly', 'Not really', 'Please don\'t ask me that'],
+      },
+      {
+        id: 'on_water',
+        text: 'Are you currently on the water? (e.g. in a boat, on a lilo, clinging to a buoy)',
+        opts: ['Yes', 'No', 'Technically above it', 'I am the boat'],
+      },
+      {
+        id: 'in_water',
+        text: 'Are you in the water?',
+        opts: ['Yes', 'No', 'Define "in"', 'I prefer not to confirm this'],
+      },
+      {
+        id: 'enjoying',
+        text: 'Are you enjoying your experience on this website?',
+        opts: ['Very much', 'It\'s fine', 'Not really', 'I\'m a bit distracted currently'],
+      },
+      {
+        id: 'breath',
+        text: 'When did you last breathe?',
+        opts: ['Just now (<2s)', 'A moment ago (<10s)', 'A little while back (<30s)', 'Longer than I\'d like (<1min)', 'I\'ve lost count (<5min)', 'It\'s been a while (<20min)', 'Time is a flat circle (<1hr)'],
+      },
+      {
+        id: 'pressure',
+        text: 'Do you feel like you\'re struggling under the weight of life\'s demands right now?',
+        opts: ['Yes', 'No', 'Only on weekdays', 'Constantly, but I\'ve made peace with it'],
+      },
+      {
+        id: 'ground',
+        text: 'Are you currently able to feel solid ground beneath your feet?',
+        opts: ['Yes, firmly', 'Loosely speaking', 'No', 'What are feet?'],
+      },
+      {
+        id: 'fish',
+        text: 'Are fish swimming past you right now?',
+        opts: ['No', 'One or two', 'Several', 'I\'ve become one of them'],
+      },
+    ];
+
+    const answers = {};
+    const quizEl  = document.getElementById('quiz');
+
+    Qs.forEach((q, qi) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.innerHTML = `
+        <div class="q-label">Question ${qi + 1} of ${Qs.length}</div>
+        <div class="q-text">${q.text}</div>
+        <div class="options" data-id="${q.id}">
+          ${q.opts.map((o, oi) => `<button class="opt-btn" data-val="${oi}">${o}</button>`).join('')}
+        </div>`;
+      quizEl.appendChild(div);
+    });
+
+    quizEl.addEventListener('click', e => {
+      const btn = e.target.closest('.opt-btn');
+      if (!btn) return;
+      const group = btn.closest('.options');
+      const id  = group.dataset.id;
+      const val = +btn.dataset.val;
+      answers[id] = val;
+      group.querySelectorAll('.opt-btn').forEach((b, i) => b.classList.toggle('selected', i === val));
+      document.getElementById('submit-btn').disabled = Object.keys(answers).length < Qs.length;
+    });
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      // ── Determine verdict ──────────────────────────────────────────
+      const inWater      = answers.in_water === 0;
+      const noGround     = answers.ground >= 2;
+      const hasFish      = answers.fish >= 1;
+      const breathIdx    = answers.breath;            // 0=<2s … 6=<1hr
+      const outOfAir     = breathIdx >= 3;            // ≥1 min
+      const losingAir    = breathIdx >= 2;            // ≥30s
+      const underPressure = answers.pressure === 0 || answers.pressure === 3;
+      const weekdays      = answers.pressure === 2;
+
+      const literallyDrowning = (inWater || noGround || hasFish) && losingAir;
+      const criticallyDrowning = outOfAir && (inWater || noGround);
+
+      let emoji, title, body;
+
+      if (criticallyDrowning || (literallyDrowning && underPressure)) {
+        emoji = '🆘';
+        title = 'You Are Drowning. On Multiple Levels.';
+        body = `<p>You are, without question, drowning — physically <em>and</em> under the crushing weight of life's expectations. This is objectively a lot.</p>
+                <p><strong>Immediate priorities:</strong> find somewhere to resume breathing. Away from the water. This is step one.</p>
+                <p><strong>Then:</strong> take a chill pill. Log off. Lie on dry land. Stare at a ceiling. The emails will still be there when you resurface (figuratively).</p>`;
+      } else if (criticallyDrowning || literallyDrowning) {
+        emoji = '🌊';
+        title = 'Yes. You Are Drowning.';
+        body = `<p>The evidence strongly suggests you are currently drowning. We want you to know: we noticed, and we care.</p>
+                <p><strong>Please:</strong> locate the nearest surface and ascend towards it with some urgency. Avoid deep bodies of water in the immediate future. Consider breathing — it is, by most accounts, quite good.</p>
+                <p>Flotation devices exist and are not embarrassing to use.</p>`;
+      } else if (underPressure || weekdays) {
+        emoji = '😮‍💨';
+        title = weekdays ? 'Drowning (Weekdays Only)' : 'You\'re Drowning Under Pressure';
+        body = `<p>You are not literally drowning — great news, well done — but you are absolutely submerged under the weight of life's relentless demands${weekdays ? ', at least Monday through Friday' : ''}.</p>
+                <p><strong>Our professional advice:</strong> take a chill pill. Calm down. Go touch some grass. Drink a glass of water (slowly, from a cup, not from below). The pressure is largely invented by society and you do not have to accept it.</p>
+                <p>You're doing fine. Probably.</p>`;
+      } else {
+        emoji = '🏖️';
+        title = 'You Are Not Drowning!';
+        body = `<p>Wonderful news! You are not drowning. You may now exhale with confidence.</p>
+                <p>That said — a few reminders from your friends here at <em>Are You Drowning?</em>:</p>
+                <p>🦺 Wear a flotation device around deep water. Always.<br>
+                🌊 Avoid swimming alone in open water.<br>
+                📉 Reduce exposure to environments of extreme pressure and unrealistic expectations.<br>
+                💧 Stay hydrated. Externally dry. Internally moist.</p>
+                <p>Stay safe out there. We'll be here if your situation changes.</p>`;
+      }
+
+      document.getElementById('verdict-emoji').textContent = emoji;
+      document.getElementById('verdict-title').textContent = title;
+      document.getElementById('verdict-body').innerHTML = body;
+      document.getElementById('wave-wrap').style.display = 'block';
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('submit-btn').textContent = 'Results are in 👇';
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  </script>
+</body>
+</html>
