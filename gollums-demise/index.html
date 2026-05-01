@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gollum's Demise — A Science Story</title>
+  <meta name="description" content="The scientifically accurate death of Gollum, as he falls into the lava of Mount Doom. A fun, slightly grotesque science story.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --orange: #ff6a00;
+      --red: #cc2200;
+      --dark: #0d0200;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--dark);
+      color: #f0d0a0;
+      overflow-x: hidden;
+    }
+
+    /* ── Ember canvas ──────────────────────────────────────────────── */
+    #ember-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* ── Intro ─────────────────────────────────────────────────────── */
+    #intro {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px;
+      background: radial-gradient(ellipse at 50% 100%, #3a0800 0%, #1a0300 40%, #0d0200 100%);
+      position: relative;
+    }
+
+    .eyeball {
+      font-size: 48px;
+      margin-bottom: 20px;
+      animation: eyePulse 3s ease-in-out infinite;
+    }
+    @keyframes eyePulse {
+      0%, 100% { filter: drop-shadow(0 0 8px #ff4400); transform: scale(1); }
+      50%       { filter: drop-shadow(0 0 20px #ff8800); transform: scale(1.05); }
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 4.5vw, 44px);
+      color: #ff9940;
+      line-height: 1.25;
+      margin-bottom: 14px;
+      text-shadow: 0 0 30px rgba(255,100,0,0.5);
+    }
+
+    .subtitle {
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #7a4020;
+      margin-bottom: 40px;
+    }
+
+    .scroll-cue {
+      font-size: 13px;
+      color: #5a2a10;
+      letter-spacing: 0.1em;
+      animation: cueFloat 2s ease-in-out infinite;
+    }
+    @keyframes cueFloat {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50%       { transform: translateY(6px); opacity: 1; }
+    }
+
+    /* ── Phases ────────────────────────────────────────────────────── */
+    .phase {
+      padding: 80px 24px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .phase-tag {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 8px;
+    }
+
+    .phase h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(26px, 4vw, 40px);
+      color: #ffb060;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(255,100,0,0.3);
+    }
+
+    .temp-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 12px;
+      background: rgba(255,80,0,0.2);
+      border: 1px solid #5a2000;
+      color: var(--orange);
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+      letter-spacing: 0.08em;
+    }
+
+    .phase p {
+      font-size: 15px;
+      line-height: 1.85;
+      color: #d0a880;
+      margin-bottom: 16px;
+    }
+
+    .phase p strong { color: #ffb060; }
+    .phase p em { color: #ff8030; font-style: normal; }
+
+    .science-box {
+      background: rgba(255,60,0,0.07);
+      border-left: 3px solid var(--orange);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 24px 0;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #c08060;
+    }
+
+    .science-box .sb-label {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .quote-box {
+      text-align: center;
+      padding: 20px;
+      margin: 28px 0;
+      border-top: 1px solid #3a1500;
+      border-bottom: 1px solid #3a1500;
+      font-style: italic;
+      font-size: 14px;
+      color: #7a4020;
+    }
+
+    .quote-box span {
+      display: block;
+      font-style: normal;
+      font-size: 11px;
+      margin-top: 6px;
+      color: #4a2010;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Section backgrounds ───────────────────────────────────────── */
+    #section-1 {
+      background: linear-gradient(180deg, #0d0200 0%, #1a0500 60%, #2d0a00 100%);
+    }
+    #section-2 {
+      background: linear-gradient(180deg, #2d0a00 0%, #6b1500 50%, #aa2200 100%);
+    }
+    #section-2 p { color: #e0c090; }
+    #section-2 .science-box { color: #d09060; }
+    #section-2 h2 { color: #ffcc80; }
+
+    #section-3 {
+      background: linear-gradient(180deg, #aa2200 0%, #3a0800 50%, #1a0300 100%);
+    }
+
+    /* ── Dividers ──────────────────────────────────────────────────── */
+    .lava-divider {
+      width: 100%;
+      line-height: 0;
+      overflow: hidden;
+    }
+    .lava-divider svg { display: block; width: 100%; }
+
+    /* ── Lava pool ─────────────────────────────────────────────────── */
+    #lava-pool-wrap {
+      position: relative;
+      background: #ff4500;
+    }
+
+    #lava-pool {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(90deg, #cc2000, #ff6a00, #ff8c00, #ff4500, #cc2000);
+      background-size: 300% 100%;
+      animation: lavaFlow 4s ease-in-out infinite;
+      position: relative;
+    }
+
+    @keyframes lavaFlow {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .lava-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #ffaa00, #cc3300);
+      animation: bubble linear infinite;
+      bottom: 0;
+    }
+
+    @keyframes bubble {
+      0%   { transform: translateY(0) scale(0.3); opacity: 0; }
+      20%  { opacity: 0.8; transform: scale(1); }
+      80%  { opacity: 0.6; }
+      100% { transform: translateY(-80px) scale(0.5); opacity: 0; }
+    }
+
+    /* ── Footer ────────────────────────────────────────────────────── */
+    footer {
+      background: #080100;
+      padding: 48px 24px;
+      text-align: center;
+      border-top: 1px solid #2a0800;
+    }
+
+    footer h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      color: #4a2010;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .easter-eggs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 500px;
+      margin: 0 auto 28px;
+    }
+
+    .egg {
+      font-size: 12px;
+      color: #3a1a08;
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+
+    footer p {
+      font-size: 11px;
+      color: #2a1008;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="ember-canvas"></canvas>
+
+<!-- ── INTRO ─────────────────────────────────────────────────────── -->
+<section id="intro">
+  <div class="eyeball">🌋</div>
+  <h1>The Scientifically Accurate<br>Demise of Gollum</h1>
+  <p class="subtitle">March 25 · Third Age 3019 · The Cracks of Doom, Mount Doom, Mordor</p>
+  <div class="scroll-cue">↓ scroll to fall ↓</div>
+</section>
+
+<!-- ── PHASE 1 ────────────────────────────────────────────────────── -->
+<div id="section-1">
+  <div class="phase">
+    <div class="phase-tag">Phase I · T−2 Seconds</div>
+    <h2>The Hot Gas</h2>
+    <div class="temp-badge">~500–700 °C</div>
+
+    <p>It begins, as all great demises do, with a bite.</p>
+
+    <p>Gollum bites off Frodo's finger, <em>finally</em> reclaims his Precious, does a little celebration dance on the edge of the Cracks of Doom — and then, in a moment of what scientists would call <em>extremely poor balance management</em>, tips backwards and falls.</p>
+
+    <p>He has approximately <strong>1.8 seconds</strong> before he hits the lava below. Which sounds short. It is not short.</p>
+
+    <p>The gas above an active lava vent — a mix of water vapour, carbon dioxide, hydrogen sulphide, and sulphur dioxide — can exceed <strong>600°C</strong>. This gas is largely invisible. You wouldn't see it coming. At 100°C, inhaling it would permanently scald the lungs. At 300°C, exposed skin begins to char. At 600°C, hair and clothing ignite.</p>
+
+    <p>Gollum's fall is fast, so he doesn't <em>cook</em> in the gas — but the radiant heat from the lava surface below radiates outward at up to <strong>80 kilowatts per square metre</strong>. That's about 80 times the energy needed to ignite a piece of paper. Instantly.</p>
+
+    <p>His loincloth — his only real possession besides the Ring — was probably on fire before he got halfway down.</p>
+
+    <div class="science-box">
+      <span class="sb-label">Science Note</span>
+      The closest real-world analogue to the Cracks of Doom is the lava lake of <strong>Nyiragongo volcano</strong> in the Democratic Republic of the Congo — one of the most active and dangerous volcanoes on Earth. Its lava lake sits in a summit crater and has been known to suddenly drain, flooding the surrounding valleys. Gollum would have found this extremely relatable.
+    </div>
+
+    <div class="quote-box">
+      "It burns us! It freezes!"
+      <span>— Gollum, describing the One Ring. Also, accurately, the lava gas.</span>
+    </div>
+  </div>
+</div>
+
+<!-- divider -->
+<div class="lava-divider">
+  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,30 C200,60 400,0 600,30 C800,60 1000,0 1200,30 L1200,60 L0,60 Z" fill="#6b1500"/>
+  </svg>
+</div>
+
+<!-- ── PHASE 2 ────────────────────────────────────────────────────── -->
+<div id="section-2">
+  <div class="phase">
+    <div class="phase-tag">Phase II · T=0</div>
+    <h2>The Impact</h2>
+    <div class="temp-badge">~800–1200 °C</div>
+
+    <p>Here's the bit that surprises everyone.</p>
+
+    <p>Basaltic lava — the kind that flows from a proper volcano like Mount Doom — is <strong>two to three times denser than water</strong>. It weighs roughly 2,800 kilograms per cubic metre. The human body, meanwhile, weighs around 1,000 kg/m³.</p>
+
+    <p>Gollum would <em>float</em>.</p>
+
+    <p>Not for long. But float he would, for approximately <strong>0.1 seconds</strong>, thanks to a phenomenon called the <em>Leidenfrost Effect</em> — the same principle that makes water droplets dance and skitter on a hot frying pan. The moisture in his body (about 60% of it was water, even after all those years eating raw fish in caves) would instantly vaporise into a thin, momentary steam layer between him and the lava surface. This layer briefly insulates. It buys him a tenth of a second of not being fully in contact with 1,000°C rock.</p>
+
+    <p>Then it collapses.</p>
+
+    <p>Human body fat ignites at around <strong>250°C</strong>. The lava surface is <strong>800–1,200°C</strong>. Gollum, admittedly, had very little body fat after six centuries of eating cave fish and muttering — but what he had would have ignited near-instantaneously. There would have been a loud crack, a hiss, a brief and very bright flash of light.</p>
+
+    <p>The Ring, being gold (melting point: <strong>1,064°C</strong>), would have begun to soften almost immediately. Tolkien's lava, mercifully, runs hot enough to do the job.</p>
+
+    <div class="science-box">
+      <span class="sb-label">Science Note</span>
+      Lava is not like quicksand in the movies. You don't slowly sink into it while dramatically reaching for someone's hand. You mostly sit on top of it, on fire, until you don't anymore. This is, arguably, worse.
+    </div>
+
+    <div class="quote-box">
+      "Gollum, clutching the Ring, fell... into the fire."
+      <span>— J.R.R. Tolkien, <em>The Return of the King</em>. Scientifically accurate. Surprisingly brief about it.</span>
+    </div>
+  </div>
+</div>
+
+<!-- divider -->
+<div class="lava-divider">
+  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,20 C300,60 500,0 700,30 C900,60 1100,10 1200,20 L1200,60 L0,60 Z" fill="#aa2200"/>
+  </svg>
+</div>
+
+<!-- ── PHASE 3 ────────────────────────────────────────────────────── -->
+<div id="section-3">
+  <div class="phase">
+    <div class="phase-tag">Phase III · T+2 Seconds</div>
+    <h2>The After</h2>
+    <div class="temp-badge">Carbon. Mostly.</div>
+
+    <p>Within seconds, it's over.</p>
+
+    <p>What remains of any organic matter exposed to lava at these temperatures is primarily <strong>carbon</strong> — the structural skeleton of the molecules that used to be everything else. A small amount of gas rises: carbon dioxide, water vapour, a faint trace of sulphur. The surface of the lava briefly ripples, then re-seals, smooth and glowing and indifferent.</p>
+
+    <p>The Ring melts into the lava. Far above, the Dark Tower of Barad-dûr begins to crack and crumble. The Eye of Sauron — a massive supernatural fire structure of unclear anatomical origin — flickers and goes out. Orcs and trolls collapse, losing their will to fight. Eagles arrive, probably.</p>
+
+    <p>The volcanic ash that begins to fall on Frodo and Samwise as they lie exhausted on the mountainside is partly silica, partly oxidised metals from the eruption — and, in some very small but <em>scientifically undeniable</em> way, partly <strong>Gollum</strong>.</p>
+
+    <p>He is, in the most literal sense, one with the mountain now.</p>
+
+    <div class="science-box">
+      <span class="sb-label">A Final Note on Fairness</span>
+      Sméagol found the One Ring around the year 2463 of the Third Age. He was corrupted by it for nearly 500 years. He guided a hobbit through the most dangerous wilderness in Middle-earth, survived being captured by Sauron himself, and ultimately — accidentally — saved the entire world by removing the Ring from Frodo's hand when Frodo could not bring himself to destroy it.<br><br>
+      Whether he deserved what he got is left as an exercise for the reader.
+    </div>
+
+    <div class="quote-box">
+      "The pity of Bilbo may rule the fate of many."
+      <span>— Gandalf. He was right. He usually was.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── LAVA POOL ───────────────────────────────────────────────────── -->
+<div id="lava-pool-wrap">
+  <div class="lava-divider">
+    <svg viewBox="0 0 1200 50" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,25 C200,50 400,0 650,25 C900,50 1050,5 1200,25 L1200,50 L0,50 Z" fill="#ff4500"/>
+    </svg>
+  </div>
+  <div id="lava-pool"></div>
+</div>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+<footer>
+  <h3>Lore &amp; Science Easter Eggs</h3>
+  <div class="easter-eggs">
+    <div class="egg">📅 March 25, T.A. 3019 — also the date Tolkien chose for the Annunciation. He liked symbolism.</div>
+    <div class="egg">💍 The One Ring's inscription is written in Black Speech. It says "one ring to rule them all." The lava does not care.</div>
+    <div class="egg">🐟 Gollum's diet of raw fish and cave water for ~500 years would have caused severe vitamin deficiencies, bone density loss, and likely some form of underground-adapted blindness. He was doing quite well, all things considered.</div>
+    <div class="egg">🦅 The Eagles arrived roughly 15 minutes after the Ring was destroyed. Frodo and Sam were rescued from a lava field. This is fine.</div>
+    <div class="egg">🔬 The Leidenfrost Effect was first described by Johann Gottlob Leidenfrost in 1751. He was not thinking about hobbits.</div>
+  </div>
+  <p>No hobbits were harmed in the making of this website.<br>One former hobbit was. He kind of brought it on himself.</p>
+</footer>
+
+<script>
+  // ── Embers ────────────────────────────────────────────────────────
+  const cv  = document.getElementById('ember-canvas');
+  const ctx = cv.getContext('2d');
+  let W = cv.width  = window.innerWidth;
+  let H = cv.height = window.innerHeight;
+  window.addEventListener('resize', () => { W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; });
+
+  const embers = [];
+  let lastSpawn = 0;
+
+  function spawnEmber(t) {
+    const size = 1.5 + Math.random() * 3;
+    embers.push({
+      x:     Math.random() * W,
+      y:     H + 10,
+      r:     size,
+      speed: 50 + Math.random() * 100,
+      drift: (Math.random() - 0.5) * 30,
+      born:  t,
+      life:  2.5 + Math.random() * 2,
+      hue:   Math.random() < 0.5 ? 20 : 35, // orange or amber
+    });
+  }
+
+  let prev = 0;
+  function frame(t) {
+    const dt = Math.min((t - prev) / 1000, 0.05);
+    prev = t;
+
+    if (t - lastSpawn > 200) { spawnEmber(t); lastSpawn = t; }
+
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = embers.length - 1; i >= 0; i--) {
+      const e   = embers[i];
+      const age = (t - e.born) / 1000;
+      if (age > e.life) { embers.splice(i, 1); continue; }
+
+      e.y -= e.speed * dt;
+      const sway = e.drift * Math.sin(age * 1.5);
+
+      const fade = age < 0.3
+        ? age / 0.3
+        : age > e.life - 0.5
+          ? (e.life - age) / 0.5
+          : 1;
+
+      ctx.beginPath();
+      ctx.arc(e.x + sway, e.y, e.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${e.hue}, 100%, 60%, ${fade * 0.7})`;
+      ctx.fill();
+
+      // glow
+      ctx.beginPath();
+      ctx.arc(e.x + sway, e.y, e.r * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${e.hue}, 100%, 60%, ${fade * 0.15})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(t => { prev = t; requestAnimationFrame(frame); });
+
+  // ── Lava bubbles ──────────────────────────────────────────────────
+  const pool = document.getElementById('lava-pool');
+  for (let i = 0; i < 8; i++) {
+    const b = document.createElement('div');
+    b.className = 'lava-bubble';
+    const s = 16 + Math.random() * 40;
+    b.style.cssText = `
+      width: ${s}px; height: ${s}px;
+      left: ${Math.random() * 95}%;
+      animation-duration: ${1.5 + Math.random() * 2}s;
+      animation-delay: ${-Math.random() * 3}s;
+    `;
+    pool.appendChild(b);
+  }
+</script>
+</body>
+</html>
