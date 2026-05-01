@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gollum's Demise</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+canvas { display: block; max-width: 100vw; max-height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 600;
+canvas.width = W;
+canvas.height = H;
+
+const BRIDGE_Y    = 320;
+const BRIDGE_LEFT = 55;
+const BRIDGE_RIGHT= 400;
+const BRIDGE_H    = 14;
+const LAVA_Y      = 500;
+const GOLLUM_H    = 42;
+
+const PHASES = {
+  1: {
+    title: 'Phase I — The Approach',
+    lines: [
+      'Temperature: ~600°C. Gollum enters the toxic gas column.',
+      'Sulphur dioxide, hydrogen fluoride, carbon monoxide —',
+      'each breath chemically burns his airway from within.',
+      'Radiant heat alone, at this proximity, causes',
+      'third-degree burns. Hair ignites. Corneas desiccate.',
+      'His nervous system is screaming.',
+      'He is already dying before he touches the surface.'
+    ]
+  },
+  2: {
+    title: 'Phase II — Impact',
+    lines: [
+      'Contact. Basaltic lava: ~1,100°C, density ~2.7 g/cm³.',
+      'Three times denser than water. He does not sink instantly.',
+      'In milliseconds: moisture in skin flash-vaporises.',
+      'A violent steam detonation. Outer tissue chars and combusts.',
+      'The central nervous system fires its final signals.',
+      'Pain beyond any scale — and then silence.',
+      'The Ring is gone. The lava does not notice.'
+    ]
+  },
+  3: {
+    title: 'Phase III — Dissolution',
+    lines: [
+      'The lava is viscous. Engulfment is slow.',
+      '',
+      'Organic compounds oxidise and vaporise into the air.',
+      'Fats render, then ignite.',
+      '',
+      'Bone — mostly calcium phosphate —',
+      'begins dissolving into the silicate melt.',
+      '',
+      'At 1,100°C, this takes hours.',
+      'But time moves differently in volcanoes.',
+      '',
+      'The Ring is unmade. The mountain flows on.',
+      '',
+      'Eventually... no residual.',
+      'No ash. No bone fragment.',
+      'No Gollum.',
+      '',
+      'The volcano simply continues.'
+    ]
+  }
+};
+
+let state, gollum, lavaTime, lavaSpits, lavaBubbles, phase3Scroll, sinkY, phase3Done;
+const keys = {};
+
+function init() {
+  state        = 'RUNNING';
+  phase3Scroll = 0;
+  sinkY        = 0;
+  phase3Done   = false;
+  lavaTime     = 0;
+  lavaSpits    = [];
+  lavaBubbles  = Array.from({ length: 14 }, () => ({
+    x: 80 + Math.random() * (W - 160),
+    phase: Math.random() * Math.PI * 2,
+    r: 4 + Math.random() * 10,
+    speed: 0.018 + Math.random() * 0.028
+  }));
+  gollum = { x: 150, y: BRIDGE_Y - GOLLUM_H, vx: 0, vy: 0, facing: 1 };
+  keys['left_touch'] = false;
+  keys['right_touch'] = false;
+}
+
+// ── Background ─────────────────────────────────────────────────────────────
+
+function drawBg() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0,    '#e8c060');
+  g.addColorStop(0.12, '#c04010');
+  g.addColorStop(0.5,  '#6a1600');
+  g.addColorStop(0.85, '#350000');
+  g.addColorStop(1,    '#aa1800');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // Far back wall (lightest — most distant)
+  ctx.fillStyle = '#7a4030';
+  ctx.beginPath();
+  ctx.ellipse(W / 2, -60, 320, 400, 0, 0, Math.PI);
+  ctx.fill();
+
+  // Mid walls (medium tone)
+  ctx.fillStyle = '#552818';
+  for (const [ox, dir] of [[0, 1], [W, -1]]) {
+    ctx.beginPath();
+    ctx.moveTo(ox, 0); ctx.lineTo(ox + dir * 155, 0);
+    ctx.lineTo(ox + dir * 95, H); ctx.lineTo(ox, H);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Foreground rock walls (darkest — closest)
+  const jagL = [82, 76, 92, 68, 86, 74, 82, 62, 72, 56];
+  const jagR = [82, 76, 92, 68, 86, 74, 82, 62, 72, 56];
+  ctx.fillStyle = '#250e04';
+  for (const [ox, dir, jags] of [[0, 1, jagL], [W, -1, jagR]]) {
+    ctx.beginPath();
+    ctx.moveTo(ox, 0);
+    ctx.lineTo(ox + dir * jags[0], 0);
+    jags.forEach((j, i) => ctx.lineTo(ox + dir * j, i * 65));
+    ctx.lineTo(ox + dir * 50, H);
+    ctx.lineTo(ox, H);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Warm light beam from crater opening above
+  const beam = ctx.createRadialGradient(W / 2, 0, 15, W / 2, 0, 380);
+  beam.addColorStop(0,   'rgba(255,220,100,0.20)');
+  beam.addColorStop(0.55,'rgba(255,160,40,0.07)');
+  beam.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = beam;
+  ctx.fillRect(0, 0, W, H * 0.72);
+}
+
+// ── Bridge ──────────────────────────────────────────────────────────────────
+
+function drawBridge() {
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(BRIDGE_LEFT, BRIDGE_Y + BRIDGE_H, BRIDGE_RIGHT - BRIDGE_LEFT, 7);
+
+  const bg = ctx.createLinearGradient(0, BRIDGE_Y, 0, BRIDGE_Y + BRIDGE_H);
+  bg.addColorStop(0, '#6a5040');
+  bg.addColorStop(1, '#281208');
+  ctx.fillStyle = bg;
+  ctx.fillRect(BRIDGE_LEFT, BRIDGE_Y, BRIDGE_RIGHT - BRIDGE_LEFT, BRIDGE_H);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.38)'; ctx.lineWidth = 1;
+  for (let x = BRIDGE_LEFT + 28; x < BRIDGE_RIGHT; x += 28) {
+    ctx.beginPath(); ctx.moveTo(x, BRIDGE_Y); ctx.lineTo(x + 4, BRIDGE_Y + BRIDGE_H); ctx.stroke();
+  }
+
+  // Jagged broken end
+  ctx.fillStyle = '#3e2010';
+  ctx.beginPath();
+  ctx.moveTo(BRIDGE_RIGHT, BRIDGE_Y);
+  ctx.lineTo(BRIDGE_RIGHT + 20, BRIDGE_Y + 3);
+  ctx.lineTo(BRIDGE_RIGHT + 9,  BRIDGE_Y + 7);
+  ctx.lineTo(BRIDGE_RIGHT + 24, BRIDGE_Y + BRIDGE_H);
+  ctx.lineTo(BRIDGE_RIGHT,      BRIDGE_Y + BRIDGE_H);
+  ctx.closePath(); ctx.fill();
+
+  // Left wall anchor
+  ctx.fillStyle = '#4a3020';
+  ctx.fillRect(BRIDGE_LEFT - 28, BRIDGE_Y - 7, 34, BRIDGE_H + 14);
+}
+
+// ── Lava ────────────────────────────────────────────────────────────────────
+
+function drawLava() {
+  lavaTime += 0.018;
+
+  const lg = ctx.createLinearGradient(0, LAVA_Y, 0, H);
+  lg.addColorStop(0,   '#ff5500');
+  lg.addColorStop(0.4, '#dd2200');
+  lg.addColorStop(1,   '#880000');
+  ctx.fillStyle = lg;
+
+  ctx.beginPath();
+  ctx.moveTo(0, LAVA_Y);
+  for (let x = 0; x <= W; x += 8) {
+    ctx.lineTo(x, LAVA_Y + Math.sin(x * 0.025 + lavaTime) * 6
+                         + Math.sin(x * 0.06 - lavaTime * 1.4) * 3);
+  }
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+  ctx.fill();
+
+  // Hot glow patches
+  for (let i = 0; i < 4; i++) {
+    const hx = W * 0.08 + W * 0.84 * ((i * 0.26 + lavaTime * 0.035) % 1);
+    const rg = ctx.createRadialGradient(hx, LAVA_Y + 18, 0, hx, LAVA_Y + 18, 60);
+    rg.addColorStop(0, 'rgba(255,210,0,0.42)');
+    rg.addColorStop(1, 'rgba(255,0,0,0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(hx - 60, LAVA_Y, 120, 65);
+  }
+
+  // Bubbles
+  lavaBubbles.forEach(b => {
+    b.phase += b.speed;
+    const by = LAVA_Y + 14 + Math.abs(Math.sin(b.phase)) * 32;
+    const rg = ctx.createRadialGradient(b.x, by, 0, b.x, by, b.r);
+    rg.addColorStop(0, 'rgba(255,190,0,0.65)');
+    rg.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(b.x, by, b.r * 1.5, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // Spits
+  if (Math.random() < 0.028) {
+    lavaSpits.push({
+      x: 100 + Math.random() * (W - 200), y: LAVA_Y,
+      vx: (Math.random() - 0.5) * 4.5,
+      vy: -(3 + Math.random() * 6.5),
+      r: 2 + Math.random() * 4, life: 1
+    });
+  }
+  lavaSpits = lavaSpits.filter(s => s.life > 0);
+  lavaSpits.forEach(s => {
+    s.x += s.vx; s.y += s.vy; s.vy += 0.18; s.life -= 0.022;
+    ctx.globalAlpha = s.life * 0.9;
+    ctx.fillStyle = s.vy > 0 ? '#cc3300' : '#ff8800';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+// ── Gollum ──────────────────────────────────────────────────────────────────
+
+function drawGollum(x, y) {
+  ctx.save();
+  ctx.translate(x + 10, y);
+  if (gollum.facing < 0) ctx.scale(-1, 1);
+
+  // Body
+  ctx.fillStyle = '#c0a878';
+  ctx.beginPath(); ctx.ellipse(0, 24, 7, 11, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Head
+  ctx.beginPath(); ctx.ellipse(0, 7, 8, 9, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Big pale eyes
+  ctx.fillStyle = '#aaccff';
+  ctx.beginPath(); ctx.ellipse(-3.5, 5, 3.2, 3.8, -0.15, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 3.5, 5, 3.2, 3.8,  0.15, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#001133';
+  ctx.beginPath(); ctx.arc(-3.5, 5.5, 1.9, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc( 3.5, 5.5, 1.9, 0, Math.PI * 2); ctx.fill();
+
+  // Spindly limbs
+  ctx.strokeStyle = '#a89060'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-6, 17); ctx.quadraticCurveTo(-15, 24, -10, 34); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 6, 17); ctx.quadraticCurveTo( 15, 24,  10, 34); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-3, 33); ctx.quadraticCurveTo(-5, 38, -4, GOLLUM_H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 3, 33); ctx.quadraticCurveTo( 5, 38,  4, GOLLUM_H); ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function drawControls() {
+  const bx = W - 138, by = H - 74, bw = 52, bh = 44, gap = 8;
+  for (const [i, label, tKey, kCode] of [
+    [0, '←', 'left_touch',  'ArrowLeft'],
+    [1, '→', 'right_touch', 'ArrowRight']
+  ]) {
+    const x = bx + i * (bw + gap);
+    const pressed = keys[tKey] || keys[kCode];
+    ctx.fillStyle   = pressed ? 'rgba(255,200,80,0.88)' : 'rgba(55,35,18,0.80)';
+    ctx.strokeStyle = 'rgba(255,175,55,0.75)'; ctx.lineWidth = 2;
+    rr(x, by, bw, bh, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = pressed ? '#111' : '#ffcc88';
+    ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, x + bw / 2, by + bh / 2 + 8);
+  }
+  window._lBtn = { x: bx, y: by, w: bw, h: bh };
+  window._rBtn = { x: bx + bw + gap, y: by, w: bw, h: bh };
+}
+
+function drawTitleText() {
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 48px serif';
+  ctx.fillStyle = 'rgba(255,200,75,0.94)';
+  ctx.shadowColor = '#ff5500'; ctx.shadowBlur = 28;
+  ctx.fillText("Gollum's Demise", W / 2, 190);
+  ctx.font = '17px serif';
+  ctx.fillStyle = 'rgba(255,185,90,0.62)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('Use  ←  →  to move.  Run off the bridge.', W / 2, 230);
+  ctx.restore();
+}
+
+function drawSpaceKey(cy, label = 'SPACE  to continue') {
+  const sw = 196, sh = 40, sx = (W - sw) / 2;
+  ctx.fillStyle   = 'rgba(45,25,8,0.94)';
+  ctx.strokeStyle = '#ffcc80'; ctx.lineWidth = 2;
+  rr(sx, cy - sh / 2, sw, sh, 9); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,200,80,0.22)'; ctx.lineWidth = 1;
+  rr(sx + 4, cy - sh / 2 + 4, sw - 8, sh - 8, 6); ctx.stroke();
+  ctx.fillStyle = '#ffcc88'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(label, W / 2, cy + 5);
+}
+
+function drawPause(phase) {
+  const { title, lines } = PHASES[phase];
+  ctx.fillStyle = 'rgba(0,0,0,0.76)';
+  ctx.fillRect(0, 0, W, H);
+
+  const pw = 530, ph = 320, px = (W - pw) / 2, py = (H - ph) / 2;
+  ctx.fillStyle   = 'rgba(12,3,0,0.97)';
+  ctx.strokeStyle = '#ff6600'; ctx.lineWidth = 2;
+  rr(px, py, pw, ph, 14); ctx.fill(); ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 23px serif'; ctx.fillStyle = '#ff9944';
+  ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 14;
+  ctx.fillText(title, W / 2, py + 48);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '15px serif'; ctx.fillStyle = '#ffddb0';
+  lines.forEach((l, i) => ctx.fillText(l, W / 2, py + 90 + i * 25));
+
+  drawSpaceKey(py + ph - 28);
+}
+
+// ── Phase 3 sinking ─────────────────────────────────────────────────────────
+
+function drawSinking() {
+  const lines = PHASES[3].lines;
+  phase3Scroll += 0.42;
+  sinkY = Math.min(sinkY + 0.25, 50);
+
+  // Gollum sinks — draw before lava so lava covers lower body
+  drawGollum(gollum.x, LAVA_Y - GOLLUM_H + sinkY);
+  drawLava();
+
+  // Dark text panel, fades in
+  const alpha = Math.min(1, phase3Scroll / 55);
+  ctx.fillStyle = `rgba(0,0,0,${alpha * 0.60})`;
+  ctx.fillRect(95, 55, W - 190, H - 120);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 22px serif'; ctx.fillStyle = '#ff9944';
+  ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 10;
+  ctx.fillText(PHASES[3].title, W / 2, 102);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '15px serif'; ctx.fillStyle = '#ffd8a0';
+  lines.forEach((line, i) => {
+    const lineAlpha = Math.min(1, Math.max(0, (phase3Scroll - i * 26) / 20));
+    ctx.globalAlpha = alpha * lineAlpha;
+    ctx.fillText(line, W / 2, 138 + i * 26);
+  });
+  ctx.restore();
+
+  const allDone = phase3Scroll >= lines.length * 26 + 60;
+  if (allDone) drawSpaceKey(H - 50, 'SPACE  to restart');
+  return allDone;
+}
+
+// ── Update ───────────────────────────────────────────────────────────────────
+
+function update() {
+  if (state === 'RUNNING') {
+    const left  = keys['ArrowLeft']  || keys['left_touch'];
+    const right = keys['ArrowRight'] || keys['right_touch'];
+    if (left)       { gollum.vx = -3.2; gollum.facing = -1; }
+    else if (right) { gollum.vx =  3.2; gollum.facing =  1; }
+    else              gollum.vx *= 0.62;
+
+    gollum.x = Math.max(BRIDGE_LEFT, gollum.x + gollum.vx);
+    gollum.y = BRIDGE_Y - GOLLUM_H;
+
+    if (gollum.x + 10 > BRIDGE_RIGHT) {
+      state = 'FALLING1';
+      gollum.vy = 0.8;
+    }
+  }
+
+  if (state === 'FALLING1' || state === 'FALLING2') {
+    gollum.vy += 0.3;
+    gollum.x  += gollum.vx * 0.88;
+    gollum.y  += gollum.vy;
+
+    if (state === 'FALLING1' && gollum.y + GOLLUM_H >= LAVA_Y - 95) {
+      state = 'PAUSE1';
+    }
+    if (state === 'FALLING2' && gollum.y + GOLLUM_H >= LAVA_Y) {
+      state = 'PAUSE2';
+      gollum.y = LAVA_Y - GOLLUM_H;
+    }
+  }
+}
+
+// ── Main loop ─────────────────────────────────────────────────────────────────
+
+function loop() {
+  update();
+  ctx.clearRect(0, 0, W, H);
+  drawBg();
+  drawBridge();
+
+  if (state === 'RUNNING') {
+    drawTitleText();
+    drawGollum(gollum.x, gollum.y);
+    drawLava();
+    drawControls();
+  } else if (state === 'FALLING1' || state === 'FALLING2') {
+    drawGollum(gollum.x, gollum.y);
+    drawLava();
+  } else if (state === 'PAUSE1') {
+    drawGollum(gollum.x, gollum.y);
+    drawLava();
+    drawPause(1);
+  } else if (state === 'PAUSE2') {
+    drawGollum(gollum.x, gollum.y);
+    drawLava();
+    drawPause(2);
+  } else if (state === 'SINKING') {
+    phase3Done = drawSinking();
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (state === 'PAUSE1')                       { state = 'FALLING2'; gollum.vy = 2.2; }
+    else if (state === 'PAUSE2')                  { state = 'SINKING'; }
+    else if (state === 'SINKING' && phase3Done)   { init(); }
+  }
+});
+document.addEventListener('keyup', e => { delete keys[e.code]; });
+
+function hitBtn(mx, my, btn) {
+  return btn && mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h;
+}
+canvas.addEventListener('mousedown', e => {
+  const r = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (W / r.width);
+  const my = (e.clientY - r.top)  * (H / r.height);
+  if (hitBtn(mx, my, window._lBtn)) keys['left_touch']  = true;
+  if (hitBtn(mx, my, window._rBtn)) keys['right_touch'] = true;
+});
+canvas.addEventListener('mouseup', () => { keys['left_touch'] = keys['right_touch'] = false; });
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  [...e.changedTouches].forEach(t => {
+    const r = canvas.getBoundingClientRect();
+    const mx = (t.clientX - r.left) * (W / r.width);
+    const my = (t.clientY - r.top)  * (H / r.height);
+    if (hitBtn(mx, my, window._lBtn)) keys['left_touch']  = true;
+    if (hitBtn(mx, my, window._rBtn)) keys['right_touch'] = true;
+  });
+}, { passive: false });
+canvas.addEventListener('touchend', () => { keys['left_touch'] = keys['right_touch'] = false; });
+
+init();
+loop();
+</script>
+</body>
+</html>
