@@ -3,418 +3,496 @@
 <head>
 <meta charset="UTF-8">
 <title>Gollum's Demise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-canvas { display: block; max-width: 100vw; max-height: 100vh; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+canvas { display:block; max-width:100vw; max-height:100vh; image-rendering:pixelated; image-rendering:crisp-edges; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <script>
 const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 const W = 800, H = 600;
-canvas.width = W;
-canvas.height = H;
+canvas.width = W; canvas.height = H;
 
-const BRIDGE_Y    = 320;
-const BRIDGE_LEFT = 55;
-const BRIDGE_RIGHT= 400;
-const BRIDGE_H    = 14;
-const LAVA_Y      = 500;
-const GOLLUM_H    = 42;
+const BANNER_H    = 44;   // top status bar
+const BRIDGE_Y    = 330;
+const BRIDGE_L    = 68;
+const BRIDGE_R    = 415;
+const BRIDGE_TH   = 14;
+const LAVA_Y      = 510;
+const GH          = 44;   // gollum height
 
 const PHASES = {
   1: {
     title: 'Phase I — The Approach',
-    lines: [
-      'Temperature: ~600°C. Gollum enters the toxic gas column.',
-      'Sulphur dioxide, hydrogen fluoride, carbon monoxide —',
-      'each breath chemically burns his airway from within.',
-      'Radiant heat alone, at this proximity, causes',
-      'third-degree burns. Hair ignites. Corneas desiccate.',
-      'His nervous system is screaming.',
-      'He is already dying before he touches the surface.'
+    items: [
+      'Temperature: ~600°C — Gollum enters the toxic gas column',
+      'Sulphur dioxide & hydrogen fluoride sear his airways with every breath',
+      'Radiant heat alone causes third-degree burns before any contact',
+      'Hair ignites. Corneas desiccate. He is already dying.',
     ]
   },
   2: {
     title: 'Phase II — Impact',
-    lines: [
-      'Contact. Basaltic lava: ~1,100°C, density ~2.7 g/cm³.',
-      'Three times denser than water. He does not sink instantly.',
-      'In milliseconds: moisture in skin flash-vaporises.',
-      'A violent steam detonation. Outer tissue chars and combusts.',
-      'The central nervous system fires its final signals.',
-      'Pain beyond any scale — and then silence.',
-      'The Ring is gone. The lava does not notice.'
+    items: [
+      'Basaltic lava: ~1,100°C, density ~2.7 g/cm³ — three times denser than water',
+      'Surface moisture flash-vaporises in milliseconds — a violent steam detonation',
+      'Outer tissue chars and combusts. The nervous system fires its last signals.',
+      'Pain beyond any scale — and then silence. The Ring is gone.',
     ]
   },
   3: {
     title: 'Phase III — Dissolution',
-    lines: [
+    items: [
       'The lava is viscous. Engulfment is slow.',
-      '',
       'Organic compounds oxidise and vaporise into the air.',
       'Fats render, then ignite.',
-      '',
-      'Bone — mostly calcium phosphate —',
-      'begins dissolving into the silicate melt.',
-      '',
-      'At 1,100°C, this takes hours.',
-      'But time moves differently in volcanoes.',
-      '',
-      'The Ring is unmade. The mountain flows on.',
-      '',
-      'Eventually... no residual.',
-      'No ash. No bone fragment.',
-      'No Gollum.',
-      '',
-      'The volcano simply continues.'
+      'Bone — calcium phosphate — dissolves into the silicate melt.',
+      'At 1,100°C this takes hours. Time moves differently in volcanoes.',
+      'The Ring is unmade. The lava flows on.',
+      'No ash. No bone fragment. No Gollum.',
+      'The volcano simply continues.',
     ]
   }
 };
 
-let state, gollum, lavaTime, lavaSpits, lavaBubbles, phase3Scroll, sinkY, phase3Done;
+const STATUS_TEXT = {
+  RUNNING:  'Run, precious... run to the edge...',
+  FALLING1: 'Falling into the void — time slows...',
+  PAUSE1:   'In the toxic gases above the lava',
+  FALLING2: 'Still falling — the surface approaches',
+  PAUSE2:   'Impact.',
+  SINKING:  'Dissolution...',
+};
+
+let state, gollum, lavaTime, lavaSpits, lavaBubbles;
+let phase3Scroll, sinkY, phase3Done, timeScale;
 const keys = {};
 
 function init() {
   state        = 'RUNNING';
+  timeScale    = 1.0;
   phase3Scroll = 0;
   sinkY        = 0;
   phase3Done   = false;
   lavaTime     = 0;
   lavaSpits    = [];
-  lavaBubbles  = Array.from({ length: 14 }, () => ({
-    x: 80 + Math.random() * (W - 160),
-    phase: Math.random() * Math.PI * 2,
-    r: 4 + Math.random() * 10,
-    speed: 0.018 + Math.random() * 0.028
+  lavaBubbles  = Array.from({length:14}, () => ({
+    x: 90 + Math.random()*(W-180),
+    phase: Math.random()*Math.PI*2,
+    r: 4 + Math.random()*10,
+    speed: 0.018 + Math.random()*0.028
   }));
-  gollum = { x: 150, y: BRIDGE_Y - GOLLUM_H, vx: 0, vy: 0, facing: 1 };
+  gollum = { x:175, y:BRIDGE_Y-GH, vx:0, vy:0, facing:1 };
   keys['left_touch'] = false;
   keys['right_touch'] = false;
 }
 
-// ── Background ─────────────────────────────────────────────────────────────
+// ── Background ────────────────────────────────────────────────────────────────
+// Volcano funnel: narrow at top (crater), wide at bottom (chamber).
+// All three wall layers use this shape so the open space widens going up.
 
 function drawBg() {
-  const g = ctx.createLinearGradient(0, 0, 0, H);
+  // Atmosphere gradient
+  const g = ctx.createLinearGradient(0,0,0,H);
   g.addColorStop(0,    '#e8c060');
   g.addColorStop(0.12, '#c04010');
   g.addColorStop(0.5,  '#6a1600');
   g.addColorStop(0.85, '#350000');
   g.addColorStop(1,    '#aa1800');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
-  // Far back wall (lightest — most distant)
+  // Far back wall — widest at bottom (lightest tone = furthest away)
   ctx.fillStyle = '#7a4030';
-  ctx.beginPath();
-  ctx.ellipse(W / 2, -60, 320, 400, 0, 0, Math.PI);
-  ctx.fill();
+  for (const [ox, dir] of [[0,1],[W,-1]]) {
+    ctx.beginPath();
+    ctx.moveTo(ox,0); ctx.lineTo(ox+dir*80,0);   // narrow at top
+    ctx.lineTo(ox+dir*180,H); ctx.lineTo(ox,H);  // wide at bottom
+    ctx.closePath(); ctx.fill();
+  }
 
-  // Mid walls (medium tone)
+  // Mid wall — medium tone, same funnel direction
   ctx.fillStyle = '#552818';
-  for (const [ox, dir] of [[0, 1], [W, -1]]) {
+  for (const [ox, dir] of [[0,1],[W,-1]]) {
     ctx.beginPath();
-    ctx.moveTo(ox, 0); ctx.lineTo(ox + dir * 155, 0);
-    ctx.lineTo(ox + dir * 95, H); ctx.lineTo(ox, H);
+    ctx.moveTo(ox,0); ctx.lineTo(ox+dir*52,0);
+    ctx.lineTo(ox+dir*118,H); ctx.lineTo(ox,H);
     ctx.closePath(); ctx.fill();
   }
 
-  // Foreground rock walls (darkest — closest)
-  const jagL = [82, 76, 92, 68, 86, 74, 82, 62, 72, 56];
-  const jagR = [82, 76, 92, 68, 86, 74, 82, 62, 72, 56];
-  ctx.fillStyle = '#250e04';
-  for (const [ox, dir, jags] of [[0, 1, jagL], [W, -1, jagR]]) {
+  // Foreground rock — darkest, jagged edge, funnel shape
+  ctx.fillStyle = '#220d04';
+  const STEPS = 10;
+  for (const [ox, dir] of [[0,1],[W,-1]]) {
     ctx.beginPath();
-    ctx.moveTo(ox, 0);
-    ctx.lineTo(ox + dir * jags[0], 0);
-    jags.forEach((j, i) => ctx.lineTo(ox + dir * j, i * 65));
-    ctx.lineTo(ox + dir * 50, H);
-    ctx.lineTo(ox, H);
+    ctx.moveTo(ox,0);
+    ctx.lineTo(ox+dir*32,0);  // narrow top
+    for (let i=0; i<=STEPS; i++) {
+      const t = i/STEPS;
+      const base = 32 + t*58; // 32→90 going top to bottom
+      const jag  = Math.sin(i*2.1)*6 + Math.cos(i*1.6+1)*4;
+      ctx.lineTo(ox+dir*(base+jag), t*H);
+    }
+    ctx.lineTo(ox+dir*90,H); ctx.lineTo(ox,H);
     ctx.closePath(); ctx.fill();
   }
 
-  // Warm light beam from crater opening above
-  const beam = ctx.createRadialGradient(W / 2, 0, 15, W / 2, 0, 380);
-  beam.addColorStop(0,   'rgba(255,220,100,0.20)');
-  beam.addColorStop(0.55,'rgba(255,160,40,0.07)');
+  // Warm light beam from crater
+  const beam = ctx.createRadialGradient(W/2,0,12,W/2,0,400);
+  beam.addColorStop(0,   'rgba(255,220,100,0.22)');
+  beam.addColorStop(0.5, 'rgba(255,160,40,0.08)');
   beam.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = beam;
-  ctx.fillRect(0, 0, W, H * 0.72);
+  ctx.fillStyle = beam; ctx.fillRect(0,0,W,H*0.75);
 }
 
-// ── Bridge ──────────────────────────────────────────────────────────────────
+// ── Bridge ────────────────────────────────────────────────────────────────────
 
 function drawBridge() {
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(BRIDGE_LEFT, BRIDGE_Y + BRIDGE_H, BRIDGE_RIGHT - BRIDGE_LEFT, 7);
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(BRIDGE_L, BRIDGE_Y+BRIDGE_TH, BRIDGE_R-BRIDGE_L, 7);
 
-  const bg = ctx.createLinearGradient(0, BRIDGE_Y, 0, BRIDGE_Y + BRIDGE_H);
-  bg.addColorStop(0, '#6a5040');
-  bg.addColorStop(1, '#281208');
-  ctx.fillStyle = bg;
-  ctx.fillRect(BRIDGE_LEFT, BRIDGE_Y, BRIDGE_RIGHT - BRIDGE_LEFT, BRIDGE_H);
+  // Slab — pixel-flat (no gradient, just two tones)
+  ctx.fillStyle='#5a4030';
+  ctx.fillRect(BRIDGE_L, BRIDGE_Y, BRIDGE_R-BRIDGE_L, BRIDGE_TH);
+  ctx.fillStyle='#3a2018';
+  ctx.fillRect(BRIDGE_L, BRIDGE_Y+BRIDGE_TH-3, BRIDGE_R-BRIDGE_L, 3);
 
-  ctx.strokeStyle = 'rgba(0,0,0,0.38)'; ctx.lineWidth = 1;
-  for (let x = BRIDGE_LEFT + 28; x < BRIDGE_RIGHT; x += 28) {
-    ctx.beginPath(); ctx.moveTo(x, BRIDGE_Y); ctx.lineTo(x + 4, BRIDGE_Y + BRIDGE_H); ctx.stroke();
+  // Pixel crack lines
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  for (let x=BRIDGE_L+28; x<BRIDGE_R; x+=28) {
+    ctx.fillRect(x, BRIDGE_Y, 1, BRIDGE_TH);
   }
 
   // Jagged broken end
-  ctx.fillStyle = '#3e2010';
+  ctx.fillStyle='#3e2010';
   ctx.beginPath();
-  ctx.moveTo(BRIDGE_RIGHT, BRIDGE_Y);
-  ctx.lineTo(BRIDGE_RIGHT + 20, BRIDGE_Y + 3);
-  ctx.lineTo(BRIDGE_RIGHT + 9,  BRIDGE_Y + 7);
-  ctx.lineTo(BRIDGE_RIGHT + 24, BRIDGE_Y + BRIDGE_H);
-  ctx.lineTo(BRIDGE_RIGHT,      BRIDGE_Y + BRIDGE_H);
+  ctx.moveTo(BRIDGE_R,BRIDGE_Y);
+  ctx.lineTo(BRIDGE_R+20,BRIDGE_Y+3);
+  ctx.lineTo(BRIDGE_R+9, BRIDGE_Y+8);
+  ctx.lineTo(BRIDGE_R+24,BRIDGE_Y+BRIDGE_TH);
+  ctx.lineTo(BRIDGE_R,   BRIDGE_Y+BRIDGE_TH);
   ctx.closePath(); ctx.fill();
 
-  // Left wall anchor
-  ctx.fillStyle = '#4a3020';
-  ctx.fillRect(BRIDGE_LEFT - 28, BRIDGE_Y - 7, 34, BRIDGE_H + 14);
+  // Left wall anchor block
+  ctx.fillStyle='#4a3020';
+  ctx.fillRect(BRIDGE_L-30, BRIDGE_Y-8, 36, BRIDGE_TH+16);
+  ctx.fillStyle='#5a4030';
+  ctx.fillRect(BRIDGE_L-30, BRIDGE_Y-8, 36, 3);
 }
 
-// ── Lava ────────────────────────────────────────────────────────────────────
+// ── Lava ──────────────────────────────────────────────────────────────────────
 
 function drawLava() {
-  lavaTime += 0.018;
+  lavaTime += 0.018 * timeScale;
 
-  const lg = ctx.createLinearGradient(0, LAVA_Y, 0, H);
-  lg.addColorStop(0,   '#ff5500');
-  lg.addColorStop(0.4, '#dd2200');
-  lg.addColorStop(1,   '#880000');
+  const lg = ctx.createLinearGradient(0,LAVA_Y,0,H);
+  lg.addColorStop(0,  '#ff5500'); lg.addColorStop(0.4,'#dd2200'); lg.addColorStop(1,'#880000');
   ctx.fillStyle = lg;
-
-  ctx.beginPath();
-  ctx.moveTo(0, LAVA_Y);
-  for (let x = 0; x <= W; x += 8) {
-    ctx.lineTo(x, LAVA_Y + Math.sin(x * 0.025 + lavaTime) * 6
-                         + Math.sin(x * 0.06 - lavaTime * 1.4) * 3);
-  }
-  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-  ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0,LAVA_Y);
+  for (let x=0; x<=W; x+=8)
+    ctx.lineTo(x, LAVA_Y + Math.sin(x*0.025+lavaTime)*6 + Math.sin(x*0.06-lavaTime*1.4)*3);
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
 
   // Hot glow patches
-  for (let i = 0; i < 4; i++) {
-    const hx = W * 0.08 + W * 0.84 * ((i * 0.26 + lavaTime * 0.035) % 1);
-    const rg = ctx.createRadialGradient(hx, LAVA_Y + 18, 0, hx, LAVA_Y + 18, 60);
-    rg.addColorStop(0, 'rgba(255,210,0,0.42)');
-    rg.addColorStop(1, 'rgba(255,0,0,0)');
-    ctx.fillStyle = rg;
-    ctx.fillRect(hx - 60, LAVA_Y, 120, 65);
+  for (let i=0; i<4; i++) {
+    const hx = W*0.08 + W*0.84*((i*0.26+lavaTime*0.035)%1);
+    const rg = ctx.createRadialGradient(hx,LAVA_Y+18,0,hx,LAVA_Y+18,60);
+    rg.addColorStop(0,'rgba(255,210,0,0.42)'); rg.addColorStop(1,'rgba(255,0,0,0)');
+    ctx.fillStyle=rg; ctx.fillRect(hx-60,LAVA_Y,120,65);
   }
 
   // Bubbles
   lavaBubbles.forEach(b => {
-    b.phase += b.speed;
-    const by = LAVA_Y + 14 + Math.abs(Math.sin(b.phase)) * 32;
-    const rg = ctx.createRadialGradient(b.x, by, 0, b.x, by, b.r);
-    rg.addColorStop(0, 'rgba(255,190,0,0.65)');
-    rg.addColorStop(1, 'rgba(255,80,0,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath(); ctx.arc(b.x, by, b.r * 1.5, 0, Math.PI * 2); ctx.fill();
+    b.phase += b.speed * timeScale;
+    const by = LAVA_Y+14+Math.abs(Math.sin(b.phase))*32;
+    const rg = ctx.createRadialGradient(b.x,by,0,b.x,by,b.r);
+    rg.addColorStop(0,'rgba(255,190,0,0.65)'); rg.addColorStop(1,'rgba(255,80,0,0)');
+    ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(b.x,by,b.r*1.5,0,Math.PI*2); ctx.fill();
   });
 
   // Spits
-  if (Math.random() < 0.028) {
-    lavaSpits.push({
-      x: 100 + Math.random() * (W - 200), y: LAVA_Y,
-      vx: (Math.random() - 0.5) * 4.5,
-      vy: -(3 + Math.random() * 6.5),
-      r: 2 + Math.random() * 4, life: 1
-    });
-  }
-  lavaSpits = lavaSpits.filter(s => s.life > 0);
-  lavaSpits.forEach(s => {
-    s.x += s.vx; s.y += s.vy; s.vy += 0.18; s.life -= 0.022;
-    ctx.globalAlpha = s.life * 0.9;
-    ctx.fillStyle = s.vy > 0 ? '#cc3300' : '#ff8800';
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
+  if (Math.random()<0.03*timeScale)
+    lavaSpits.push({x:100+Math.random()*(W-200),y:LAVA_Y,
+      vx:(Math.random()-0.5)*4.5,vy:-(3+Math.random()*6.5),r:2+Math.random()*4,life:1});
+  lavaSpits = lavaSpits.filter(s=>s.life>0);
+  lavaSpits.forEach(s=>{
+    s.x+=s.vx*timeScale; s.y+=s.vy*timeScale; s.vy+=0.18*timeScale; s.life-=0.022;
+    ctx.globalAlpha=s.life*0.9;
+    ctx.fillStyle=s.vy>0?'#cc3300':'#ff8800';
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
   });
 }
 
-// ── Gollum ──────────────────────────────────────────────────────────────────
+// ── Gollum ────────────────────────────────────────────────────────────────────
 
 function drawGollum(x, y) {
   ctx.save();
-  ctx.translate(x + 10, y);
-  if (gollum.facing < 0) ctx.scale(-1, 1);
+  ctx.translate(x+10, y);
+  if (gollum.facing<0) ctx.scale(-1,1);
 
   // Body
-  ctx.fillStyle = '#c0a878';
-  ctx.beginPath(); ctx.ellipse(0, 24, 7, 11, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle='#c0a878';
+  ctx.beginPath(); ctx.ellipse(0,26,7,11,0,0,Math.PI*2); ctx.fill();
 
   // Head
-  ctx.beginPath(); ctx.ellipse(0, 7, 8, 9, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(0,8,8,9,0,0,Math.PI*2); ctx.fill();
 
   // Big pale eyes
-  ctx.fillStyle = '#aaccff';
-  ctx.beginPath(); ctx.ellipse(-3.5, 5, 3.2, 3.8, -0.15, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse( 3.5, 5, 3.2, 3.8,  0.15, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#001133';
-  ctx.beginPath(); ctx.arc(-3.5, 5.5, 1.9, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc( 3.5, 5.5, 1.9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle='#aaccff';
+  ctx.beginPath(); ctx.ellipse(-3.5,6,3.2,3.8,-0.15,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 3.5,6,3.2,3.8, 0.15,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#001133';
+  ctx.beginPath(); ctx.arc(-3.5,6.5,1.9,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( 3.5,6.5,1.9,0,Math.PI*2); ctx.fill();
 
-  // Spindly limbs
-  ctx.strokeStyle = '#a89060'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(-6, 17); ctx.quadraticCurveTo(-15, 24, -10, 34); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo( 6, 17); ctx.quadraticCurveTo( 15, 24,  10, 34); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-3, 33); ctx.quadraticCurveTo(-5, 38, -4, GOLLUM_H); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo( 3, 33); ctx.quadraticCurveTo( 5, 38,  4, GOLLUM_H); ctx.stroke();
+  ctx.strokeStyle='#a89060'; ctx.lineWidth=2.5; ctx.lineCap='round';
+
+  // Left arm — down
+  ctx.beginPath(); ctx.moveTo(-6,18); ctx.quadraticCurveTo(-15,26,-11,36); ctx.stroke();
+
+  // Right arm — raised to hold the Ring aloft
+  ctx.beginPath(); ctx.moveTo(6,18); ctx.quadraticCurveTo(16,8,12,-5); ctx.stroke();
+
+  // THE ONE RING — large golden band at the raised hand
+  const rx=13, ry=-11;
+  // outer glow
+  const rg=ctx.createRadialGradient(rx,ry,6,rx,ry,24);
+  rg.addColorStop(0,'rgba(255,225,40,0.55)'); rg.addColorStop(1,'rgba(255,130,0,0)');
+  ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(rx,ry,24,0,Math.PI*2); ctx.fill();
+  // ring band (thick)
+  ctx.strokeStyle='#d4a000'; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.arc(rx,ry,13,0,Math.PI*2); ctx.stroke();
+  // inner highlight
+  ctx.strokeStyle='#ffe86a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(rx,ry,13,0,Math.PI*2); ctx.stroke();
+  // bright inner reflection
+  ctx.strokeStyle='rgba(255,255,200,0.65)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.arc(rx-3,ry-3,10,Math.PI*1.1,Math.PI*1.75); ctx.stroke();
+
+  // Legs
+  ctx.strokeStyle='#a89060'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(-3,35); ctx.quadraticCurveTo(-5,40,-4,GH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 3,35); ctx.quadraticCurveTo( 5,40, 4,GH); ctx.stroke();
 
   ctx.restore();
 }
 
-// ── UI helpers ───────────────────────────────────────────────────────────────
+// ── Pixel / Terraria-style UI ─────────────────────────────────────────────────
 
-function rr(x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
-  ctx.closePath();
+// Bevel-bordered pixel button — matches Terraria's inventory style
+function pixelBtn(x, y, w, h, pressed) {
+  // fill
+  ctx.fillStyle = pressed ? '#1c0d05' : '#2c1a0a';
+  ctx.fillRect(x,y,w,h);
+  // top + left highlight
+  ctx.fillStyle = pressed ? '#3e2210' : '#7c4a20';
+  ctx.fillRect(x,   y,   w, 3);
+  ctx.fillRect(x,   y,   3, h);
+  // bottom + right shadow
+  ctx.fillStyle = pressed ? '#7c4a20' : '#080302';
+  ctx.fillRect(x,   y+h-3, w, 3);
+  ctx.fillRect(x+w-3, y,   3, h);
+  // inner 1px accent on top/left
+  ctx.fillStyle = pressed ? '#2a1208' : '#5a3418';
+  ctx.fillRect(x+3, y+3, w-6, 1);
+  ctx.fillRect(x+3, y+3, 1, h-6);
 }
 
 function drawControls() {
-  const bx = W - 138, by = H - 74, bw = 52, bh = 44, gap = 8;
-  for (const [i, label, tKey, kCode] of [
-    [0, '←', 'left_touch',  'ArrowLeft'],
-    [1, '→', 'right_touch', 'ArrowRight']
+  const bx=W-142, by=H-72, bw=56, bh=48, gap=8;
+  for (const [i, symbol, tKey, kCode] of [
+    [0,'<','left_touch','ArrowLeft'],
+    [1,'>','right_touch','ArrowRight']
   ]) {
-    const x = bx + i * (bw + gap);
-    const pressed = keys[tKey] || keys[kCode];
-    ctx.fillStyle   = pressed ? 'rgba(255,200,80,0.88)' : 'rgba(55,35,18,0.80)';
-    ctx.strokeStyle = 'rgba(255,175,55,0.75)'; ctx.lineWidth = 2;
-    rr(x, by, bw, bh, 8); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = pressed ? '#111' : '#ffcc88';
-    ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(label, x + bw / 2, by + bh / 2 + 8);
+    const x=bx+i*(bw+gap);
+    const pressed=!!(keys[tKey]||keys[kCode]);
+    pixelBtn(x, by, bw, bh, pressed);
+    ctx.fillStyle = pressed ? '#664422' : '#ffcc88';
+    ctx.font = '11px "Press Start 2P", monospace';
+    ctx.textAlign='center';
+    ctx.fillText(symbol, x+bw/2, by+bh/2+4);
   }
-  window._lBtn = { x: bx, y: by, w: bw, h: bh };
-  window._rBtn = { x: bx + bw + gap, y: by, w: bw, h: bh };
+  window._lBtn={x:bx,        y:by,w:bw,h:bh};
+  window._rBtn={x:bx+bw+gap, y:by,w:bw,h:bh};
 }
+
+function drawPixelSpaceKey(cy, label='SPACE TO CONTINUE') {
+  const sw=220, sh=38, sx=(W-sw)/2;
+  pixelBtn(sx, cy-sh/2, sw, sh, false);
+  ctx.fillStyle='#ffcc88';
+  ctx.font='8px "Press Start 2P", monospace';
+  ctx.textAlign='center';
+  ctx.fillText(label, W/2, cy+3);
+}
+
+// ── Title (Cinzel / LOTR font) ────────────────────────────────────────────────
 
 function drawTitleText() {
   ctx.save();
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 48px serif';
-  ctx.fillStyle = 'rgba(255,200,75,0.94)';
-  ctx.shadowColor = '#ff5500'; ctx.shadowBlur = 28;
-  ctx.fillText("Gollum's Demise", W / 2, 190);
-  ctx.font = '17px serif';
-  ctx.fillStyle = 'rgba(255,185,90,0.62)';
-  ctx.shadowBlur = 8;
-  ctx.fillText('Use  ←  →  to move.  Run off the bridge.', W / 2, 230);
+  ctx.textAlign='center';
+  ctx.font='bold 50px Cinzel, serif';
+  ctx.fillStyle='rgba(255,200,75,0.95)';
+  ctx.shadowColor='#ff5500'; ctx.shadowBlur=30;
+  ctx.fillText("Gollum's Demise", W/2, 205);
+  ctx.font='15px Cinzel, serif';
+  ctx.fillStyle='rgba(255,185,90,0.62)';
+  ctx.shadowBlur=8;
+  ctx.fillText('Use  ←  →  to move  ·  Walk off the bridge', W/2, 244);
   ctx.restore();
 }
 
-function drawSpaceKey(cy, label = 'SPACE  to continue') {
-  const sw = 196, sh = 40, sx = (W - sw) / 2;
-  ctx.fillStyle   = 'rgba(45,25,8,0.94)';
-  ctx.strokeStyle = '#ffcc80'; ctx.lineWidth = 2;
-  rr(sx, cy - sh / 2, sw, sh, 9); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,200,80,0.22)'; ctx.lineWidth = 1;
-  rr(sx + 4, cy - sh / 2 + 4, sw - 8, sh - 8, 6); ctx.stroke();
-  ctx.fillStyle = '#ffcc88'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(label, W / 2, cy + 5);
+// ── Full-width pause banner ───────────────────────────────────────────────────
+
+function drawBanner(phase) {
+  const {title, items} = PHASES[phase];
+  const bannerH = 50 + items.length*44 + 56; // dynamic height
+  const by = H - bannerH;
+
+  // Full-width panel
+  ctx.fillStyle='rgba(8,3,0,0.96)';
+  ctx.fillRect(0, by, W, bannerH);
+
+  // Pixel-style top border (3 rows: dark, bright, medium)
+  ctx.fillStyle='#661500'; ctx.fillRect(0,by,W,2);
+  ctx.fillStyle='#ff6600'; ctx.fillRect(0,by+2,W,2);
+  ctx.fillStyle='#993300'; ctx.fillRect(0,by+4,W,1);
+
+  // Title (Cinzel)
+  ctx.textAlign='center';
+  ctx.font='bold 19px Cinzel, serif';
+  ctx.fillStyle='#ff9944';
+  ctx.shadowColor='#ff3300'; ctx.shadowBlur=10;
+  ctx.fillText(title, W/2, by+34);
+  ctx.shadowBlur=0;
+
+  // Bullet items
+  ctx.font='13px Cinzel, serif';
+  ctx.fillStyle='#ffddb0';
+  ctx.textAlign='left';
+  items.forEach((item,i) => {
+    ctx.fillText('▸  '+item, 52, by+55+i*44);
+  });
+
+  // Space key prompt
+  drawPixelSpaceKey(by + bannerH - 26);
 }
 
-function drawPause(phase) {
-  const { title, lines } = PHASES[phase];
-  ctx.fillStyle = 'rgba(0,0,0,0.76)';
-  ctx.fillRect(0, 0, W, H);
-
-  const pw = 530, ph = 320, px = (W - pw) / 2, py = (H - ph) / 2;
-  ctx.fillStyle   = 'rgba(12,3,0,0.97)';
-  ctx.strokeStyle = '#ff6600'; ctx.lineWidth = 2;
-  rr(px, py, pw, ph, 14); ctx.fill(); ctx.stroke();
-
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 23px serif'; ctx.fillStyle = '#ff9944';
-  ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 14;
-  ctx.fillText(title, W / 2, py + 48);
-  ctx.shadowBlur = 0;
-
-  ctx.font = '15px serif'; ctx.fillStyle = '#ffddb0';
-  lines.forEach((l, i) => ctx.fillText(l, W / 2, py + 90 + i * 25));
-
-  drawSpaceKey(py + ph - 28);
-}
-
-// ── Phase 3 sinking ─────────────────────────────────────────────────────────
+// ── Phase 3 sinking / credits ─────────────────────────────────────────────────
 
 function drawSinking() {
-  const lines = PHASES[3].lines;
-  phase3Scroll += 0.42;
-  sinkY = Math.min(sinkY + 0.25, 50);
+  const {title, items} = PHASES[3];
+  phase3Scroll += 0.38;
+  sinkY = Math.min(sinkY+0.22, 54);
 
-  // Gollum sinks — draw before lava so lava covers lower body
-  drawGollum(gollum.x, LAVA_Y - GOLLUM_H + sinkY);
+  // Gollum drawn first so lava can cover lower body
+  drawGollum(gollum.x, LAVA_Y-GH+sinkY);
   drawLava();
 
-  // Dark text panel, fades in
-  const alpha = Math.min(1, phase3Scroll / 55);
-  ctx.fillStyle = `rgba(0,0,0,${alpha * 0.60})`;
-  ctx.fillRect(95, 55, W - 190, H - 120);
-
+  // Semi-transparent overlay (credits over lava)
+  const alpha = Math.min(1, phase3Scroll/50);
   ctx.save();
+  ctx.globalAlpha = alpha * 0.82;
+  ctx.fillStyle='#050100';
+  ctx.fillRect(0, BANNER_H, W, H-BANNER_H-80);
+  // Top border
   ctx.globalAlpha = alpha;
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 22px serif'; ctx.fillStyle = '#ff9944';
-  ctx.shadowColor = '#ff3300'; ctx.shadowBlur = 10;
-  ctx.fillText(PHASES[3].title, W / 2, 102);
-  ctx.shadowBlur = 0;
+  ctx.fillStyle='#661500'; ctx.fillRect(0,BANNER_H,  W,2);
+  ctx.fillStyle='#ff6600'; ctx.fillRect(0,BANNER_H+2,W,2);
 
-  ctx.font = '15px serif'; ctx.fillStyle = '#ffd8a0';
-  lines.forEach((line, i) => {
-    const lineAlpha = Math.min(1, Math.max(0, (phase3Scroll - i * 26) / 20));
-    ctx.globalAlpha = alpha * lineAlpha;
-    ctx.fillText(line, W / 2, 138 + i * 26);
+  // Title
+  ctx.textAlign='center';
+  ctx.font='bold 19px Cinzel, serif';
+  ctx.fillStyle='#ff9944';
+  ctx.shadowColor='#ff3300'; ctx.shadowBlur=10;
+  ctx.fillText(title, W/2, BANNER_H+32);
+  ctx.shadowBlur=0;
+
+  // Bullet items — fade in sequentially
+  ctx.font='13px Cinzel, serif';
+  ctx.fillStyle='#ffd8a0';
+  ctx.textAlign='left';
+  items.forEach((item,i) => {
+    const la = Math.min(1, Math.max(0,(phase3Scroll-i*28)/22));
+    ctx.globalAlpha = alpha*la;
+    ctx.fillText('▸  '+item, 52, BANNER_H+60+i*34);
   });
   ctx.restore();
 
-  const allDone = phase3Scroll >= lines.length * 26 + 60;
-  if (allDone) drawSpaceKey(H - 50, 'SPACE  to restart');
+  const allDone = phase3Scroll >= items.length*28+60;
+  if (allDone) drawPixelSpaceKey(H-46, 'SPACE TO RESTART');
   return allDone;
 }
 
-// ── Update ───────────────────────────────────────────────────────────────────
+// ── Top status banner ─────────────────────────────────────────────────────────
 
-function update() {
-  if (state === 'RUNNING') {
-    const left  = keys['ArrowLeft']  || keys['left_touch'];
-    const right = keys['ArrowRight'] || keys['right_touch'];
-    if (left)       { gollum.vx = -3.2; gollum.facing = -1; }
-    else if (right) { gollum.vx =  3.2; gollum.facing =  1; }
-    else              gollum.vx *= 0.62;
+function drawStatusBanner() {
+  const isPaused = state==='PAUSE1'||state==='PAUSE2'||state==='SINKING';
+  const isSlow   = state==='FALLING1'||state==='FALLING2';
 
-    gollum.x = Math.max(BRIDGE_LEFT, gollum.x + gollum.vx);
-    gollum.y = BRIDGE_Y - GOLLUM_H;
+  // Background
+  ctx.fillStyle='rgba(5,2,0,0.92)'; ctx.fillRect(0,0,W,BANNER_H);
+  // Bottom pixel border
+  ctx.fillStyle='#551100'; ctx.fillRect(0,BANNER_H-3,W,2);
+  ctx.fillStyle='#331100'; ctx.fillRect(0,BANNER_H-1,W,1);
 
-    if (gollum.x + 10 > BRIDGE_RIGHT) {
-      state = 'FALLING1';
-      gollum.vy = 0.8;
+  // Left icon: pause bars or slow-mo arrow
+  if (isPaused || isSlow) {
+    const ix=14, iy=12, ih=20;
+    if (isPaused) {
+      // Classic ⏸ — two vertical rectangles
+      ctx.fillStyle='#ffcc88';
+      ctx.fillRect(ix,   iy, 6, ih);
+      ctx.fillRect(ix+10,iy, 6, ih);
+    } else {
+      // Slow-mo: filled right-arrow
+      ctx.fillStyle='#88ccff';
+      ctx.beginPath();
+      ctx.moveTo(ix,iy); ctx.lineTo(ix+14,iy+ih/2); ctx.lineTo(ix,iy+ih);
+      ctx.closePath(); ctx.fill();
+      // "x.25" label next to it
+      ctx.font='6px "Press Start 2P", monospace';
+      ctx.fillStyle='#88ccff'; ctx.textAlign='left';
+      ctx.fillText('x.25',ix+18,iy+13);
     }
   }
 
-  if (state === 'FALLING1' || state === 'FALLING2') {
-    gollum.vy += 0.3;
-    gollum.x  += gollum.vx * 0.88;
-    gollum.y  += gollum.vy;
+  // Status text (Cinzel)
+  ctx.font='12px Cinzel, serif';
+  ctx.fillStyle='rgba(255,190,90,0.88)';
+  ctx.textAlign='center';
+  ctx.fillText(STATUS_TEXT[state]||'', W/2, BANNER_H/2+5);
+}
 
-    if (state === 'FALLING1' && gollum.y + GOLLUM_H >= LAVA_Y - 95) {
-      state = 'PAUSE1';
+// ── Update ────────────────────────────────────────────────────────────────────
+
+function update() {
+  if (state==='RUNNING') {
+    const left  = keys['ArrowLeft'] ||keys['left_touch'];
+    const right = keys['ArrowRight']||keys['right_touch'];
+    if (left)       { gollum.vx=-3.2; gollum.facing=-1; }
+    else if (right) { gollum.vx= 3.2; gollum.facing= 1; }
+    else              gollum.vx *= 0.62;
+    gollum.x = Math.max(BRIDGE_L, gollum.x+gollum.vx);
+    gollum.y = BRIDGE_Y-GH;
+    if (gollum.x+10 > BRIDGE_R) {
+      state='FALLING1'; timeScale=0.25; gollum.vy=0.8;
     }
-    if (state === 'FALLING2' && gollum.y + GOLLUM_H >= LAVA_Y) {
-      state = 'PAUSE2';
-      gollum.y = LAVA_Y - GOLLUM_H;
-    }
+  }
+
+  if (state==='FALLING1'||state==='FALLING2') {
+    gollum.vy += 0.3  *timeScale;
+    gollum.x  += gollum.vx*0.88*timeScale;
+    gollum.y  += gollum.vy*timeScale;
+    if (state==='FALLING1' && gollum.y+GH>=LAVA_Y-95) state='PAUSE1';
+    if (state==='FALLING2' && gollum.y+GH>=LAVA_Y)  { state='PAUSE2'; gollum.y=LAVA_Y-GH; }
   }
 }
 
@@ -422,72 +500,69 @@ function update() {
 
 function loop() {
   update();
-  ctx.clearRect(0, 0, W, H);
+  ctx.clearRect(0,0,W,H);
   drawBg();
   drawBridge();
 
-  if (state === 'RUNNING') {
+  if (state==='RUNNING') {
     drawTitleText();
     drawGollum(gollum.x, gollum.y);
     drawLava();
     drawControls();
-  } else if (state === 'FALLING1' || state === 'FALLING2') {
+  } else if (state==='FALLING1'||state==='FALLING2') {
     drawGollum(gollum.x, gollum.y);
     drawLava();
-  } else if (state === 'PAUSE1') {
+  } else if (state==='PAUSE1') {
     drawGollum(gollum.x, gollum.y);
     drawLava();
-    drawPause(1);
-  } else if (state === 'PAUSE2') {
+    drawBanner(1);
+  } else if (state==='PAUSE2') {
     drawGollum(gollum.x, gollum.y);
     drawLava();
-    drawPause(2);
-  } else if (state === 'SINKING') {
+    drawBanner(2);
+  } else if (state==='SINKING') {
     phase3Done = drawSinking();
   }
 
+  drawStatusBanner();
   requestAnimationFrame(loop);
 }
 
 // ── Input ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e => {
-  keys[e.code] = true;
-  if (e.code === 'Space') {
+  keys[e.code]=true;
+  if (e.code==='Space') {
     e.preventDefault();
-    if (state === 'PAUSE1')                       { state = 'FALLING2'; gollum.vy = 2.2; }
-    else if (state === 'PAUSE2')                  { state = 'SINKING'; }
-    else if (state === 'SINKING' && phase3Done)   { init(); }
+    if      (state==='PAUSE1')                  { state='FALLING2'; gollum.vy=2.2; timeScale=0.25; }
+    else if (state==='PAUSE2')                  { state='SINKING';  timeScale=1.0; }
+    else if (state==='SINKING' && phase3Done)   { init(); }
   }
 });
 document.addEventListener('keyup', e => { delete keys[e.code]; });
 
-function hitBtn(mx, my, btn) {
-  return btn && mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h;
-}
+function hitBtn(mx,my,b) { return b&&mx>=b.x&&mx<=b.x+b.w&&my>=b.y&&my<=b.y+b.h; }
+
 canvas.addEventListener('mousedown', e => {
-  const r = canvas.getBoundingClientRect();
-  const mx = (e.clientX - r.left) * (W / r.width);
-  const my = (e.clientY - r.top)  * (H / r.height);
-  if (hitBtn(mx, my, window._lBtn)) keys['left_touch']  = true;
-  if (hitBtn(mx, my, window._rBtn)) keys['right_touch'] = true;
+  const r=canvas.getBoundingClientRect();
+  const mx=(e.clientX-r.left)*(W/r.width), my=(e.clientY-r.top)*(H/r.height);
+  if (hitBtn(mx,my,window._lBtn)) keys['left_touch']=true;
+  if (hitBtn(mx,my,window._rBtn)) keys['right_touch']=true;
 });
-canvas.addEventListener('mouseup', () => { keys['left_touch'] = keys['right_touch'] = false; });
+canvas.addEventListener('mouseup', ()=>{ keys['left_touch']=keys['right_touch']=false; });
 
-canvas.addEventListener('touchstart', e => {
+canvas.addEventListener('touchstart', e=>{
   e.preventDefault();
-  [...e.changedTouches].forEach(t => {
-    const r = canvas.getBoundingClientRect();
-    const mx = (t.clientX - r.left) * (W / r.width);
-    const my = (t.clientY - r.top)  * (H / r.height);
-    if (hitBtn(mx, my, window._lBtn)) keys['left_touch']  = true;
-    if (hitBtn(mx, my, window._rBtn)) keys['right_touch'] = true;
+  [...e.changedTouches].forEach(t=>{
+    const r=canvas.getBoundingClientRect();
+    const mx=(t.clientX-r.left)*(W/r.width), my=(t.clientY-r.top)*(H/r.height);
+    if (hitBtn(mx,my,window._lBtn)) keys['left_touch']=true;
+    if (hitBtn(mx,my,window._rBtn)) keys['right_touch']=true;
   });
-}, { passive: false });
-canvas.addEventListener('touchend', () => { keys['left_touch'] = keys['right_touch'] = false; });
+},{passive:false});
+canvas.addEventListener('touchend',()=>{ keys['left_touch']=keys['right_touch']=false; });
 
-init();
-loop();
+document.fonts.ready.then(()=>{ init(); loop(); });
 </script>
 </body>
 </html>
