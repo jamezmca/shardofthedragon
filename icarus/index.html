@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="description" content="Fly between the sun and the sea. A pixel art Flappy Bird retelling of the myth of Icarus.">
+<title>Icarus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; touch-action:none; }
+canvas { display:block; max-width:100vw; max-height:100vh; image-rendering:pixelated; image-rendering:crisp-edges; cursor:pointer; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const W  = 400;
+const H  = 620;
+canvas.width  = W;
+canvas.height = H;
+
+// Layout zones
+const SUN_BOTTOM = 72;   // sun fills y=0..SUN_BOTTOM
+const SEA_TOP    = 500;  // ocean starts here
+const BTN_Y      = 566;  // space button top
+const BTN_H      = 46;   // space button height
+
+// Physics
+const GRAVITY    = 0.38;
+const JUMP_VY    = -7.8;
+const MAX_FALL   =  9;
+
+// Obstacles
+const OB_W       = 54;
+const BASE_GAP   = 162;
+const BASE_SPEED = 2.4;
+const SPAWN_DIST = 215;
+
+// ── High scores (localStorage) ───────────────────────────────────────────────
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem('icarus_hi') || '[]'); } catch { return []; }
+}
+function saveScore(s) {
+  const arr = loadScores();
+  arr.push(s);
+  arr.sort((a,b)=>b-a);
+  localStorage.setItem('icarus_hi', JSON.stringify(arr.slice(0,3)));
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let state;   // 'START' | 'PLAYING' | 'DEAD'
+let icarus, obstacles, score, deathType, deadTimer, nextSpawnX, waveT, spacePressed;
+
+function init() {
+  state     = 'START';
+  waveT     = 0;
+  spacePressed = false;
+}
+
+function startGame() {
+  state       = 'PLAYING';
+  score       = 0;
+  deathType   = null;
+  deadTimer   = 0;
+  nextSpawnX  = W + 80;
+  obstacles   = [];
+  icarus = { x:90, y:(SUN_BOTTOM+SEA_TOP)/2, vy:0, dead:false };
+  spawnObstacle(W + 80);
+}
+
+function spawnObstacle(x) {
+  const minGapY = SUN_BOTTOM + 90;
+  const maxGapY = SEA_TOP    - 90;
+  const gapY    = minGapY + Math.random()*(maxGapY - minGapY);
+  const gap     = Math.max(120, BASE_GAP - score*1.2);
+  obstacles.push({ x, gapY, gap, passed:false });
+}
+
+function getSpeed() { return Math.min(BASE_SPEED + score*0.055, 5.2); }
+
+// ── Pixel art Icarus sprite ───────────────────────────────────────────────────
+// 10 wide × 11 tall @ P=3 = 30×33 on screen. Facing right.
+const ICARUS_SP = [
+  '..hhhh....',  //  0
+  '.hsssssh..',  //  1
+  '.hsseshh..',  //  2  e = eye
+  '..hsssh...',  //  3
+  'wwwsssswww',  //  4  w = wing
+  'wwwsssswww',  //  5
+  '.wwwsswww.',  //  6
+  '...ssss...',  //  7
+  '...s..s...',  //  8
+  '..ll..ll..',  //  9  l = leg/feet
+];
+const IC_COL = {
+  h:'#7a3e10', s:'#e8c878', e:'#1a0800', w:'#f4eed8', l:'#c07840'
+};
+const IC_P = 3;
+const IC_W = 10 * IC_P;  // 30
+const IC_H = 10 * IC_P;  // 30
+
+function drawIcarus() {
+  const { x, y, vy, dead } = icarus;
+  const angle = dead ? Math.PI/2 : Math.max(-0.45, Math.min(0.55, vy*0.065));
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // Melt tint when dead from sun
+  if (dead && deathType==='sun') ctx.globalAlpha = 0.7;
+
+  const ox = -IC_W/2, oy = -IC_H/2;
+  ICARUS_SP.forEach((row, ry) => {
+    for (let cx=0; cx<row.length; cx++) {
+      const ch = row[cx];
+      if (ch==='.') continue;
+      let col = IC_COL[ch] || '#ff00ff';
+      if (dead && deathType==='sun' && ch==='w') col='#ff8800'; // wings melt orange
+      ctx.fillStyle = col;
+      ctx.fillRect(ox + cx*IC_P, oy + ry*IC_P, IC_P, IC_P);
+    }
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ── Background ────────────────────────────────────────────────────────────────
+function drawSky() {
+  const g = ctx.createLinearGradient(0, SUN_BOTTOM, 0, SEA_TOP);
+  g.addColorStop(0,   '#ffe88a');
+  g.addColorStop(0.15,'#87ceeb');
+  g.addColorStop(0.7, '#4090d8');
+  g.addColorStop(1,   '#205090');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, SUN_BOTTOM, W, SEA_TOP - SUN_BOTTOM);
+}
+
+// ── Sun ───────────────────────────────────────────────────────────────────────
+function drawSun() {
+  // Main sun body: full width, slightly curved bottom
+  const g = ctx.createLinearGradient(0, 0, 0, SUN_BOTTOM);
+  g.addColorStop(0,   '#fff8c0');
+  g.addColorStop(0.5, '#ffdd00');
+  g.addColorStop(1,   '#ffaa00');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(W, 0);
+  ctx.lineTo(W, SUN_BOTTOM - 10);
+  // gentle downward curve
+  ctx.quadraticCurveTo(W/2, SUN_BOTTOM + 8, 0, SUN_BOTTOM - 10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pixel-art texture lines on the sun
+  ctx.fillStyle = 'rgba(255,200,0,0.35)';
+  for (let y=8; y<SUN_BOTTOM-12; y+=8) {
+    ctx.fillRect(0, y, W, 3);
+  }
+
+  // Bright inner core
+  const core = ctx.createLinearGradient(0,0,0,30);
+  core.addColorStop(0,'rgba(255,255,220,0.7)');
+  core.addColorStop(1,'rgba(255,255,200,0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(0, 0, W, 30);
+}
+
+// ── Sun ray obstacles (top) ───────────────────────────────────────────────────
+function drawRay(ob) {
+  const rayH = ob.gapY - ob.gap/2 - SUN_BOTTOM;
+  if (rayH <= 0) return;
+
+  // Main beam
+  const g = ctx.createLinearGradient(0, SUN_BOTTOM, 0, SUN_BOTTOM + rayH);
+  g.addColorStop(0,   '#ffee44');
+  g.addColorStop(0.7, '#ffcc00');
+  g.addColorStop(1,   '#ff9900');
+  ctx.fillStyle = g;
+  ctx.fillRect(ob.x, SUN_BOTTOM, OB_W, rayH);
+
+  // Pixel edge lines
+  ctx.fillStyle = 'rgba(255,180,0,0.4)';
+  for (let y=SUN_BOTTOM; y<SUN_BOTTOM+rayH; y+=6) ctx.fillRect(ob.x, y, OB_W, 2);
+
+  // Hot tip glow at bottom of ray
+  const tip = ctx.createLinearGradient(0, SUN_BOTTOM+rayH-12, 0, SUN_BOTTOM+rayH);
+  tip.addColorStop(0,'rgba(255,120,0,0)');
+  tip.addColorStop(1,'rgba(255,80,0,0.9)');
+  ctx.fillStyle = tip;
+  ctx.fillRect(ob.x, SUN_BOTTOM + rayH - 12, OB_W, 12);
+
+  // Pointed drip at the very bottom
+  ctx.fillStyle='#ff6600';
+  ctx.beginPath();
+  ctx.moveTo(ob.x + OB_W/2 - 10, SUN_BOTTOM+rayH);
+  ctx.lineTo(ob.x + OB_W/2,      SUN_BOTTOM+rayH+10);
+  ctx.lineTo(ob.x + OB_W/2 + 10, SUN_BOTTOM+rayH);
+  ctx.closePath(); ctx.fill();
+
+  // Bright highlight stripe
+  ctx.fillStyle='rgba(255,255,180,0.5)';
+  ctx.fillRect(ob.x+4, SUN_BOTTOM, 6, rayH);
+}
+
+// ── Wave columns (bottom obstacles) ───────────────────────────────────────────
+function drawWaveCol(ob) {
+  const colTop = ob.gapY + ob.gap/2;
+  const colH   = SEA_TOP - colTop;
+  if (colH <= 0) return;
+
+  const g = ctx.createLinearGradient(0, colTop, 0, SEA_TOP);
+  g.addColorStop(0,   '#40b0e8');
+  g.addColorStop(0.4, '#1880cc');
+  g.addColorStop(1,   '#0a5090');
+  ctx.fillStyle = g;
+  ctx.fillRect(ob.x, colTop, OB_W, colH);
+
+  // Wave ripple lines
+  ctx.fillStyle='rgba(180,230,255,0.3)';
+  for (let y=colTop+4; y<SEA_TOP; y+=8) ctx.fillRect(ob.x, y, OB_W, 2);
+
+  // Foamy wave cap at top
+  ctx.fillStyle='#e8f8ff';
+  ctx.fillRect(ob.x, colTop, OB_W, 5);
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  for (let bx=ob.x; bx<ob.x+OB_W; bx+=7) {
+    ctx.fillRect(bx, colTop-3, 5, 5);
+  }
+
+  // Highlight
+  ctx.fillStyle='rgba(180,230,255,0.45)';
+  ctx.fillRect(ob.x, colTop, 6, colH);
+}
+
+// ── Ocean ─────────────────────────────────────────────────────────────────────
+function drawOcean() {
+  waveT += 0.03;
+
+  // Deep ocean body
+  const g = ctx.createLinearGradient(0, SEA_TOP, 0, H - BTN_H - 8);
+  g.addColorStop(0,  '#1880cc');
+  g.addColorStop(0.5,'#0a5090');
+  g.addColorStop(1,  '#062840');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, SEA_TOP, W, H - BTN_H - 8 - SEA_TOP);
+
+  // Animated wave surface
+  ctx.fillStyle='#40b8f0';
+  ctx.beginPath();
+  ctx.moveTo(0, SEA_TOP);
+  for (let x=0; x<=W; x+=4) {
+    const wy = SEA_TOP + Math.sin(x*0.04 + waveT)*5 + Math.sin(x*0.09 - waveT*1.3)*3;
+    ctx.lineTo(x, wy);
+  }
+  ctx.lineTo(W, SEA_TOP+20); ctx.lineTo(0, SEA_TOP+20); ctx.closePath(); ctx.fill();
+
+  // White foam crests
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  for (let x=0; x<W; x+=18) {
+    const wy = SEA_TOP + Math.sin(x*0.04+waveT)*5 + Math.sin(x*0.09-waveT*1.3)*3;
+    ctx.fillRect(x, wy-2, 10, 3);
+  }
+}
+
+// ── Space button ──────────────────────────────────────────────────────────────
+function drawSpaceBtn(label='SPACE', active=false) {
+  const bx=10, bw=W-20, bh=BTN_H-8, by=BTN_Y+4;
+  // Pixel bevel
+  ctx.fillStyle = active ? '#2a1408' : '#3a2010';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = active ? '#7a4820' : '#a06030';
+  ctx.fillRect(bx, by, bw, 4);
+  ctx.fillRect(bx, by, 4, bh);
+  ctx.fillStyle = active ? '#a06030' : '#1a0802';
+  ctx.fillRect(bx, by+bh-4, bw, 4);
+  ctx.fillRect(bx+bw-4, by, 4, bh);
+  ctx.fillStyle = active ? '#553320' : '#ffcc88';
+  ctx.font = '10px "Press Start 2P", monospace';
+  ctx.textAlign='center';
+  ctx.fillText(label, W/2, by+bh/2+4);
+}
+
+// ── Score display ─────────────────────────────────────────────────────────────
+function drawScore() {
+  ctx.font = '13px "Press Start 2P", monospace';
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.textAlign='center';
+  ctx.fillText(score, W/2+2, 38);
+  ctx.fillStyle = '#fff8e0';
+  ctx.fillText(score, W/2, 36);
+}
+
+// ── Start screen ──────────────────────────────────────────────────────────────
+function drawStart() {
+  // Draw the world behind
+  drawSky();
+  drawSun();
+  drawOcean();
+
+  // Dark vignette overlay
+  ctx.fillStyle='rgba(10,5,20,0.60)';
+  ctx.fillRect(0, SUN_BOTTOM, W, SEA_TOP-SUN_BOTTOM);
+
+  // Prison window silhouette (simple pixel art)
+  const wx=W/2, wy=220;
+  ctx.fillStyle='#2a1a08';
+  ctx.fillRect(wx-30, wy-50, 60, 70);
+  ctx.fillStyle='rgba(255,220,80,0.25)';
+  ctx.fillRect(wx-24, wy-44, 46, 58);
+  // bars
+  ctx.fillStyle='#1a0e04';
+  for (let bx=wx-18; bx<wx+22; bx+=12) ctx.fillRect(bx, wy-44, 5, 58);
+  ctx.fillRect(wx-24, wy-18, 46, 5);
+
+  // Icarus silhouette at window
+  ctx.fillStyle='#221100';
+  ctx.fillRect(wx-8, wy-36, 16, 26);
+
+  // Title
+  ctx.textAlign='center';
+  ctx.font='bold 28px "Press Start 2P", monospace';
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillText('ICARUS', W/2+2, 130);
+  ctx.fillStyle='#ffee44';
+  ctx.shadowColor='#ff8800'; ctx.shadowBlur=18;
+  ctx.fillText('ICARUS', W/2, 128);
+  ctx.shadowBlur=0;
+
+  // Lore
+  const lore = [
+    'Imprisoned in Crete.',
+    'Your father built you wings',
+    'of feathers and wax.',
+    'Fly between the sun and sea.',
+    'Do not fly too high.',
+  ];
+  ctx.font='7px "Press Start 2P", monospace';
+  ctx.fillStyle='#d0c8a0';
+  lore.forEach((line, i) => ctx.fillText(line, W/2, 158 + i*17));
+
+  // High scores
+  const hi = loadScores();
+  if (hi.length > 0) {
+    ctx.font='8px "Press Start 2P", monospace';
+    ctx.fillStyle='#ffcc44';
+    ctx.fillText('— HI SCORES —', W/2, 258);
+    ctx.font='7px "Press Start 2P", monospace';
+    ctx.fillStyle='#e0d8b0';
+    hi.slice(0,3).forEach((s,i) => {
+      const medals = ['#ffd700','#c0c0c0','#cd7f32'];
+      ctx.fillStyle=medals[i]||'#e0d8b0';
+      ctx.fillText(`${i+1}.  ${s}`, W/2, 278+i*18);
+    });
+  }
+
+  // Animated Icarus hint (small flapping near the gap)
+  const t = Date.now()/600;
+  const hintY = 360 + Math.sin(t)*12;
+  ctx.save();
+  ctx.translate(W/2, hintY);
+  const ox=-IC_W/2, oy=-IC_H/2;
+  ICARUS_SP.forEach((row,ry)=>{
+    for(let cx=0;cx<row.length;cx++){
+      const ch=row[cx];
+      if(ch==='.') return;
+      ctx.fillStyle=IC_COL[ch]||'#fff';
+      ctx.fillRect(ox+cx*IC_P, oy+ry*IC_P, IC_P, IC_P);
+    }
+  });
+  ctx.restore();
+
+  drawSpaceBtn('SPACE  /  TAP');
+}
+
+// ── Dead screen ───────────────────────────────────────────────────────────────
+function drawDead() {
+  const msg1 = deathType==='sun'
+    ? ['YOUR WINGS', 'HAVE MELTED.']
+    : ['ENGULFED BY', 'THE SEA.'];
+
+  ctx.fillStyle='rgba(0,0,0,0.62)';
+  ctx.fillRect(0, SUN_BOTTOM, W, SEA_TOP-SUN_BOTTOM);
+
+  ctx.textAlign='center';
+  ctx.font='12px "Press Start 2P", monospace';
+  ctx.fillStyle = deathType==='sun' ? '#ff8822' : '#66ccff';
+  ctx.shadowColor = deathType==='sun' ? '#ff4400' : '#0088ff';
+  ctx.shadowBlur = 12;
+  msg1.forEach((l,i) => ctx.fillText(l, W/2, 195+i*28));
+  ctx.shadowBlur=0;
+
+  ctx.font='9px "Press Start 2P", monospace';
+  ctx.fillStyle='#e8e0b8';
+  ctx.fillText(`SCORE: ${score}`, W/2, 265);
+
+  const hi = loadScores();
+  if (hi.length > 0) {
+    ctx.fillStyle='#ffcc44';
+    ctx.fillText(`BEST:  ${hi[0]}`, W/2, 285);
+  }
+
+  if (deadTimer > 80) drawSpaceBtn('RETRY');
+}
+
+// ── Collision ─────────────────────────────────────────────────────────────────
+const HB = 8; // hitbox half-size
+function collides(ob) {
+  const ix=icarus.x, iy=icarus.y;
+  const inX = ix+HB > ob.x && ix-HB < ob.x+OB_W;
+  if (!inX) return false;
+  const rayBottom = ob.gapY - ob.gap/2;
+  const colTop    = ob.gapY + ob.gap/2;
+  return (iy-HB < rayBottom) || (iy+HB > colTop);
+}
+
+// ── Update ────────────────────────────────────────────────────────────────────
+function update() {
+  if (state !== 'PLAYING') return;
+  waveT += 0.03;
+
+  const spd = getSpeed();
+
+  // Physics
+  icarus.vy += GRAVITY;
+  if (icarus.vy > MAX_FALL) icarus.vy = MAX_FALL;
+  icarus.y += icarus.vy;
+
+  // Move + manage obstacles
+  obstacles.forEach(ob => { ob.x -= spd; });
+  obstacles = obstacles.filter(ob => ob.x + OB_W > -10);
+
+  // Score: passed through gap
+  obstacles.forEach(ob => {
+    if (!ob.passed && ob.x + OB_W < icarus.x - HB) {
+      ob.passed = true; score++;
+    }
+  });
+
+  // Spawn
+  const lastX = obstacles.length ? obstacles[obstacles.length-1].x : -Infinity;
+  if (lastX < W - SPAWN_DIST) spawnObstacle(W + 10);
+
+  // Boundary death
+  if (icarus.y - HB <= SUN_BOTTOM) { die('sun');  return; }
+  if (icarus.y + HB >= SEA_TOP)    { die('sea');  return; }
+
+  // Obstacle collision
+  for (const ob of obstacles) {
+    if (collides(ob)) {
+      // Determine which obstacle killed (ray=sun, col=sea)
+      const rayBottom = ob.gapY - ob.gap/2;
+      die(icarus.y - HB < rayBottom ? 'sun' : 'sea');
+      return;
+    }
+  }
+}
+
+function die(type) {
+  icarus.dead = true;
+  deathType   = type;
+  state       = 'DEAD';
+  deadTimer   = 0;
+  icarus.vy   = type==='sun' ? 5 : 3;
+  saveScore(score);
+}
+
+// ── Main loop ─────────────────────────────────────────────────────────────────
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Bottom bar (always)
+  ctx.fillStyle='#0a0604';
+  ctx.fillRect(0, BTN_Y, W, BTN_H);
+
+  if (state === 'START') {
+    drawStart();
+  } else {
+    drawSky();
+    drawSun();
+    obstacles.forEach(ob => { drawRay(ob); drawWaveCol(ob); });
+    drawOcean();
+    drawIcarus();
+    drawScore();
+    if (state==='DEAD') {
+      deadTimer++;
+      // Keep falling after death
+      icarus.vy += GRAVITY;
+      if (icarus.vy > MAX_FALL) icarus.vy = MAX_FALL;
+      icarus.y  += icarus.vy;
+      icarus.y   = Math.min(icarus.y, SEA_TOP + 20);
+      drawDead();
+    }
+    drawSpaceBtn(state==='DEAD' && deadTimer>80 ? 'RETRY' : 'JUMP', spacePressed);
+  }
+
+  spacePressed = false;
+  requestAnimationFrame(loop);
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+function handleAction() {
+  spacePressed = true;
+  if (state==='START')  { startGame(); return; }
+  if (state==='PLAYING'){ icarus.vy = JUMP_VY; return; }
+  if (state==='DEAD' && deadTimer>80) { startGame(); }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code==='Space') { e.preventDefault(); handleAction(); }
+});
+
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  handleAction();
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+document.fonts.ready.then(() => { init(); loop(); });
+</script>
+</body>
+</html>
