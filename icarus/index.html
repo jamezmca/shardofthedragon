@@ -32,14 +32,14 @@ const BTN_Y      = 566;  // space button top
 const BTN_H      = 46;   // space button height
 
 // Physics
-const GRAVITY    = 0.38;
-const JUMP_VY    = -7.8;
-const MAX_FALL   =  9;
+const GRAVITY    = 0.30;
+const JUMP_VY    = -7.5;
+const MAX_FALL   =  8;
 
 // Obstacles
 const OB_W       = 54;
-const BASE_GAP   = 162;
-const BASE_SPEED = 2.4;
+const BASE_GAP   = 190;
+const BASE_SPEED = 2.0;
 const SPAWN_DIST = 215;
 
 // ── High scores (localStorage) ───────────────────────────────────────────────
@@ -78,11 +78,11 @@ function spawnObstacle(x) {
   const minGapY = SUN_BOTTOM + 90;
   const maxGapY = SEA_TOP    - 90;
   const gapY    = minGapY + Math.random()*(maxGapY - minGapY);
-  const gap     = Math.max(120, BASE_GAP - score*1.2);
+  const gap     = Math.max(140, BASE_GAP - score*0.8);
   obstacles.push({ x, gapY, gap, passed:false });
 }
 
-function getSpeed() { return Math.min(BASE_SPEED + score*0.055, 5.2); }
+function getSpeed() { return Math.min(BASE_SPEED + score*0.035, 4.5); }
 
 // ── Pixel art Icarus sprite ───────────────────────────────────────────────────
 // 10 wide × 11 tall @ P=3 = 30×33 on screen. Facing right.
