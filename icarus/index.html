@@ -70,7 +70,7 @@ function startGame() {
   deadTimer   = 0;
   nextSpawnX  = W + 80;
   obstacles   = [];
-  icarus = { x:90, y:(SUN_BOTTOM+SEA_TOP)/2, vy:0, dead:false };
+  icarus = { x:90, y:(SUN_BOTTOM+SEA_TOP)/2, vy:0, dead:false, started:false };
   spawnObstacle(W + 80);
 }
 
@@ -424,9 +424,14 @@ function collides(ob) {
 // ── Update ────────────────────────────────────────────────────────────────────
 function update() {
   if (state !== 'PLAYING') return;
-  waveT += 0.03;
 
   const spd = getSpeed();
+
+  // Hold still until first flap
+  if (!icarus.started) {
+    icarus.y = (SUN_BOTTOM + SEA_TOP) / 2 + Math.sin(Date.now() / 300) * 5;
+    return;
+  }
 
   // Physics
   icarus.vy += GRAVITY;
@@ -474,6 +479,7 @@ function die(type) {
 
 // ── Main loop ─────────────────────────────────────────────────────────────────
 function loop() {
+  update();
   ctx.clearRect(0, 0, W, H);
 
   // Bottom bar (always)
@@ -509,7 +515,7 @@ function loop() {
 function handleAction() {
   spacePressed = true;
   if (state==='START')  { startGame(); return; }
-  if (state==='PLAYING'){ icarus.vy = JUMP_VY; return; }
+  if (state==='PLAYING'){ icarus.started = true; icarus.vy = JUMP_VY; return; }
   if (state==='DEAD' && deadTimer>80) { startGame(); }
 }
 
