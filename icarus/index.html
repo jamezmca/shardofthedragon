@@ -305,6 +305,15 @@ function drawStart() {
   drawSun();
   drawOcean();
 
+  // Preview obstacles so the player can see what's coming
+  const previewGap = 190;
+  for (const px of [110, 310]) {
+    const gapY = (SUN_BOTTOM + SEA_TOP) / 2 + (px === 110 ? -30 : 40);
+    const ob = { x: px, gapY, gap: previewGap };
+    drawRay(ob);
+    drawWaveCol(ob);
+  }
+
   // Dark vignette overlay
   ctx.fillStyle='rgba(10,5,20,0.60)';
   ctx.fillRect(0, SUN_BOTTOM, W, SEA_TOP-SUN_BOTTOM);
@@ -340,7 +349,8 @@ function drawStart() {
     'Your father built you wings',
     'of feathers and wax.',
     'Fly between the sun and sea.',
-    'Do not fly too high.',
+    'Do not fly too close to the sun,',
+    'else the wax melts and you fall.',
   ];
   ctx.font='7px "Press Start 2P", monospace';
   ctx.fillStyle='#d0c8a0';
