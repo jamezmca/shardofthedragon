@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="description" content="A scientifically accurate account of Gollum's death in Mount Doom — told as a 2D canvas game. Run him off the bridge and watch physics do the rest.">
 <title>Gollum's Demise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,7 @@ const BRIDGE_L    = 68;
 const BRIDGE_R    = 415;
 const BRIDGE_TH   = 14;
 const LAVA_Y      = 510;
-const GH          = 44;   // gollum height
+const GH          = 60;   // gollum sprite height (20 rows × 3px)
 
 const PHASES = {
   1: {
@@ -43,8 +44,8 @@ const PHASES = {
     items: [
       'Basaltic lava: ~1,100°C, density ~2.7 g/cm³ — three times denser than water',
       'Surface moisture flash-vaporises in milliseconds — a violent steam detonation',
-      'Outer tissue chars and combusts. The nervous system fires its last signalsLAME.',
-      'Pain beyond any scale — and then silenceLAME.',
+      'Skin blackens and burns through in under a second. Every nerve fires at once.',
+      'His brain cannot process it fast enough. Then it stops.',
     ]
   },
   3: {
@@ -52,10 +53,10 @@ const PHASES = {
     items: [
       'The lava is viscous. Engulfment is slow.',
       'Organic compounds oxidise and vaporise into the air.',
-      'Fats renderDONT KNOW WHAT IT MEANS, then ignite.',
+      'Body fat liquefies and catches fire.',
       'Bone — calcium phosphate — dissolves into the silicate melt.',
       'At 1,100°C this takes hours.',
-      'The Rig is unmade. The lava consumes all.',
+      'The Ring is destroyed. The lava consumes everything.',
     ]
   }
 };
@@ -229,56 +230,69 @@ function drawLava() {
   });
 }
 
-// ── Gollum ────────────────────────────────────────────────────────────────────
+// ── Gollum pixel art sprite ───────────────────────────────────────────────────
+// 15 cols × 20 rows @ 3px per cell = 45×60px on screen.
+// Sprite defined facing right; mirrored horizontally for facing left.
+// Ring held aloft by raised right arm (cols 9-13, rows 0-5).
+
+const GOLLUM_SPRITE = [
+  '..........rrr..',  //  0  ring top
+  '.........r...r.',  //  1  ring sides
+  '.........r...r.',  //  2  ring sides
+  '..........rrr..',  //  3  ring bottom
+  '..........l....',  //  4  arm up
+  '.........l.....',  //  5  arm up
+  '....ssssl......',  //  6  head start + arm join at shoulder
+  '...ssssss......',  //  7  head
+  '...seesee......',  //  8  eyes
+  '...sepsp.......',  //  9  pupils (inward-facing stare)
+  '...ssssss......',  // 10  lower face
+  '....ssss.......',  // 11  chin
+  '..l.cccc.......',  // 12  body + left arm start
+  '.l..cccc.......',  // 13  left arm
+  'l...cccc.......',  // 14  left arm extended
+  '....cccc.......',  // 15  lower body
+  '....l..l.......',  // 16  legs
+  '....l..l.......',  // 17  legs
+  '....l..l.......',  // 18  legs
+  '...ll..ll......',  // 19  feet
+];
+
+const GOLLUM_COLORS = {
+  's': '#bec0a0',  // pale grey-green skin
+  'e': '#99bbff',  // big pale eyes
+  'p': '#111130',  // dark pupils
+  'c': '#5a3820',  // dark loincloth
+  'l': '#a8a888',  // limbs
+  'r': '#d4a000',  // gold ring
+};
 
 function drawGollum(x, y) {
+  const P  = 3;
+  const SW = 15 * P; // 45px
   ctx.save();
-  ctx.translate(x+10, y);
-  if (gollum.facing<0) ctx.scale(-1,1);
+  ctx.translate(x + 22, y);  // center sprite on x
+  if (gollum.facing < 0) ctx.scale(-1, 1);
 
-  // Body
-  ctx.fillStyle='#c0a878';
-  ctx.beginPath(); ctx.ellipse(0,26,7,11,0,0,Math.PI*2); ctx.fill();
+  const ox = -22; // left edge offset for centering
 
-  // Head
-  ctx.beginPath(); ctx.ellipse(0,8,8,9,0,0,Math.PI*2); ctx.fill();
+  // Ring glow behind sprite pixels
+  const rgx = ox + 11*P, rgy = 2*P;
+  const rg = ctx.createRadialGradient(rgx, rgy, P, rgx, rgy, P*5);
+  rg.addColorStop(0, 'rgba(255,220,40,0.65)');
+  rg.addColorStop(1, 'rgba(255,130,0,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath(); ctx.arc(rgx, rgy, P*5, 0, Math.PI*2); ctx.fill();
 
-  // Big pale eyes
-  ctx.fillStyle='#aaccff';
-  ctx.beginPath(); ctx.ellipse(-3.5,6,3.2,3.8,-0.15,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse( 3.5,6,3.2,3.8, 0.15,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#001133';
-  ctx.beginPath(); ctx.arc(-3.5,6.5,1.9,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc( 3.5,6.5,1.9,0,Math.PI*2); ctx.fill();
-
-  ctx.strokeStyle='#a89060'; ctx.lineWidth=2.5; ctx.lineCap='round';
-
-  // Left arm — down
-  ctx.beginPath(); ctx.moveTo(-6,18); ctx.quadraticCurveTo(-15,26,-11,36); ctx.stroke();
-
-  // Right arm — raised to hold the Ring aloft
-  ctx.beginPath(); ctx.moveTo(6,18); ctx.quadraticCurveTo(16,8,12,-5); ctx.stroke();
-
-  // THE ONE RING — large golden band at the raised hand
-  const rx=13, ry=-11;
-  // outer glow
-  const rg=ctx.createRadialGradient(rx,ry,6,rx,ry,24);
-  rg.addColorStop(0,'rgba(255,225,40,0.55)'); rg.addColorStop(1,'rgba(255,130,0,0)');
-  ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(rx,ry,24,0,Math.PI*2); ctx.fill();
-  // ring band (thick)
-  ctx.strokeStyle='#d4a000'; ctx.lineWidth=5;
-  ctx.beginPath(); ctx.arc(rx,ry,13,0,Math.PI*2); ctx.stroke();
-  // inner highlight
-  ctx.strokeStyle='#ffe86a'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.arc(rx,ry,13,0,Math.PI*2); ctx.stroke();
-  // bright inner reflection
-  ctx.strokeStyle='rgba(255,255,200,0.65)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.arc(rx-3,ry-3,10,Math.PI*1.1,Math.PI*1.75); ctx.stroke();
-
-  // Legs
-  ctx.strokeStyle='#a89060'; ctx.lineWidth=2.5;
-  ctx.beginPath(); ctx.moveTo(-3,35); ctx.quadraticCurveTo(-5,40,-4,GH); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo( 3,35); ctx.quadraticCurveTo( 5,40, 4,GH); ctx.stroke();
+  // Draw sprite row by row
+  GOLLUM_SPRITE.forEach((row, ry) => {
+    for (let cx = 0; cx < row.length; cx++) {
+      const ch = row[cx];
+      if (ch === '.') continue;
+      ctx.fillStyle = GOLLUM_COLORS[ch] || '#ff00ff';
+      ctx.fillRect(ox + cx*P, ry*P, P, P);
+    }
+  });
 
   ctx.restore();
 }
@@ -480,7 +494,7 @@ function update() {
     else              gollum.vx *= 0.62;
     gollum.x = Math.max(BRIDGE_L, gollum.x+gollum.vx);
     gollum.y = BRIDGE_Y-GH;
-    if (gollum.x+10 > BRIDGE_R) {
+    if (gollum.x+44 > BRIDGE_R) {
       state='FALLING1'; timeScale=0.25; gollum.vy=0.8;
     }
   }
