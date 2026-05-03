@@ -11,16 +11,15 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-  background: #1a1a1a;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  height: 100vh;
+  background: #000;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 canvas {
   display: block;
+  position: fixed;
+  top: 0; left: 0;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -32,66 +31,58 @@ canvas {
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 
-// ── Sizing ──────────────────────────────────────────────────────────────────
-const TILE = 16;
-
-// Map dimensions in tiles
+// ── Constants ──────────────────────────────────────────────────────────────
+const TILE     = 16;
 const MAP_COLS = 64;
 const MAP_ROWS = 48;
-const MAP_W = MAP_COLS * TILE;
-const MAP_H = MAP_ROWS * TILE;
+const MAP_W    = MAP_COLS * TILE;
+const MAP_H    = MAP_ROWS * TILE;
+const BANNER_H = 30;
 
-let VW, VH, scale;
+// GAME_SCALE: screen pixels per world pixel. Recomputed on resize so ~28 tiles
+// are visible across the shorter viewport dimension, giving a scrollable world.
+let GAME_SCALE = 2;
+let VW = 0, VH = 0;
 
 function resize() {
-  const maxW = window.innerWidth;
-  const maxH = window.innerHeight;
-  scale = Math.min(maxW / MAP_W, maxH / MAP_H, 1);
-  // Viewport shows part of the map; canvas = full window
-  VW = Math.round(maxW);
-  VH = Math.round(maxH);
+  VW = window.innerWidth;
+  VH = window.innerHeight;
   canvas.width  = VW;
   canvas.height = VH;
-  canvas.style.width  = VW + 'px';
-  canvas.style.height = VH + 'px';
+  // target ~28 tiles visible on the narrow axis
+  const minDim = Math.min(VW, VH);
+  GAME_SCALE = Math.max(1.5, Math.min(4, minDim / (28 * TILE)));
 }
 resize();
-window.addEventListener('resize', () => { resize(); });
+window.addEventListener('resize', resize);
 
-// ── Tile types ───────────────────────────────────────────────────────────────
-const T = {
-  GRASS:   0,  // long unmowed grass
-  MOWED:   1,  // mowed
-  PATH:    2,  // stone/dirt path — not mowable, walkable
-  SOLID:   3,  // obstacle, blocks mower
-  WATER:   4,  // decorative
-  BORDER:  5,  // outer fence
-};
+// ── Tile types ─────────────────────────────────────────────────────────────
+const T = { GRASS: 0, MOWED: 1, PATH: 2, SOLID: 3, BORDER: 5 };
 
-// ── Map definition ────────────────────────────────────────────────────────────
-// We'll build it programmatically
+// ── Map ────────────────────────────────────────────────────────────────────
 const map = new Uint8Array(MAP_COLS * MAP_ROWS).fill(T.GRASS);
 
-function ti(col, row) { return row * MAP_COLS + col; }
-function setRect(c0, r0, c1, r1, type) {
+function ti(c, r) { return r * MAP_COLS + c; }
+function setRect(c0, r0, c1, r1, t) {
   for (let r = r0; r <= r1; r++)
     for (let c = c0; c <= c1; c++)
-      map[ti(c, r)] = type;
+      map[ti(c, r)] = t;
 }
-function setTile(c, r, type) { if (c >= 0 && c < MAP_COLS && r >= 0 && r < MAP_ROWS) map[ti(c,r)] = type; }
+function setTile(c, r, t) {
+  if (c >= 0 && c < MAP_COLS && r >= 0 && r < MAP_ROWS) map[ti(c, r)] = t;
+}
 
-// Outer border
+// Border
 setRect(0, 0, MAP_COLS-1, 0, T.BORDER);
 setRect(0, MAP_ROWS-1, MAP_COLS-1, MAP_ROWS-1, T.BORDER);
 setRect(0, 0, 0, MAP_ROWS-1, T.BORDER);
 setRect(MAP_COLS-1, 0, MAP_COLS-1, MAP_ROWS-1, T.BORDER);
 
-// ── House (col 4-14, row 3-13) ───────────────────────────────────────────────
+// House
 setRect(4, 3, 14, 13, T.SOLID);
-// Path from house to main area
 setRect(8, 13, 10, 18, T.PATH);
 
-// ── Orchard (top-right area) ──────────────────────────────────────────────────
+// Orchard
 const orchardTrees = [
   [48,4],[51,4],[54,4],[57,4],[60,4],
   [48,8],[51,8],[54,8],[57,8],[60,8],
@@ -102,7 +93,7 @@ orchardTrees.forEach(([c,r]) => {
   setTile(c,r+1,T.SOLID); setTile(c+1,r+1,T.SOLID);
 });
 
-// ── Standalone trees scattered ─────────────────────────────────────────────────
+// Trees
 const trees = [
   [20,3],[22,6],[35,3],[40,5],
   [5,20],[3,30],[7,38],[18,42],[30,44],[45,40],[55,35],[60,28],[62,18],
@@ -112,39 +103,30 @@ trees.forEach(([c,r]) => {
   setTile(c,r+1,T.SOLID); setTile(c+1,r+1,T.SOLID);
 });
 
-// ── Stumps ────────────────────────────────────────────────────────────────────
+// Stumps
 const stumps = [[26,8],[33,15],[50,22],[15,33],[40,38]];
 stumps.forEach(([c,r]) => setTile(c,r,T.SOLID));
 
-// ── Gravestones ───────────────────────────────────────────────────────────────
+// Graveyard
 const graves = [[55,42],[57,42],[59,42],[55,44],[57,44]];
-graves.forEach(([c,r]) => setTile(c,r,T.SOLID));
-// Small path around graveyard
 setRect(53,40,61,46,T.PATH);
 graves.forEach(([c,r]) => setTile(c,r,T.SOLID));
 
-// ── Campfire + Tent (bottom-left area) ────────────────────────────────────────
-// Tent
+// Tent + campfire
 setRect(5,38,9,43,T.SOLID);
-// Campfire (1 tile, walkable but obstacle)
 setTile(12,41,T.SOLID);
 
-// ── Dog kennel + dog ─────────────────────────────────────────────────────────
-setRect(18,20,21,23,T.SOLID); // kennel
-setTile(23,21,T.SOLID);       // dog
+// Kennel + dog
+setRect(18,20,21,23,T.SOLID);
+setTile(23,21,T.SOLID);
 
-// ── Animals ──────────────────────────────────────────────────────────────────
-const animals = [
-  [30,20],[32,22],[28,25],  // sheep
-  [42,30],[44,28],[46,32],  // chickens
-];
-animals.forEach(([c,r]) => setTile(c,r,T.SOLID));
+// Animals
+[[30,20],[32,22],[28,25],[42,30],[44,28],[46,32]].forEach(([c,r]) => setTile(c,r,T.SOLID));
 
-// ── Winding main path ─────────────────────────────────────────────────────────
+// Paths
 for (let c = 1; c < MAP_COLS-1; c++) setTile(c, 22, T.PATH);
 for (let r = 14; r < 46; r++) setTile(32, r, T.PATH);
 
-// Count total mowable tiles
 function countMowable() {
   let n = 0;
   for (let i = 0; i < map.length; i++) if (map[i] === T.GRASS) n++;
@@ -152,166 +134,121 @@ function countMowable() {
 }
 const TOTAL_GRASS = countMowable();
 
-// ── Grass noise texture offscreen canvas ──────────────────────────────────────
-// Pre-render a tileable noise pattern for unmowed grass
-const noiseCanvas = document.createElement('canvas');
-noiseCanvas.width = 64; noiseCanvas.height = 64;
-const nctx = noiseCanvas.getContext('2d');
-const noiseImg = nctx.createImageData(64, 64);
-// Simple LCG seeded noise
-let seed = 42;
-function lcg() { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 4294967296; }
-for (let i = 0; i < 64*64; i++) {
-  const v = Math.floor(lcg() * 30);
-  const base = [42, 90, 36];
-  noiseImg.data[i*4+0] = base[0] + v;
-  noiseImg.data[i*4+1] = base[1] + v;
-  noiseImg.data[i*4+2] = base[2] + v;
-  noiseImg.data[i*4+3] = 255;
+// ── Per-tile grass noise ───────────────────────────────────────────────────
+const grassNoise = new Uint8Array(MAP_COLS * MAP_ROWS);
+{
+  let seed = 42;
+  const lcg = () => { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 4294967296; };
+  for (let i = 0; i < grassNoise.length; i++) grassNoise[i] = Math.floor(lcg() * 38);
 }
-nctx.putImageData(noiseImg, 0, 0);
-const noisePattern = ctx.createPattern(noiseCanvas, 'repeat');
 
-// ── Sprite drawing helpers ────────────────────────────────────────────────────
-// All sprites are drawn procedurally to keep the file self-contained
+// ── Sprite drawing ─────────────────────────────────────────────────────────
+// All take world-pixel (sx, sy) = top-left of tile, and use TILE * GAME_SCALE.
 
-function drawMower(cx, cy, angle) {
+function drawMower(screenX, screenY, angle) {
+  const s = TILE * GAME_SCALE;
   ctx.save();
-  ctx.translate(cx, cy);
+  ctx.translate(screenX, screenY);
   ctx.rotate(angle);
-  const s = TILE * scale;
-  // Body
   ctx.fillStyle = '#d42b2b';
   ctx.fillRect(-s*0.45, -s*0.35, s*0.9, s*0.7);
-  // Handle
   ctx.fillStyle = '#8B4513';
   ctx.fillRect(-s*0.1, s*0.25, s*0.2, s*0.25);
-  // Wheels
   ctx.fillStyle = '#222';
   ctx.fillRect(-s*0.45, -s*0.42, s*0.22, s*0.14);
   ctx.fillRect( s*0.23, -s*0.42, s*0.22, s*0.14);
   ctx.fillRect(-s*0.45,  s*0.28, s*0.22, s*0.14);
   ctx.fillRect( s*0.23,  s*0.28, s*0.22, s*0.14);
-  // Blade glint
-  ctx.fillStyle = '#aaa';
-  ctx.fillRect(-s*0.25, -s*0.1, s*0.5, s*0.06);
+  ctx.fillStyle = '#bbb';
+  ctx.fillRect(-s*0.25, -s*0.09, s*0.5, s*0.05);
   ctx.restore();
 }
 
 function drawTree(sx, sy) {
-  const s = TILE * scale;
-  // Trunk
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#6B3A2A';
-  ctx.fillRect(sx + s*0.35, sy + s*0.6, s*0.3, s*0.4);
-  // Canopy shadow
+  ctx.fillRect(sx+s*0.35, sy+s*0.6, s*0.3, s*0.4);
   ctx.fillStyle = '#1a5c1a';
-  ctx.beginPath();
-  ctx.arc(sx + s*0.5, sy + s*0.45, s*0.5, 0, Math.PI*2);
-  ctx.fill();
-  // Canopy highlight
+  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.45, s*0.5, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#2e8b2e';
-  ctx.beginPath();
-  ctx.arc(sx + s*0.42, sy + s*0.35, s*0.38, 0, Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(sx+s*0.42, sy+s*0.35, s*0.38, 0, Math.PI*2); ctx.fill();
 }
 
 function drawStump(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#6B3A2A';
   ctx.fillRect(sx+s*0.15, sy+s*0.15, s*0.7, s*0.7);
   ctx.fillStyle = '#8B5E3C';
-  ctx.beginPath();
-  ctx.ellipse(sx+s*0.5, sy+s*0.5, s*0.35, s*0.28, 0, 0, Math.PI*2);
-  ctx.fill();
-  // Rings
+  ctx.beginPath(); ctx.ellipse(sx+s*0.5, sy+s*0.5, s*0.35, s*0.28, 0, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle = '#6B3A2A';
   ctx.lineWidth = Math.max(1, s*0.04);
-  ctx.beginPath();
-  ctx.ellipse(sx+s*0.5, sy+s*0.5, s*0.2, s*0.15, 0, 0, Math.PI*2);
-  ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(sx+s*0.5, sy+s*0.5, s*0.2, s*0.15, 0, 0, Math.PI*2); ctx.stroke();
 }
 
 function drawGrave(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#888';
   ctx.fillRect(sx+s*0.25, sy+s*0.2, s*0.5, s*0.6);
   ctx.fillStyle = '#aaa';
-  ctx.beginPath();
-  ctx.arc(sx+s*0.5, sy+s*0.3, s*0.25, Math.PI, 0);
-  ctx.fill();
-  ctx.fillStyle = '#666';
+  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.3, s*0.25, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = '#555';
   ctx.fillRect(sx+s*0.38, sy+s*0.35, s*0.04, s*0.2);
-  ctx.fillRect(sx+s*0.3, sy+s*0.42, s*0.2, s*0.04);
+  ctx.fillRect(sx+s*0.3,  sy+s*0.42, s*0.2,  s*0.04);
 }
 
 function drawHouse(sx, sy) {
-  const s = TILE * scale;
-  const w = 11 * s, h = 11 * s;
-  // Walls
+  const s = TILE * GAME_SCALE;
+  const w = 11*s, h = 11*s;
   ctx.fillStyle = '#d4a96a';
   ctx.fillRect(sx, sy, w, h);
-  // Roof
   ctx.fillStyle = '#8B2020';
   ctx.beginPath();
-  ctx.moveTo(sx - s*0.5, sy + s*0.5);
-  ctx.lineTo(sx + w*0.5, sy - s*2);
-  ctx.lineTo(sx + w + s*0.5, sy + s*0.5);
-  ctx.closePath();
-  ctx.fill();
-  // Door
+  ctx.moveTo(sx-s*0.5, sy+s*0.5);
+  ctx.lineTo(sx+w*0.5, sy-s*2);
+  ctx.lineTo(sx+w+s*0.5, sy+s*0.5);
+  ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#6B3A2A';
-  ctx.fillRect(sx + w*0.42, sy + h*0.6, w*0.16, h*0.4);
-  // Windows
+  ctx.fillRect(sx+w*0.42, sy+h*0.6, w*0.16, h*0.4);
   ctx.fillStyle = '#aaddff';
-  ctx.fillRect(sx + w*0.15, sy + h*0.25, w*0.18, h*0.18);
-  ctx.fillRect(sx + w*0.67, sy + h*0.25, w*0.18, h*0.18);
-  // Chimney
+  ctx.fillRect(sx+w*0.15, sy+h*0.25, w*0.18, h*0.18);
+  ctx.fillRect(sx+w*0.67, sy+h*0.25, w*0.18, h*0.18);
   ctx.fillStyle = '#8B5E3C';
-  ctx.fillRect(sx + w*0.7, sy - s*1.8, w*0.1, s*1.5);
+  ctx.fillRect(sx+w*0.7, sy-s*1.8, w*0.1, s*1.5);
 }
 
 function drawKennel(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   const w = 4*s, h = 4*s;
   ctx.fillStyle = '#c8a050';
   ctx.fillRect(sx, sy, w, h);
   ctx.fillStyle = '#8B4513';
   ctx.beginPath();
-  ctx.moveTo(sx - s*0.3, sy + s*0.3);
-  ctx.lineTo(sx + w*0.5, sy - s);
-  ctx.lineTo(sx + w + s*0.3, sy + s*0.3);
-  ctx.closePath();
-  ctx.fill();
-  // Door hole
+  ctx.moveTo(sx-s*0.3, sy+s*0.3);
+  ctx.lineTo(sx+w*0.5, sy-s);
+  ctx.lineTo(sx+w+s*0.3, sy+s*0.3);
+  ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#222';
-  ctx.beginPath();
-  ctx.ellipse(sx + w*0.5, sy + h*0.62, w*0.2, h*0.25, 0, 0, Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.ellipse(sx+w*0.5, sy+h*0.62, w*0.2, h*0.25, 0, 0, Math.PI*2); ctx.fill();
 }
 
 function drawDog(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#c8844a';
-  // Body
   ctx.fillRect(sx+s*0.1, sy+s*0.35, s*0.6, s*0.35);
-  // Head
   ctx.fillRect(sx+s*0.55, sy+s*0.2, s*0.35, s*0.3);
-  // Ears
   ctx.fillStyle = '#a0602a';
   ctx.fillRect(sx+s*0.58, sy+s*0.1, s*0.1, s*0.18);
   ctx.fillRect(sx+s*0.76, sy+s*0.1, s*0.1, s*0.18);
-  // Tail
   ctx.fillStyle = '#c8844a';
   ctx.fillRect(sx+s*0.02, sy+s*0.2, s*0.12, s*0.2);
-  // Legs
   ctx.fillStyle = '#a0602a';
   ctx.fillRect(sx+s*0.15, sy+s*0.65, s*0.12, s*0.22);
   ctx.fillRect(sx+s*0.35, sy+s*0.65, s*0.12, s*0.22);
-  ctx.fillRect(sx+s*0.5, sy+s*0.65, s*0.12, s*0.22);
+  ctx.fillRect(sx+s*0.5,  sy+s*0.65, s*0.12, s*0.22);
 }
 
 function drawSheep(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#eee';
   ctx.fillRect(sx+s*0.1, sy+s*0.2, s*0.75, s*0.5);
   ctx.fillStyle = '#555';
@@ -322,384 +259,279 @@ function drawSheep(sx, sy) {
 }
 
 function drawChicken(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#f0e0a0';
   ctx.fillRect(sx+s*0.2, sy+s*0.3, s*0.55, s*0.4);
   ctx.fillStyle = '#d44';
   ctx.fillRect(sx+s*0.62, sy+s*0.18, s*0.22, s*0.22);
-  // beak
   ctx.fillStyle = '#fa0';
-  ctx.fillRect(sx+s*0.8, sy+s*0.28, s*0.14, s*0.08);
-  // legs
-  ctx.fillStyle = '#fa0';
-  ctx.fillRect(sx+s*0.3, sy+s*0.68, s*0.08, s*0.2);
+  ctx.fillRect(sx+s*0.8,  sy+s*0.28, s*0.14, s*0.08);
+  ctx.fillRect(sx+s*0.3,  sy+s*0.68, s*0.08, s*0.2);
   ctx.fillRect(sx+s*0.52, sy+s*0.68, s*0.08, s*0.2);
 }
 
 function drawCampfire(sx, sy) {
-  const s = TILE * scale;
-  // Logs
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#6B3A2A';
   ctx.save();
   ctx.translate(sx+s*0.5, sy+s*0.7);
-  ctx.rotate(0.5);
-  ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
-  ctx.rotate(-1);
-  ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
+  ctx.rotate(0.5);  ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
+  ctx.rotate(-1);   ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
   ctx.restore();
-  // Flames
   ctx.fillStyle = '#ff6600';
   ctx.beginPath();
-  ctx.moveTo(sx+s*0.5, sy+s*0.15);
-  ctx.lineTo(sx+s*0.3, sy+s*0.65);
-  ctx.lineTo(sx+s*0.7, sy+s*0.65);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(sx+s*0.5, sy+s*0.15); ctx.lineTo(sx+s*0.3, sy+s*0.65); ctx.lineTo(sx+s*0.7, sy+s*0.65);
+  ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#ffcc00';
   ctx.beginPath();
-  ctx.moveTo(sx+s*0.5, sy+s*0.25);
-  ctx.lineTo(sx+s*0.38, sy+s*0.62);
-  ctx.lineTo(sx+s*0.62, sy+s*0.62);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(sx+s*0.5, sy+s*0.25); ctx.lineTo(sx+s*0.38, sy+s*0.62); ctx.lineTo(sx+s*0.62, sy+s*0.62);
+  ctx.closePath(); ctx.fill();
 }
 
 function drawTent(sx, sy) {
-  const s = TILE * scale;
+  const s = TILE * GAME_SCALE;
   const w = 5*s, h = 6*s;
   ctx.fillStyle = '#4a7c59';
   ctx.beginPath();
-  ctx.moveTo(sx, sy + h);
-  ctx.lineTo(sx + w*0.5, sy);
-  ctx.lineTo(sx + w, sy + h);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(sx, sy+h); ctx.lineTo(sx+w*0.5, sy); ctx.lineTo(sx+w, sy+h);
+  ctx.closePath(); ctx.fill();
   ctx.fillStyle = '#2a4c39';
   ctx.beginPath();
-  ctx.moveTo(sx + w*0.35, sy + h);
-  ctx.lineTo(sx + w*0.5, sy + h*0.35);
-  ctx.lineTo(sx + w*0.65, sy + h);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(sx+w*0.35, sy+h); ctx.lineTo(sx+w*0.5, sy+h*0.35); ctx.lineTo(sx+w*0.65, sy+h);
+  ctx.closePath(); ctx.fill();
 }
 
 function drawOrchardTree(sx, sy) {
-  const s = TILE * scale;
-  // Trunk
+  const s = TILE * GAME_SCALE;
   ctx.fillStyle = '#6B3A2A';
-  ctx.fillRect(sx + s*0.7, sy + s*0.8, s*0.6, s*1.2);
-  // Canopy
+  ctx.fillRect(sx+s*0.7, sy+s*0.8, s*0.6, s*1.2);
   ctx.fillStyle = '#2d7a2d';
-  ctx.beginPath();
-  ctx.arc(sx + s, sy + s*0.7, s*0.9, 0, Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(sx+s, sy+s*0.7, s*0.9, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#3a9c3a';
-  ctx.beginPath();
-  ctx.arc(sx + s*0.85, sy + s*0.55, s*0.65, 0, Math.PI*2);
-  ctx.fill();
-  // Apples
+  ctx.beginPath(); ctx.arc(sx+s*0.85, sy+s*0.55, s*0.65, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#cc2222';
   [[0.5,0.6],[1.2,0.45],[0.9,0.8],[1.4,0.75]].forEach(([dx,dy]) => {
-    ctx.beginPath();
-    ctx.arc(sx + s*dx, sy + s*dy, s*0.12, 0, Math.PI*2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(sx+s*dx, sy+s*dy, s*0.12, 0, Math.PI*2); ctx.fill();
   });
 }
 
-// ── Sprite type lookup ─────────────────────────────────────────────────────────
-// We tag certain tiles with extra metadata for rendering
-// Store as objects: { type, col, row }
+// ── Sprites list ───────────────────────────────────────────────────────────
 const sprites = [];
-
-// House
-sprites.push({ type: 'house', col: 4, row: 3 });
-// Kennel
-sprites.push({ type: 'kennel', col: 18, row: 20 });
-// Dog
-sprites.push({ type: 'dog', col: 23, row: 21 });
-// Tent
-sprites.push({ type: 'tent', col: 5, row: 38 });
-// Campfire
+sprites.push({ type: 'house',    col: 4,  row: 3  });
+sprites.push({ type: 'kennel',   col: 18, row: 20 });
+sprites.push({ type: 'dog',      col: 23, row: 21 });
+sprites.push({ type: 'tent',     col: 5,  row: 38 });
 sprites.push({ type: 'campfire', col: 12, row: 41 });
-// Orchard trees
-orchardTrees.forEach(([c,r]) => sprites.push({ type: 'otree', col: c, row: r }));
-// Regular trees
-trees.forEach(([c,r]) => sprites.push({ type: 'tree', col: c, row: r }));
-// Stumps
-stumps.forEach(([c,r]) => sprites.push({ type: 'stump', col: c, row: r }));
-// Graves
-graves.forEach(([c,r]) => sprites.push({ type: 'grave', col: c, row: r }));
-// Animals — sheep
-[[30,20],[32,22],[28,25]].forEach(([c,r]) => sprites.push({ type: 'sheep', col: c, row: r }));
-// Animals — chickens
+orchardTrees.forEach(([c,r])  => sprites.push({ type: 'otree',   col: c, row: r }));
+trees.forEach(([c,r])         => sprites.push({ type: 'tree',    col: c, row: r }));
+stumps.forEach(([c,r])        => sprites.push({ type: 'stump',   col: c, row: r }));
+graves.forEach(([c,r])        => sprites.push({ type: 'grave',   col: c, row: r }));
+[[30,20],[32,22],[28,25]].forEach(([c,r]) => sprites.push({ type: 'sheep',   col: c, row: r }));
 [[42,30],[44,28],[46,32]].forEach(([c,r]) => sprites.push({ type: 'chicken', col: c, row: r }));
 
-// ── Mower state ────────────────────────────────────────────────────────────────
-const mower = {
-  x: (9 + 0.5) * TILE,  // world coords (tile center)
-  y: (16 + 0.5) * TILE,
-  angle: 0,             // radians, 0 = right
-  speed: 0,             // tiles/sec  (+forward, -reverse)
-  vx: 0,
-  vy: 0,
-};
+// ── Mower ──────────────────────────────────────────────────────────────────
+const mower = { x: 9.5*TILE, y: 16.5*TILE, angle: 0, speed: 0 };
+const MOWER_SPEED = 4.5 * TILE;
+const TURN_SPEED  = 3.2;
 
-const MOWER_SPEED = 4.5 * TILE;  // pixels per second
-const TURN_SPEED  = 3.2;          // radians per second
-
-// ── Score storage ─────────────────────────────────────────────────────────────
+// ── Scores ─────────────────────────────────────────────────────────────────
 function loadScores() {
-  try { return JSON.parse(localStorage.getItem('mm_scores') || '[]'); }
-  catch { return []; }
+  try { return JSON.parse(localStorage.getItem('mm_scores') || '[]'); } catch { return []; }
 }
 function saveScore(ms) {
-  const scores = loadScores();
-  scores.push(ms);
-  scores.sort((a,b) => a-b);
-  scores.splice(5);
-  localStorage.setItem('mm_scores', JSON.stringify(scores));
+  const s = loadScores(); s.push(ms); s.sort((a,b) => a-b); s.splice(5);
+  localStorage.setItem('mm_scores', JSON.stringify(s));
 }
 function fmtTime(ms) {
-  const s = Math.floor(ms/1000);
-  const m = Math.floor(s/60);
-  const ss = s % 60;
+  const s = Math.floor(ms/1000), m = Math.floor(s/60), ss = s%60;
   return `${String(m).padStart(2,'0')}m${String(ss).padStart(2,'0')}s`;
 }
 
-// ── Banner ────────────────────────────────────────────────────────────────────
-let bannerX = 0;
-let bannerText = '';
+// ── Banner ─────────────────────────────────────────────────────────────────
+let bannerText = '', bannerScroll = 0;
 function buildBanner() {
-  const scores = loadScores();
-  if (scores.length === 0) {
-    bannerText = '  MOWING MADNESS — NO SCORES YET — MOW THE LAWN!  ';
-  } else {
-    const top = scores.slice(0,5).map((s,i) => `#${i+1} ${fmtTime(s)}`).join('   ');
-    bannerText = '  TOP SCORES: ' + top + '  ';
-  }
+  const s = loadScores();
+  bannerText = s.length
+    ? '  TOP SCORES:  ' + s.slice(0,5).map((t,i) => `#${i+1} ${fmtTime(t)}`).join('   ') + '  '
+    : '  MOWING MADNESS — NO SCORES YET — MOW THE LAWN!  ';
 }
 buildBanner();
 
-// ── Game state ─────────────────────────────────────────────────────────────────
+// ── Game state ─────────────────────────────────────────────────────────────
 const STATE = { HOME: 0, PLAYING: 1, END: 2 };
 let gameState = STATE.HOME;
-let startTime = 0;
-let endTime = 0;
-let mowedCount = 0;
-let lastMs = 0;
+let startTime = 0, endTime = 0, mowedCount = 0, lastMs = 0;
 
 const keys = {};
 document.addEventListener('keydown', e => {
+  // Don't capture keys used for page scroll when game isn't focused on movement
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
-  if (gameState === STATE.HOME) { startGame(); return; }
-  if (gameState === STATE.END && e.code === 'Space') { resetGame(); startGame(); return; }
-  if (gameState === STATE.PLAYING && e.code === 'Escape') { endGame(); }
+  if (gameState === STATE.HOME)                              { startGame(); return; }
+  if (gameState === STATE.END && e.code === 'Space')         { startGame(); return; }
+  if (gameState === STATE.PLAYING && e.code === 'Escape')    { endGame(); }
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 
-// On-screen buttons
+// ── On-screen D-pad ────────────────────────────────────────────────────────
 const BTN = { up: false, down: false, left: false, right: false };
 
-function pointerOn(dir) { BTN[dir] = true; }
-function pointerOff(dir) { BTN[dir] = false; }
+function btnSize() { return Math.round(Math.max(36, Math.min(56, VW * 0.065))); }
 
-canvas.addEventListener('pointerdown', e => {
-  const btn = hitButton(e);
-  if (btn) pointerOn(btn);
-});
-canvas.addEventListener('pointermove', e => {
-  // handle drag
-});
-canvas.addEventListener('pointerup', e => {
-  Object.keys(BTN).forEach(k => BTN[k] = false);
-});
-canvas.addEventListener('pointercancel', e => {
-  Object.keys(BTN).forEach(k => BTN[k] = false);
-});
+function dpadLayout() {
+  const bs = btnSize();
+  const pad = 14;
+  const bx = VW - bs*3 - pad;
+  const by = VH - bs*3 - pad;
+  return {
+    up:    { x: bx+bs,   y: by       },
+    down:  { x: bx+bs,   y: by+bs*2  },
+    left:  { x: bx,      y: by+bs    },
+    right: { x: bx+bs*2, y: by+bs    },
+    bs,
+  };
+}
 
 function hitButton(e) {
   const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  // Buttons rendered in bottom-right — positions computed in drawButtons
-  const bs = btnSize();
-  const bx = VW - bs * 3.8;
-  const by = VH - bs * 3.8;
-  // Up
-  if (mx > bx + bs*0.8 && mx < bx + bs*1.8 && my > by && my < by + bs) return 'up';
-  // Down
-  if (mx > bx + bs*0.8 && mx < bx + bs*1.8 && my > by + bs*2 && my < by + bs*3) return 'down';
-  // Left
-  if (mx > bx && mx < bx + bs && my > by + bs && my < by + bs*2) return 'left';
-  // Right
-  if (mx > bx + bs*2 && mx < bx + bs*3 && my > by + bs && my < by + bs*2) return 'right';
+  const mx = (e.clientX - rect.left) * (VW / rect.width);
+  const my = (e.clientY - rect.top)  * (VH / rect.height);
+  const d = dpadLayout();
+  const { bs } = d;
+  for (const dir of ['up','down','left','right']) {
+    const b = d[dir];
+    if (mx >= b.x && mx <= b.x+bs && my >= b.y && my <= b.y+bs) return dir;
+  }
   return null;
 }
 
-function btnSize() { return Math.max(32, Math.min(54, VW * 0.07)); }
+canvas.addEventListener('pointerdown', e => {
+  const b = hitButton(e); if (b) { BTN[b] = true; e.preventDefault(); }
+});
+canvas.addEventListener('pointermove', e => {
+  // allow sliding between buttons
+  if (e.buttons === 0) return;
+  const b = hitButton(e);
+  Object.keys(BTN).forEach(k => BTN[k] = false);
+  if (b) BTN[b] = true;
+});
+canvas.addEventListener('pointerup',     () => Object.keys(BTN).forEach(k => BTN[k] = false));
+canvas.addEventListener('pointercancel', () => Object.keys(BTN).forEach(k => BTN[k] = false));
 
+// ── Game flow ──────────────────────────────────────────────────────────────
 function startGame() {
-  // Reset map
-  for (let i = 0; i < map.length; i++) {
-    if (map[i] === T.MOWED) map[i] = T.GRASS;
-  }
-  mower.x = (9 + 0.5) * TILE;
-  mower.y = (16 + 0.5) * TILE;
-  mower.angle = 0;
-  mower.speed = 0;
+  for (let i = 0; i < map.length; i++) if (map[i] === T.MOWED) map[i] = T.GRASS;
+  mower.x = 9.5*TILE; mower.y = 16.5*TILE; mower.angle = 0; mower.speed = 0;
   mowedCount = 0;
   startTime = performance.now();
   gameState = STATE.PLAYING;
+  updateMinimap();
   buildBanner();
-}
-
-function resetGame() {
-  gameState = STATE.HOME;
 }
 
 function endGame() {
   if (gameState !== STATE.PLAYING) return;
   endTime = performance.now();
-  const elapsed = endTime - startTime;
-  // Only save score on win (all mowed); on Escape just show
-  if (mowedCount >= TOTAL_GRASS) saveScore(elapsed);
+  if (mowedCount >= TOTAL_GRASS) saveScore(endTime - startTime);
   buildBanner();
   gameState = STATE.END;
 }
 
-// ── Camera ─────────────────────────────────────────────────────────────────────
+// ── Camera ─────────────────────────────────────────────────────────────────
+// Returns camera offset in screen pixels (top-left world pixel that maps to screen (0,0))
 function getCam() {
-  const s = scale;
-  let cx = mower.x * s - VW / 2;
-  let cy = mower.y * s - VH / 2;
-  cx = Math.max(0, Math.min(MAP_W * s - VW, cx));
-  cy = Math.max(0, Math.min(MAP_H * s - VH, cy));
-  return { cx, cy, s };
+  let cx = mower.x * GAME_SCALE - VW / 2;
+  let cy = mower.y * GAME_SCALE - VH / 2;
+  cx = Math.max(0, Math.min(MAP_W * GAME_SCALE - VW, cx));
+  cy = Math.max(0, Math.min(MAP_H * GAME_SCALE - VH, cy));
+  return { cx, cy };
 }
 
-// ── Tile color helpers ─────────────────────────────────────────────────────────
-function tileColor(type) {
-  switch(type) {
-    case T.GRASS:  return null;  // use pattern
-    case T.MOWED:  return '#7abf5e';
-    case T.PATH:   return '#b8a87a';
-    case T.SOLID:  return null;  // drawn by sprite
-    case T.WATER:  return '#4a90d9';
-    case T.BORDER: return '#5a4a2a';
-    default: return '#444';
-  }
-}
-
-// ── Draw everything ────────────────────────────────────────────────────────────
+// ── Map rendering ──────────────────────────────────────────────────────────
 function drawMap(cam) {
-  const { cx, cy, s } = cam;
-  const tileS = TILE * s;
+  const { cx, cy } = cam;
+  const tS = TILE * GAME_SCALE;
 
-  // Determine visible tile range
-  const c0 = Math.max(0, Math.floor(cx / tileS));
-  const r0 = Math.max(0, Math.floor(cy / tileS));
-  const c1 = Math.min(MAP_COLS-1, Math.ceil((cx + VW) / tileS));
-  const r1 = Math.min(MAP_ROWS-1, Math.ceil((cy + VH) / tileS));
+  const c0 = Math.max(0, Math.floor(cx / tS));
+  const r0 = Math.max(0, Math.floor(cy / tS));
+  const c1 = Math.min(MAP_COLS-1, Math.ceil((cx + VW) / tS));
+  const r1 = Math.min(MAP_ROWS-1, Math.ceil((cy + VH) / tS));
 
-  // Grass base / pattern
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
-      const t = map[ti(c, r)];
-      const sx = Math.round(c * tileS - cx);
-      const sy = Math.round(r * tileS - cy);
-      const sw = Math.ceil(tileS);
-      const sh = Math.ceil(tileS);
+      const t  = map[ti(c, r)];
+      const sx = Math.round(c * tS - cx);
+      const sy = Math.round(r * tS - cy);
+      const sw = Math.ceil(tS);
+      const sh = Math.ceil(tS);
 
       if (t === T.GRASS) {
-        ctx.save();
-        ctx.translate(sx, sy);
-        ctx.fillStyle = noisePattern;
-        ctx.fillRect(0, 0, sw, sh);
-        ctx.restore();
-        // Grass blades overlay
-        if (s >= 0.6) {
-          ctx.fillStyle = 'rgba(20,70,10,0.35)';
-          for (let g = 0; g < 4; g++) {
-            const gx = sx + (((c*7+r*3+g*5)&15)/15) * sw;
-            const gy = sy + (((c*3+r*11+g*9)&15)/15) * sh;
-            ctx.fillRect(gx, gy, Math.max(1,sw*0.07), Math.max(2,sh*0.25));
-          }
+        const v = grassNoise[ti(c, r)];
+        ctx.fillStyle = `rgb(${42+v},${88+v},${34+v})`;
+        ctx.fillRect(sx, sy, sw, sh);
+        // Blade strokes — deterministic per tile
+        ctx.fillStyle = `rgba(10,55,5,0.45)`;
+        for (let g = 0; g < 5; g++) {
+          const gx = sx + (((c*7+r*3+g*11) & 31) / 31) * sw;
+          const gy = sy + (((c*3+r*11+g*7) & 31) / 31) * sh;
+          ctx.fillRect(gx, gy, Math.max(1, tS*0.06), Math.max(2, tS*0.22));
         }
       } else if (t === T.MOWED) {
         ctx.fillStyle = '#7abf5e';
         ctx.fillRect(sx, sy, sw, sh);
-        // Subtle stripe
-        if (s >= 0.5) {
-          ctx.fillStyle = 'rgba(0,0,0,0.06)';
-          if (Math.floor(c/2 + r/2) % 2 === 0)
-            ctx.fillRect(sx, sy, sw, sh);
-        }
+        ctx.fillStyle = 'rgba(0,0,0,0.055)';
+        if (((c>>1) + (r>>1)) & 1) ctx.fillRect(sx, sy, sw, sh);
       } else if (t === T.PATH) {
         ctx.fillStyle = '#b8a87a';
         ctx.fillRect(sx, sy, sw, sh);
-        // Pebble dots
-        if (s >= 0.7) {
-          ctx.fillStyle = 'rgba(100,80,50,0.3)';
-          for (let p = 0; p < 3; p++) {
-            const px = sx + (((c*11+r*7+p*13)&15)/15) * sw;
-            const py = sy + (((c*5+r*13+p*3)&15)/15) * sh;
-            ctx.fillRect(px, py, Math.max(1,sw*0.12), Math.max(1,sh*0.12));
-          }
+        ctx.fillStyle = 'rgba(90,70,40,0.28)';
+        for (let p = 0; p < 3; p++) {
+          const px = sx + (((c*11+r*7+p*13)&15)/15) * sw;
+          const py = sy + (((c*5+r*13+p*3)&15)/15) * sh;
+          ctx.fillRect(px, py, Math.max(1, tS*0.11), Math.max(1, tS*0.11));
         }
       } else if (t === T.BORDER) {
-        ctx.fillStyle = '#5a4a2a';
+        ctx.fillStyle = '#4a3820';
         ctx.fillRect(sx, sy, sw, sh);
-        // Fence post
-        ctx.fillStyle = '#8B6040';
-        if ((c + r) % 4 === 0) ctx.fillRect(sx+sw*0.2, sy+sh*0.1, sw*0.6, sh*0.8);
+        ctx.fillStyle = '#7a5e38';
+        if ((c+r) % 4 === 0) ctx.fillRect(sx+sw*0.15, sy+sh*0.08, sw*0.7, sh*0.84);
       } else if (t === T.SOLID) {
-        // Background fill — sprites drawn on top
         ctx.fillStyle = '#5a8a3a';
         ctx.fillRect(sx, sy, sw, sh);
       }
     }
   }
 
-  // Draw sprites
+  // Sprites
   for (const sp of sprites) {
-    const sx = Math.round(sp.col * tileS - cx);
-    const sy = Math.round(sp.row * tileS - cy);
-    // Cull offscreen
-    if (sx > VW + tileS*3 || sy > VH + tileS*3 || sx < -tileS*3 || sy < -tileS*3) continue;
-
-    ctx.save();
-    ctx.scale(s, s);
-    const bx = sp.col * TILE - cx/s;
-    const by = sp.row * TILE - cy/s;
+    const sx = sp.col * tS - cx;
+    const sy = sp.row * tS - cy;
+    if (sx > VW + tS*3 || sy > VH + tS*3 || sx < -tS*4 || sy < -tS*4) continue;
     switch(sp.type) {
-      case 'house':    drawHouse(bx, by); break;
-      case 'kennel':   drawKennel(bx, by); break;
-      case 'dog':      drawDog(bx, by); break;
-      case 'tent':     drawTent(bx, by); break;
-      case 'campfire': drawCampfire(bx, by); break;
-      case 'otree':    drawOrchardTree(bx, by); break;
-      case 'tree':     drawTree(bx, by); break;
-      case 'stump':    drawStump(bx, by); break;
-      case 'grave':    drawGrave(bx, by); break;
-      case 'sheep':    drawSheep(bx, by); break;
-      case 'chicken':  drawChicken(bx, by); break;
+      case 'house':    drawHouse(sx, sy);    break;
+      case 'kennel':   drawKennel(sx, sy);   break;
+      case 'dog':      drawDog(sx, sy);      break;
+      case 'tent':     drawTent(sx, sy);     break;
+      case 'campfire': drawCampfire(sx, sy); break;
+      case 'otree':    drawOrchardTree(sx, sy); break;
+      case 'tree':     drawTree(sx, sy);     break;
+      case 'stump':    drawStump(sx, sy);    break;
+      case 'grave':    drawGrave(sx, sy);    break;
+      case 'sheep':    drawSheep(sx, sy);    break;
+      case 'chicken':  drawChicken(sx, sy);  break;
     }
-    ctx.restore();
   }
 }
 
 function drawMowerOnScreen(cam) {
-  const { cx, cy, s } = cam;
-  const sx = mower.x * s - cx;
-  const sy = mower.y * s - cy;
-  drawMower(sx, sy, mower.angle);
+  drawMower(mower.x * GAME_SCALE - cam.cx, mower.y * GAME_SCALE - cam.cy, mower.angle);
 }
 
-// ── Minimap ────────────────────────────────────────────────────────────────────
-const MM_W = 160;
+// ── Minimap (top-left) ─────────────────────────────────────────────────────
+const MM_W = 150;
 const MM_H = Math.round(MM_W * MAP_ROWS / MAP_COLS);
 const mmCanvas = document.createElement('canvas');
-mmCanvas.width = MAP_COLS;
+mmCanvas.width  = MAP_COLS;
 mmCanvas.height = MAP_ROWS;
 const mmCtx = mmCanvas.getContext('2d');
 const mmImg = mmCtx.createImageData(MAP_COLS, MAP_ROWS);
@@ -708,196 +540,206 @@ function updateMinimap() {
   for (let r = 0; r < MAP_ROWS; r++) {
     for (let c = 0; c < MAP_COLS; c++) {
       const i = (r * MAP_COLS + c) * 4;
-      const t = map[ti(c,r)];
       let col;
-      switch(t) {
-        case T.GRASS:  col = [42,90,36]; break;
-        case T.MOWED:  col = [122,191,94]; break;
+      switch(map[ti(c,r)]) {
+        case T.GRASS:  col = [42,90,36];    break;
+        case T.MOWED:  col = [122,191,94];  break;
         case T.PATH:   col = [184,168,122]; break;
-        case T.SOLID:  col = [120,80,50]; break;
-        case T.BORDER: col = [90,74,42]; break;
+        case T.SOLID:  col = [120,80,50];   break;
+        case T.BORDER: col = [74,58,32];    break;
         default:       col = [60,60,60];
       }
-      mmImg.data[i]   = col[0];
-      mmImg.data[i+1] = col[1];
-      mmImg.data[i+2] = col[2];
-      mmImg.data[i+3] = 255;
+      mmImg.data[i]=col[0]; mmImg.data[i+1]=col[1]; mmImg.data[i+2]=col[2]; mmImg.data[i+3]=255;
     }
   }
   mmCtx.putImageData(mmImg, 0, 0);
 }
 updateMinimap();
 
-function drawMinimap() {
+function drawMinimap(cam) {
   const pad = 10;
-  const x = VW - MM_W - pad;
+  const x = pad;
   const y = BANNER_H + pad;
+
+  // Border
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(x-2, y-2, MM_W+4, MM_H+4);
 
   ctx.save();
   ctx.globalAlpha = 0.5;
-  // Background
-  ctx.fillStyle = '#000';
-  ctx.fillRect(x-2, y-2, MM_W+4, MM_H+4);
-  // Map image
   ctx.drawImage(mmCanvas, x, y, MM_W, MM_H);
   ctx.restore();
 
-  // Mower dot (full opacity)
+  // Mower dot
   const mx = x + (mower.x / MAP_W) * MM_W;
   const my = y + (mower.y / MAP_H) * MM_H;
   ctx.fillStyle = '#ff3333';
-  ctx.beginPath();
-  ctx.arc(mx, my, 3, 0, Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(mx, my, 3, 0, Math.PI*2); ctx.fill();
 
   // Viewport rect
-  const cam = getCam();
-  const vx = x + (cam.cx / (MAP_W * cam.s)) * MM_W;
-  const vy = y + (cam.cy / (MAP_H * cam.s)) * MM_H;
-  const vw = (VW / (MAP_W * cam.s)) * MM_W;
-  const vh = (VH / (MAP_H * cam.s)) * MM_H;
+  const vx = x + (cam.cx / (MAP_W * GAME_SCALE)) * MM_W;
+  const vy = y + (cam.cy / (MAP_H * GAME_SCALE)) * MM_H;
+  const vw = (VW / (MAP_W * GAME_SCALE)) * MM_W;
+  const vh = (VH / (MAP_H * GAME_SCALE)) * MM_H;
   ctx.strokeStyle = 'rgba(255,255,255,0.6)';
   ctx.lineWidth = 1;
   ctx.strokeRect(vx, vy, vw, vh);
 }
 
-// ── Banner rendering ────────────────────────────────────────────────────────────
-const BANNER_H = 28;
-let bannerScroll = 0;
-
+// ── Banner ─────────────────────────────────────────────────────────────────
 function drawBanner(dt) {
-  ctx.fillStyle = '#111';
+  ctx.fillStyle = '#0d0d0d';
   ctx.fillRect(0, 0, VW, BANNER_H);
+  // Pixel-art bottom edge line
+  ctx.fillStyle = '#3a8a3a';
+  ctx.fillRect(0, BANNER_H-2, VW, 2);
+
   ctx.font = '9px "Press Start 2P"';
+  const tw = ctx.measureText(bannerText).width;
+  bannerScroll -= 55 * dt;
+  if (bannerScroll < -tw) bannerScroll = VW;
   ctx.fillStyle = '#ffdd44';
-  const textW = ctx.measureText(bannerText).width;
-  bannerScroll -= 60 * dt;
-  if (bannerScroll < -textW) bannerScroll = VW;
-  ctx.fillText(bannerText + bannerText, bannerScroll, BANNER_H - 8);
+  ctx.fillText(bannerText + bannerText, bannerScroll, BANNER_H - 9);
 }
 
-// ── On-screen buttons ─────────────────────────────────────────────────────────
-function drawButtons() {
-  const bs = btnSize();
-  const bx = VW - bs * 3.8;
-  const by = VH - bs * 3.8;
+// ── Pixel-art D-pad buttons ────────────────────────────────────────────────
+function drawPixelKey(x, y, size, dir, active) {
+  const b = 3; // bevel thickness
+  const face = active ? '#c8c800' : '#404050';
+  const hi   = active ? '#f0f060' : '#686878';
+  const sh   = active ? '#707000' : '#181820';
 
-  function drawKey(kx, ky, label, active) {
-    ctx.fillStyle = active ? 'rgba(255,255,180,0.85)' : 'rgba(40,40,40,0.75)';
-    ctx.strokeStyle = active ? '#fff' : '#888';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(kx, ky, bs*0.9, bs*0.9, 6);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = active ? '#222' : '#ccc';
-    ctx.font = `${Math.max(8,bs*0.22)}px "Press Start 2P"`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, kx + bs*0.45, ky + bs*0.45);
+  // Shadow slab (bottom-right)
+  ctx.fillStyle = sh;
+  ctx.fillRect(x, y, size, size);
+  // Highlight slab (top-left)
+  ctx.fillStyle = hi;
+  ctx.fillRect(x, y, size-b, size-b);
+  // Face
+  ctx.fillStyle = face;
+  ctx.fillRect(x+b, y+b, size-b*2, size-b*2);
+
+  // Arrow (pixelated solid triangle)
+  const cx = x + size/2;
+  const cy = y + size/2;
+  const aw = size * 0.28;
+  const ah = size * 0.30;
+  ctx.fillStyle = active ? '#1a1a00' : '#c8c8d8';
+  ctx.beginPath();
+  switch(dir) {
+    case 'up':
+      ctx.moveTo(cx,      cy - ah);
+      ctx.lineTo(cx + aw, cy + ah*0.6);
+      ctx.lineTo(cx - aw, cy + ah*0.6);
+      break;
+    case 'down':
+      ctx.moveTo(cx,      cy + ah);
+      ctx.lineTo(cx + aw, cy - ah*0.6);
+      ctx.lineTo(cx - aw, cy - ah*0.6);
+      break;
+    case 'left':
+      ctx.moveTo(cx - ah,      cy);
+      ctx.lineTo(cx + ah*0.6,  cy - aw);
+      ctx.lineTo(cx + ah*0.6,  cy + aw);
+      break;
+    case 'right':
+      ctx.moveTo(cx + ah,      cy);
+      ctx.lineTo(cx - ah*0.6,  cy - aw);
+      ctx.lineTo(cx - ah*0.6,  cy + aw);
+      break;
   }
-
-  const up    = keys['ArrowUp']    || BTN.up;
-  const down  = keys['ArrowDown']  || BTN.down;
-  const left  = keys['ArrowLeft']  || BTN.left;
-  const right = keys['ArrowRight'] || BTN.right;
-
-  drawKey(bx + bs*0.8, by,         '▲', up);
-  drawKey(bx + bs*0.8, by + bs*2,  '▼', down);
-  drawKey(bx,          by + bs,    '◀', left);
-  drawKey(bx + bs*1.6, by + bs,    '▶', right);
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
+  ctx.closePath();
+  ctx.fill();
 }
 
-// ── Timer display ─────────────────────────────────────────────────────────────
-function drawTimer() {
+function drawButtons() {
+  const d = dpadLayout();
+  const { bs } = d;
+  const isUp    = keys['ArrowUp']    || BTN.up;
+  const isDown  = keys['ArrowDown']  || BTN.down;
+  const isLeft  = keys['ArrowLeft']  || BTN.left;
+  const isRight = keys['ArrowRight'] || BTN.right;
+  drawPixelKey(d.up.x,    d.up.y,    bs, 'up',    isUp);
+  drawPixelKey(d.down.x,  d.down.y,  bs, 'down',  isDown);
+  drawPixelKey(d.left.x,  d.left.y,  bs, 'left',  isLeft);
+  drawPixelKey(d.right.x, d.right.y, bs, 'right', isRight);
+}
+
+// ── Timer + progress bar ───────────────────────────────────────────────────
+function drawHUD() {
   const elapsed = performance.now() - startTime;
-  const s = Math.floor(elapsed/1000);
-  const m = Math.floor(s/60);
-  const ss = s % 60;
-  const ms = Math.floor((elapsed % 1000) / 10);
-  const str = `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${String(ms).padStart(2,'0')}`;
+  const s = Math.floor(elapsed/1000), m = Math.floor(s/60), ss = s%60;
+  const cs = Math.floor((elapsed%1000)/10);
+  const str = `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+
+  // Timer pill background
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(MM_W + 22, BANNER_H + 4, 168, 36);
   ctx.font = '11px "Press Start 2P"';
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'left';
-  ctx.fillText(str, 10, BANNER_H + 18);
-  // Progress
+  ctx.fillText(str, MM_W + 30, BANNER_H + 22);
+
+  // Progress bar
   const pct = Math.min(1, mowedCount / TOTAL_GRASS);
-  const barW = 120;
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.fillRect(10, BANNER_H + 24, barW, 8);
-  ctx.fillStyle = '#7abf5e';
-  ctx.fillRect(10, BANNER_H + 24, barW * pct, 8);
-  ctx.textAlign = 'left';
+  const bx = MM_W + 30, by = BANNER_H + 28, bw = 148, bh = 7;
+  ctx.fillStyle = '#222';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = pct > 0.9 ? '#ffdd44' : '#7abf5e';
+  ctx.fillRect(bx, by, bw * pct, bh);
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx, by, bw, bh);
 }
 
-// ── Mow tiles under mower ──────────────────────────────────────────────────────
+// ── Mowing + collision ─────────────────────────────────────────────────────
 function mowUnder() {
-  const halfW = TILE * 0.45;
-  // Sample several points under the mower footprint
+  const hw = TILE * 0.44;
   const pts = [
-    {x: mower.x, y: mower.y},
-    {x: mower.x + Math.cos(mower.angle)*halfW*0.7, y: mower.y + Math.sin(mower.angle)*halfW*0.7},
-    {x: mower.x - Math.cos(mower.angle)*halfW*0.7, y: mower.y - Math.sin(mower.angle)*halfW*0.7},
-    {x: mower.x + Math.cos(mower.angle + Math.PI/2)*halfW*0.5, y: mower.y + Math.sin(mower.angle + Math.PI/2)*halfW*0.5},
-    {x: mower.x - Math.cos(mower.angle + Math.PI/2)*halfW*0.5, y: mower.y - Math.sin(mower.angle + Math.PI/2)*halfW*0.5},
+    { x: mower.x, y: mower.y },
+    { x: mower.x + Math.cos(mower.angle)*hw*0.7,       y: mower.y + Math.sin(mower.angle)*hw*0.7 },
+    { x: mower.x - Math.cos(mower.angle)*hw*0.7,       y: mower.y - Math.sin(mower.angle)*hw*0.7 },
+    { x: mower.x + Math.cos(mower.angle+Math.PI/2)*hw*0.5, y: mower.y + Math.sin(mower.angle+Math.PI/2)*hw*0.5 },
+    { x: mower.x - Math.cos(mower.angle+Math.PI/2)*hw*0.5, y: mower.y - Math.sin(mower.angle+Math.PI/2)*hw*0.5 },
   ];
   let changed = false;
   for (const p of pts) {
-    const c = Math.floor(p.x / TILE);
-    const r = Math.floor(p.y / TILE);
+    const c = Math.floor(p.x / TILE), r = Math.floor(p.y / TILE);
     if (c >= 0 && c < MAP_COLS && r >= 0 && r < MAP_ROWS) {
       const idx = ti(c, r);
-      if (map[idx] === T.GRASS) {
-        map[idx] = T.MOWED;
-        mowedCount++;
-        changed = true;
-      }
+      if (map[idx] === T.GRASS) { map[idx] = T.MOWED; mowedCount++; changed = true; }
     }
   }
   if (changed) updateMinimap();
 }
 
-// ── Collision helpers ──────────────────────────────────────────────────────────
 function solidAt(wx, wy) {
-  const c = Math.floor(wx / TILE);
-  const r = Math.floor(wy / TILE);
+  const c = Math.floor(wx/TILE), r = Math.floor(wy/TILE);
   if (c < 0 || c >= MAP_COLS || r < 0 || r >= MAP_ROWS) return true;
   const t = map[ti(c,r)];
   return t === T.SOLID || t === T.BORDER;
 }
 
 function mowerCollides(nx, ny) {
-  const half = TILE * 0.38;
-  const pts = [
-    {x: nx+half, y: ny},
-    {x: nx-half, y: ny},
-    {x: nx, y: ny+half},
-    {x: nx, y: ny-half},
-    {x: nx+half*0.7, y: ny+half*0.7},
-    {x: nx-half*0.7, y: ny+half*0.7},
-    {x: nx+half*0.7, y: ny-half*0.7},
-    {x: nx-half*0.7, y: ny-half*0.7},
-  ];
-  return pts.some(p => solidAt(p.x, p.y));
+  const h = TILE * 0.38;
+  return [
+    [nx+h, ny], [nx-h, ny], [nx, ny+h], [nx, ny-h],
+    [nx+h*0.7, ny+h*0.7], [nx-h*0.7, ny+h*0.7],
+    [nx+h*0.7, ny-h*0.7], [nx-h*0.7, ny-h*0.7],
+  ].some(([x,y]) => solidAt(x, y));
 }
 
-// ── Update ─────────────────────────────────────────────────────────────────────
+// ── Update ─────────────────────────────────────────────────────────────────
 function update(dt) {
-  if (gameState !== STATE.PLAYING) return;
+  const fwd   = keys['ArrowUp']    || BTN.up;
+  const back  = keys['ArrowDown']  || BTN.down;
+  const left  = keys['ArrowLeft']  || BTN.left;
+  const right = keys['ArrowRight'] || BTN.right;
 
-  const fwd  = keys['ArrowUp']    || BTN.up;
-  const back = keys['ArrowDown']  || BTN.down;
-  const left = keys['ArrowLeft']  || BTN.left;
-  const right= keys['ArrowRight'] || BTN.right;
-
-  // Speed
   if (fwd)       mower.speed =  MOWER_SPEED;
   else if (back) mower.speed = -MOWER_SPEED * 0.7;
   else           mower.speed *= 0.7;
 
-  // Turning (only when moving)
   if (Math.abs(mower.speed) > 10) {
     const dir = mower.speed > 0 ? 1 : -1;
     if (left)  mower.angle -= TURN_SPEED * dt * dir;
@@ -906,84 +748,71 @@ function update(dt) {
 
   const nx = mower.x + Math.cos(mower.angle) * mower.speed * dt;
   const ny = mower.y + Math.sin(mower.angle) * mower.speed * dt;
-
-  // Collision
   if (!mowerCollides(nx, mower.y)) mower.x = nx;
   if (!mowerCollides(mower.x, ny)) mower.y = ny;
 
   mowUnder();
-
-  // Win check
   if (mowedCount >= TOTAL_GRASS) endGame();
 }
 
-// ── Home screen ────────────────────────────────────────────────────────────────
+// ── Home screen ────────────────────────────────────────────────────────────
 function drawHome(dt) {
-  // Background — static map view
-  const cam = { cx: 0, cy: 0, s: scale };
-  // Center on start area
-  cam.cx = Math.max(0, mower.x * scale - VW/2);
-  cam.cy = Math.max(0, mower.y * scale - VH/2);
-  drawMap(cam);
-  drawMowerOnScreen(cam);
-
-  // Dim overlay
-  ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(0, BANNER_H, VW, VH - BANNER_H);
-
-  // Title
-  const titleSize = Math.max(16, Math.min(32, VW * 0.04));
-  ctx.font = `${titleSize}px "Press Start 2P"`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#7bff4e';
-  ctx.fillText('MOWING MADNESS', VW/2, VH/2 - titleSize*2);
-
-  // Instructions
-  const instrSize = Math.max(8, Math.min(12, VW * 0.015));
-  ctx.font = `${instrSize}px "Press Start 2P"`;
-  ctx.fillStyle = '#fff';
-  ctx.fillText('▲ / ▼  FORWARD & REVERSE', VW/2, VH/2);
-  ctx.fillText('◀ / ▶  TURN', VW/2, VH/2 + instrSize*2.5);
-  ctx.fillStyle = '#ffdd44';
-  ctx.fillText('PRESS ANY KEY TO START', VW/2, VH/2 + instrSize*6);
-  ctx.textAlign = 'left';
-}
-
-// ── End screen ─────────────────────────────────────────────────────────────────
-function drawEnd(dt) {
   const cam = getCam();
   drawMap(cam);
   drawMowerOnScreen(cam);
+  ctx.fillStyle = 'rgba(0,0,0,0.58)';
+  ctx.fillRect(0, BANNER_H, VW, VH - BANNER_H);
 
+  const tsz = Math.max(16, Math.min(30, VW * 0.038));
+  ctx.textAlign = 'center';
+  ctx.font = `${tsz}px "Press Start 2P"`;
+  ctx.fillStyle = '#7bff4e';
+  ctx.fillText('MOWING MADNESS', VW/2, VH/2 - tsz*2.2);
+
+  const isz = Math.max(8, Math.min(11, VW * 0.014));
+  ctx.font = `${isz}px "Press Start 2P"`;
+  ctx.fillStyle = '#fff';
+  ctx.fillText('▲ / ▼   FORWARD & REVERSE', VW/2, VH/2 + isz*0.5);
+  ctx.fillText('◀ / ▶   TURN', VW/2, VH/2 + isz*3);
+  ctx.fillStyle = '#ffdd44';
+  ctx.fillText('PRESS ANY KEY TO START', VW/2, VH/2 + isz*7);
+  ctx.textAlign = 'left';
+}
+
+// ── End screen ─────────────────────────────────────────────────────────────
+function drawEnd() {
+  const cam = getCam();
+  drawMap(cam);
+  drawMowerOnScreen(cam);
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
   ctx.fillRect(0, BANNER_H, VW, VH - BANNER_H);
 
   const won = mowedCount >= TOTAL_GRASS;
   const elapsed = endTime - startTime;
+  const tsz = Math.max(14, Math.min(26, VW * 0.032));
 
-  const titleSize = Math.max(14, Math.min(28, VW * 0.035));
-  ctx.font = `${titleSize}px "Press Start 2P"`;
   ctx.textAlign = 'center';
+  ctx.font = `${tsz}px "Press Start 2P"`;
   ctx.fillStyle = won ? '#7bff4e' : '#ff6644';
-  ctx.fillText(won ? 'LAWN MOWED!' : 'QUIT', VW/2, VH/2 - titleSize*2);
+  ctx.fillText(won ? 'LAWN MOWED!' : 'QUIT', VW/2, VH/2 - tsz*2);
 
-  ctx.font = `${Math.max(10,titleSize*0.6)}px "Press Start 2P"`;
+  ctx.font = `${Math.max(9, tsz*0.58)}px "Press Start 2P"`;
   ctx.fillStyle = '#fff';
-  ctx.fillText('TIME: ' + fmtTime(elapsed), VW/2, VH/2);
+  ctx.fillText('TIME: ' + fmtTime(elapsed), VW/2, VH/2 + tsz*0.2);
 
   if (won) {
-    const scores = loadScores();
-    const rank = scores.indexOf(elapsed) + 1 || scores.findIndex(s=>s===elapsed)+1;
-    if (rank > 0) ctx.fillText(`RANK #${rank} OF ${scores.length}`, VW/2, VH/2 + titleSize);
+    const sc = loadScores();
+    const rank = sc.findIndex(v => v === elapsed) + 1;
+    if (rank > 0) ctx.fillText(`RANK #${rank} OF ${sc.length}`, VW/2, VH/2 + tsz*1.6);
   }
 
   ctx.fillStyle = '#ffdd44';
-  ctx.font = `${Math.max(8,titleSize*0.45)}px "Press Start 2P"`;
-  ctx.fillText('PRESS SPACE TO MOW AGAIN', VW/2, VH/2 + titleSize*3);
+  ctx.font = `${Math.max(7, tsz*0.4)}px "Press Start 2P"`;
+  ctx.fillText('PRESS SPACE TO MOW AGAIN', VW/2, VH/2 + tsz*3.2);
   ctx.textAlign = 'left';
 }
 
-// ── Main loop ──────────────────────────────────────────────────────────────────
+// ── Main loop ──────────────────────────────────────────────────────────────
 function loop(ms) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (ms - lastMs) / 1000);
@@ -1000,12 +829,12 @@ function loop(ms) {
     drawMap(cam);
     drawMowerOnScreen(cam);
     drawBanner(dt);
-    drawTimer();
-    drawMinimap();
+    drawHUD();
+    drawMinimap(cam);
     drawButtons();
     update(dt);
-  } else if (gameState === STATE.END) {
-    drawEnd(dt);
+  } else {
+    drawEnd();
     drawBanner(dt);
     drawButtons();
   }
