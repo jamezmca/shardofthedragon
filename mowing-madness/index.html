@@ -558,8 +558,15 @@ updateMinimap();
 
 function drawMinimap(cam) {
   const pad = 10;
-  const x = pad;
+  const x = VW - MM_W - pad;
   const y = BANNER_H + pad;
+
+  // Hide if the mower's screen position is over the minimap area
+  const msx = mower.x * GAME_SCALE - cam.cx;
+  const msy = mower.y * GAME_SCALE - cam.cy;
+  const margin = TILE * GAME_SCALE;
+  if (msx > x - margin && msx < x + MM_W + margin &&
+      msy > y - margin && msy < y + MM_H + margin) return;
 
   // Border
   ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -674,15 +681,15 @@ function drawHUD() {
 
   // Timer pill background
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
-  ctx.fillRect(MM_W + 22, BANNER_H + 4, 168, 36);
+  ctx.fillRect(10, BANNER_H + 4, 168, 36);
   ctx.font = '11px "Press Start 2P"';
   ctx.fillStyle = '#fff';
   ctx.textAlign = 'left';
-  ctx.fillText(str, MM_W + 30, BANNER_H + 22);
+  ctx.fillText(str, 18, BANNER_H + 22);
 
   // Progress bar
   const pct = Math.min(1, mowedCount / TOTAL_GRASS);
-  const bx = MM_W + 30, by = BANNER_H + 28, bw = 148, bh = 7;
+  const bx = 18, by = BANNER_H + 28, bw = 148, bh = 7;
   ctx.fillStyle = '#222';
   ctx.fillRect(bx, by, bw, bh);
   ctx.fillStyle = pct > 0.9 ? '#ffdd44' : '#7abf5e';
