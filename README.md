@@ -1,6 +1,8 @@
 # shardofthedragon
  Fun web projects
 
+ note too self - get chatgpt to do a plan first, and also ask it any questrions it has (seems to yield better results)s
+
 
 ideas (general themes are societal resets i.e. emotional regulation, social norms, acceptance, shitty quizzes!!!!)
 - word typing speed (insults like gormless fool or vacuous oaf / or words + definitions)
