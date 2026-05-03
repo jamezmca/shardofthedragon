@@ -697,17 +697,20 @@ function drawMap(cam) {
         ctx.fillStyle = 'rgba(0,0,0,0.055)';
         if (((c>>1) + (r>>1)) & 1) ctx.fillRect(sx, sy, sw, sh);
       } else if (t === T.PATH) {
-        // Terraria-style stone slab — raised block with bevel
-        ctx.fillStyle = '#40404a'; ctx.fillRect(sx, sy, sw, sh);
-        ctx.fillStyle = '#686872'; ctx.fillRect(sx+2, sy+2, sw-4, sh-4);
-        ctx.fillStyle = '#888894'; ctx.fillRect(sx+2, sy+2, sw-4, 2);  // top hi
-        ctx.fillStyle = '#888894'; ctx.fillRect(sx+2, sy+2, 2, sh-4);  // left hi
-        ctx.fillStyle = '#2e2e36'; ctx.fillRect(sx+2, sy+sh-4, sw-4, 2); // bottom sh
-        ctx.fillStyle = '#2e2e36'; ctx.fillRect(sx+sw-4, sy+2, 2, sh-4); // right sh
-        // Occasional crack
-        if ((c*3+r*7)%6 === 0) {
-          ctx.fillStyle = '#2e2e36';
-          ctx.fillRect(sx+Math.round(sw*0.28), sy+Math.round(sh*0.22), Math.round(sw*0.38), 1);
+        // Pokemon-style dirt path — warm sandy base with subtle noise variation
+        const pv = grassNoise[ti(c, r)]; // reuse noise for dirt variation
+        const pr = 178 + Math.floor(pv * 0.4);
+        const pg = 148 + Math.floor(pv * 0.35);
+        const pb = 98  + Math.floor(pv * 0.2);
+        ctx.fillStyle = `rgb(${pr},${pg},${pb})`;
+        ctx.fillRect(sx, sy, sw, sh);
+        // Small scattered pebble/dirt flecks — deterministic
+        for (let p = 0; p < 4; p++) {
+          const fx = sx + (((c*13+r*5+p*17)&31)/31) * sw;
+          const fy = sy + (((c*7+r*11+p*3) &31)/31) * sh;
+          const dark = ((c*11+r*7+p*9)&3) < 2;
+          ctx.fillStyle = dark ? `rgba(120,90,55,0.35)` : `rgba(210,185,140,0.4)`;
+          ctx.fillRect(fx, fy, Math.max(1, sw*0.13), Math.max(1, sh*0.13));
         }
       } else if (t === T.BORDER) {
         ctx.fillStyle = '#4a3820';
@@ -763,7 +766,7 @@ function updateMinimap() {
       switch(map[ti(c,r)]) {
         case T.GRASS:  col = [42,90,36];    break;
         case T.MOWED:  col = [122,191,94];  break;
-        case T.PATH:   col = [184,168,122]; break;
+        case T.PATH:   col = [178,148,98];  break;
         case T.SOLID:  col = [120,80,50];   break;
         case T.BORDER: col = [74,58,32];    break;
         default:       col = [60,60,60];
