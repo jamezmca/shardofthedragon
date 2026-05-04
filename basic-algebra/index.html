@@ -739,7 +739,7 @@ function submitAnswer() {
   if (!val) return;
 
   totalAnswered++;
-  document.getElementById('top-right').textContent = `${totalAnswered} answered`;
+  document.getElementById('top-right').textContent = `${totalAnswered}`;
 
   const correct = currentQ.check(val);
 
@@ -785,7 +785,7 @@ function startTopic(key) {
   totalAnswered = 0;
   home.style.display  = 'none';
   qpage.style.display = 'block';
-  document.getElementById('top-right').textContent = '0 answered';
+  document.getElementById('top-right').textContent = '0';
   nextQuestion();
 }
 
