@@ -48,6 +48,11 @@
     <li><a data-topic="solve-eq">7. Solving Equations</a></li>
     <li><a data-topic="substitution">8. Substitution into Formulas</a></li>
     <li><a data-topic="rearrange">9. Rearranging Formulas</a></li>
+    <li><a data-topic="index-laws">10. Index Laws</a></li>
+    <li><a data-topic="alg-fractions">11. Algebraic Fractions</a></li>
+    <li><a data-topic="inequalities">12. Inequalities</a></li>
+    <li><a data-topic="complete-square">13. Completing the Square</a></li>
+    <li><a data-topic="simultaneous">14. Simultaneous Equations</a></li>
     <hr class="sep">
     <li><a data-topic="mix">Mix of All Topics</a></li>
   </ul>
@@ -99,7 +104,8 @@ function renderA(str) {
 // ── Session state ─────────────────────────────────────────────────────────────
 const KEYS = [
   'like-terms','mult-terms','single-bracket','double-bracket',
-  'factorise-hcf','factorise-quad','solve-eq','substitution','rearrange'
+  'factorise-hcf','factorise-quad','solve-eq','substitution','rearrange',
+  'index-laws','alg-fractions','inequalities','complete-square','simultaneous'
 ];
 
 // Per-topic correct counts at each level (shared between dedicated + mix sessions)
@@ -425,6 +431,263 @@ function genRearrange(level) {
   };
 }
 
+// 10. Index Laws
+function genIndexLaws(level) {
+  const v = pick(['x','y','a','m']);
+  if (level === 1) {
+    // multiplication: v^a × v^b = v^(a+b)
+    const a = rnd(2,6), b = rnd(2,6), s = a + b;
+    return {
+      qText: `Simplify \\(${v}^${a} \\times ${v}^${b}\\)`,
+      aLatex: `${v}^{${s}}`,
+      check: inp => norm(inp) === norm(`${v}^${s}`) || norm(inp) === norm(`${v}^{${s}}`)
+    };
+  }
+  if (level === 2) {
+    const type = pick(['div','power','coef']);
+    if (type === 'div') {
+      // v^a ÷ v^b = v^(a-b)
+      const b = rnd(2,5), a = b + rnd(2,5), d = a - b;
+      return {
+        qText: `Simplify \\(${v}^${a} \\div ${v}^${b}\\)`,
+        aLatex: `${v}^{${d}}`,
+        check: inp => norm(inp) === norm(`${v}^${d}`) || norm(inp) === norm(`${v}^{${d}}`)
+      };
+    }
+    if (type === 'power') {
+      // (v^a)^b = v^(ab)
+      const a = rnd(2,5), b = rnd(2,4), p = a * b;
+      return {
+        qText: `Simplify \\((${v}^${a})^${b}\\)`,
+        aLatex: `${v}^{${p}}`,
+        check: inp => norm(inp) === norm(`${v}^${p}`) || norm(inp) === norm(`${v}^{${p}}`)
+      };
+    }
+    // coef: c*v^a × d*v^b
+    const c = rnd(2,5), d = rnd(2,5), a = rnd(2,4), b = rnd(2,4), p = c*d, s = a+b;
+    return {
+      qText: `Simplify \\(${c}${v}^${a} \\times ${d}${v}^${b}\\)`,
+      aLatex: `${p}${v}^{${s}}`,
+      check: inp => norm(inp) === norm(`${p}${v}^${s}`) || norm(inp) === norm(`${p}${v}^{${s}}`)
+    };
+  }
+  // level 3: negative and fractional indices
+  const type = pick(['neg','frac','negfrac']);
+  if (type === 'neg') {
+    // v^-a = 1/v^a
+    const a = rnd(2,4);
+    const a1 = `1/${v}^${a}`, a2 = `1/${v}^{${a}}`;
+    return {
+      qText: `Write \\(${v}^{-${a}}\\) without negative indices`,
+      aLatex: `\\dfrac{1}{${v}^${a}}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  if (type === 'frac') {
+    // v^(1/2) = sqrt(v),  v^(1/3) = cbrt
+    const n = pick([2,3]);
+    const rootStr = n === 2 ? `\\sqrt{${v}}` : `\\sqrt[3]{${v}}`;
+    const a1 = n === 2 ? `sqrt(${v})` : `${v}^(1/3)`;
+    const a2 = `${v}^(1/${n})`;
+    return {
+      qText: `Write \\(${v}^{1/${n}}\\) in surd/root form`,
+      aLatex: rootStr,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2) ||
+                   norm(inp) === norm(`${v}^{1/${n}}`)
+    };
+  }
+  // negfrac: v^(-1/2) = 1/sqrt(v)
+  const a1 = `1/sqrt(${v})`, a2 = `1/${v}^(1/2)`;
+  return {
+    qText: `Write \\(${v}^{-1/2}\\) without negative indices`,
+    aLatex: `\\dfrac{1}{\\sqrt{${v}}}`,
+    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2) ||
+                 norm(inp) === norm(`1/${v}^{1/2}`)
+  };
+}
+
+// 11. Algebraic Fractions
+function genAlgFractions(level) {
+  const v = pick(['x','n','a']);
+  if (level === 1) {
+    // simplify: (ab*v) / (a*v) = b, or (a*v^2)/(b*v) = (a/b)*v
+    const a = rnd(2,6), b = rnd(2,6), p = a * b;
+    return {
+      qText: `Simplify \\(\\dfrac{${p}${v}}{${a}}\\)`,
+      aLatex: `${b}${v}`,
+      check: inp => norm(inp) === norm(`${b}${v}`)
+    };
+  }
+  if (level === 2) {
+    // simplify: (a*v^2) / (b*v) = (a/b)*v  — pick a,b with common factor so answer is integer coef
+    const k = rnd(2,5), c = rnd(2,4), d = rnd(2,4), num = k*c, den = k*d;
+    // gcd already k; result is (c/d)v — only generate if c/d is integer
+    const g = gcd(num, den), rn = num/g, rd = den/g;
+    if (rd === 1) {
+      return {
+        qText: `Simplify \\(\\dfrac{${num}${v}^2}{${den}${v}}\\)`,
+        aLatex: `${rn}${v}`,
+        check: inp => norm(inp) === norm(`${rn}${v}`)
+      };
+    }
+    // fallback: plain coefficient fraction
+    const a2 = rnd(2,8), b2 = rnd(2,8), p2 = a2*b2;
+    return {
+      qText: `Simplify \\(\\dfrac{${p2}${v}^2}{${a2}${v}}\\)`,
+      aLatex: `${b2}${v}`,
+      check: inp => norm(inp) === norm(`${b2}${v}`)
+    };
+  }
+  // level 3: add two fractions with different denominators: a/(bv) + c/(dv) = (ad+bc)/(bdv)
+  const b = rnd(2,5), d = rnd(2,5), a = rnd(1,5), c = rnd(1,5);
+  const numVal = a*d + b*c, denVal = b*d;
+  const g = gcd(numVal, denVal), rn = numVal/g, rd = denVal/g;
+  const aLatex = rd === 1 ? `\\dfrac{${rn}}{${v}}` : `\\dfrac{${rn}}{${rd}${v}}`;
+  const a1 = rd === 1 ? `${rn}/${v}` : `${rn}/(${rd}${v})`;
+  const a2 = rd === 1 ? `${rn}/${v}` : `${rn}/${rd}${v}`;
+  return {
+    qText: `Simplify \\(\\dfrac{${a}}{${b}${v}} + \\dfrac{${c}}{${d}${v}}\\)`,
+    aLatex,
+    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+  };
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+// 12. Inequalities
+function genInequalities(level) {
+  const v = pick(['x','n','k']);
+  const ops = ['<', '>', '\\leq', '\\geq'];
+  const opSym = (o) => ({ '<':'<', '>':'>','\\leq':'<=','\\geq':'>=' }[o]);
+  if (level === 1) {
+    // v + a > b  →  v > b-a
+    const op = pick(ops), a = rnd(2,8), x = rnd(1,8), b = x + a;
+    const rhs = b - a;
+    const a1 = `${v}${opSym(op)}${rhs}`, a2 = `${v} ${opSym(op)} ${rhs}`;
+    return {
+      qText: `Solve \\(${v} + ${a} ${op} ${b}\\)`,
+      aLatex: `${v} ${op} ${rhs}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  if (level === 2) {
+    // av + b > c  →  v > (c-b)/a
+    const op = pick(ops), a = rnd(2,6), x = rnd(1,7), b = rnd(1,8), c = a*x + b;
+    const a1 = `${v}${opSym(op)}${x}`, a2 = `${v} ${opSym(op)} ${x}`;
+    return {
+      qText: `Solve \\(${a}${v} + ${b} ${op} ${c}\\)`,
+      aLatex: `${v} ${op} ${x}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // level 3: variables on both sides, or dividing by negative flips sign
+  // divide by negative: -av < b  →  v > -b/a
+  const a = rnd(2,6), b = rnd(2,12), x = Math.ceil(b / a);
+  // -av < b  →  v > -b/a; use b as multiple of a for clean answer
+  const aa = rnd(2,5), bb = aa * rnd(1,6);
+  const xval = bb / aa; // integer
+  // question: -aa*v < bb → v > -xval  (flip: > becomes <)
+  // or: av + b > cv + d
+  const av = rnd(4,8), cv = rnd(1, av-2), d = rnd(1,8), bv = (cv - av)*xval + d;
+  const bvAbs = Math.abs(bv);
+  const op = pick(['<','>']);
+  const flip = (o) => o === '<' ? '>' : '<';
+  const qStr = bv >= 0
+    ? `${av}${v} + ${bv} ${op} ${cv}${v} + ${d}`
+    : `${av}${v} - ${bvAbs} ${op} ${cv}${v} + ${d}`;
+  const a1 = `${v}${flip(op)}${xval}`, a2 = `${v} ${flip(op)} ${xval}`;
+  return {
+    qText: `Solve \\(${qStr}\\)`,
+    aLatex: `${v} ${flip(op)} ${xval}`,
+    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+  };
+}
+
+// 13. Completing the Square
+function genCompleteSquare(level) {
+  if (level === 1) {
+    // x^2 + 2bx + c = (x+b)^2 - b^2 + c, where c = 0 (just x^2 + 2bx)
+    const b = rnd(2,7), sq = b*b;
+    return {
+      qText: `Complete the square: \\(x^2 + ${2*b}x\\)`,
+      aLatex: `(x + ${b})^2 - ${sq}`,
+      check: inp => norm(inp) === norm(`(x+${b})^2-${sq}`) ||
+                   norm(inp) === norm(`(x+${b})^2-${sq}`)
+    };
+  }
+  if (level === 2) {
+    // x^2 + 2bx + c = (x+b)^2 + (c - b^2)
+    const b = rnd(2,6), c = rnd(1,12), k = c - b*b;
+    const kStr = k >= 0 ? `+ ${k}` : `- ${Math.abs(k)}`;
+    const aStr = k >= 0 ? `(x+${b})^2+${k}` : `(x+${b})^2-${Math.abs(k)}`;
+    return {
+      qText: `Complete the square: \\(x^2 + ${2*b}x + ${c}\\)`,
+      aLatex: `(x + ${b})^2 ${kStr}`,
+      check: inp => norm(inp) === norm(aStr)
+    };
+  }
+  // level 3: x^2 - 2bx + c (negative middle term)
+  const b = rnd(2,6), c = rnd(1,12), k = c - b*b;
+  const kStr = k >= 0 ? `+ ${k}` : `- ${Math.abs(k)}`;
+  const aStr = k >= 0 ? `(x-${b})^2+${k}` : `(x-${b})^2-${Math.abs(k)}`;
+  return {
+    qText: `Complete the square: \\(x^2 - ${2*b}x + ${c}\\)`,
+    aLatex: `(x - ${b})^2 ${kStr}`,
+    check: inp => norm(inp) === norm(aStr)
+  };
+}
+
+// 14. Simultaneous Equations
+function genSimultaneous(level) {
+  if (level === 1) {
+    // substitution: y = ax + b, y = cx + d  →  ax+b = cx+d → x = (d-b)/(a-c)
+    const x = rnd(1,6), a = rnd(2,5), b = rnd(1,8), c = rnd(1, a-1), d = a*x + b - c*x;
+    return {
+      qText: `Solve simultaneously:\\(y = ${a}x + ${b}\\) and \\(y = ${c}x + ${d}\\)`,
+      aLatex: `x = ${x},\\; y = ${a*x + b}`,
+      check: inp => {
+        const n = norm(inp);
+        const yv = a*x + b;
+        return (n.includes(`x=${x}`) && n.includes(`y=${yv}`)) ||
+               (n.includes(`${x}`) && n.includes(`${yv}`));
+      }
+    };
+  }
+  if (level === 2) {
+    // elimination: ax + by = p, cx + dy = q — simple coefficients
+    const x = rnd(1,6), y = rnd(1,6);
+    const a = rnd(1,4), b = rnd(1,4), c = rnd(1,4), d = rnd(1,4);
+    const p = a*x + b*y, q = c*x + d*y;
+    return {
+      qText: `Solve simultaneously:\\(${a}x + ${b}y = ${p}\\) and \\(${c}x + ${d}y = ${q}\\)`,
+      aLatex: `x = ${x},\\; y = ${y}`,
+      check: inp => {
+        const n = norm(inp);
+        return (n.includes(`x=${x}`) && n.includes(`y=${y}`)) ||
+               (n.includes(`${x}`) && n.includes(`${y}`));
+      }
+    };
+  }
+  // level 3: one linear one quadratic
+  const b = rnd(1,5), c = rnd(-4,4);
+  // y = x^2 + c  and  y = bx; intersect: x^2 - bx + c = 0 → need discriminant ≥ 0
+  // use b^2 - 4c ≥ 0; pick c ≤ b^2/4; also want integer roots so c = -(r*s), b = r+s
+  const r = rnd(1,4), s = rnd(1,4);
+  const bv = r + s, cv = -(r * s);
+  const x1 = r, x2 = -s, y1 = bv*x1, y2 = bv*x2;
+  const cvStr = cv >= 0 ? `+ ${cv}` : `- ${Math.abs(cv)}`;
+  return {
+    qText: `Solve simultaneously: \\(y = x^2 ${cvStr}\\) and \\(y = ${bv}x\\)`,
+    aLatex: `(${x1},\\,${y1}) \\text{ and } (${x2},\\,${y2})`,
+    check: inp => {
+      const n = norm(inp);
+      const pair1 = `(${x1},${y1})`, pair2 = `(${x2},${y2})`;
+      const pair3 = `(${x2},${y2})`, pair4 = `(${x1},${y1})`;
+      return (n.includes(norm(pair1)) && n.includes(norm(pair2)));
+    }
+  };
+}
+
 // ── Generator map ──────────────────────────────────────────────────────────────
 const GEN = {
   'like-terms':      genLikeTerms,
@@ -436,6 +699,11 @@ const GEN = {
   'solve-eq':        genSolveEq,
   'substitution':    genSubstitution,
   'rearrange':       genRearrange,
+  'index-laws':      genIndexLaws,
+  'alg-fractions':   genAlgFractions,
+  'inequalities':    genInequalities,
+  'complete-square': genCompleteSquare,
+  'simultaneous':    genSimultaneous,
 };
 
 // ── Next question ─────────────────────────────────────────────────────────────
