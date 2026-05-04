@@ -144,7 +144,7 @@ function countMowable() {
 }
 const TOTAL_GRASS = countMowable();
 
-// ── Per-tile grass noise ───────────────────────────────────────────────────
+// ── Per-tile grass noise (kept for minimap / border variation) ─────────────
 const grassNoise = new Uint8Array(MAP_COLS * MAP_ROWS);
 {
   let seed = 42;
@@ -152,286 +152,44 @@ const grassNoise = new Uint8Array(MAP_COLS * MAP_ROWS);
   for (let i = 0; i < grassNoise.length; i++) grassNoise[i] = Math.floor(lcg() * 38);
 }
 
-// ── Sprite drawing ─────────────────────────────────────────────────────────
-// All take world-pixel (sx, sy) = top-left of tile, and use TILE * GAME_SCALE.
+// ── Image assets ──────────────────────────────────────────────────────────────
+const IMG = {};
+[
+  'grass','grass_mowed','path_cobble',
+  'tree','tree_orchard','stump','grave','campfire',
+  'kennel','tent','cottage',
+  'sheep','chicken','dog','mower_n',
+  'flower_red','flower_yellow','flower_purple','flower_pink','flower_white',
+].forEach(name => {
+  const img = new Image();
+  img.src = `assets/sprites/${name}.png`;
+  IMG[name] = img;
+});
+const FLOWER_IMGS = ['flower_red','flower_yellow','flower_purple','flower_pink','flower_white'];
 
-function drawPixelArt(px, pal, sx, sy, sw, sh) {
-  const rows = px.length, cols = px[0].length;
-  const pw = sw / cols, ph = sh / rows;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const ci = px[r][c];
-      if (!pal[ci]) continue;
-      ctx.fillStyle = pal[ci];
-      ctx.fillRect(Math.round(sx + c*pw), Math.round(sy + r*ph), Math.ceil(pw), Math.ceil(ph));
-    }
-  }
-}
+// ── Sprite drawing ─────────────────────────────────────────────────────────
 
 function drawMower(screenX, screenY, angle) {
   const s = TILE * GAME_SCALE;
   ctx.save();
   ctx.translate(screenX, screenY);
-  ctx.rotate(angle);
-  ctx.fillStyle = '#d42b2b';
-  ctx.fillRect(-s*0.45, -s*0.35, s*0.9, s*0.7);
-  ctx.fillStyle = '#8B4513';
-  ctx.fillRect(-s*0.1, s*0.25, s*0.2, s*0.25);
-  ctx.fillStyle = '#222';
-  ctx.fillRect(-s*0.45, -s*0.42, s*0.22, s*0.14);
-  ctx.fillRect( s*0.23, -s*0.42, s*0.22, s*0.14);
-  ctx.fillRect(-s*0.45,  s*0.28, s*0.22, s*0.14);
-  ctx.fillRect( s*0.23,  s*0.28, s*0.22, s*0.14);
-  ctx.fillStyle = '#bbb';
-  ctx.fillRect(-s*0.25, -s*0.09, s*0.5, s*0.05);
+  ctx.rotate(angle + Math.PI / 2); // sprite faces north; offset so angle=0 faces east
+  ctx.drawImage(IMG.mower_n, -s*0.5, -s*0.5, s, s);
   ctx.restore();
 }
 
-const OAK_TREE_PAL = [null,'#145014','#2a7830','#40b048','#5a3210','#7a4820'];
-const OAK_TREE_PX = [
-  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-  [0,0,0,0,1,1,2,3,3,2,1,1,0,0,0,0],
-  [0,0,0,1,2,3,3,3,3,2,2,2,1,0,0,0],
-  [0,0,1,2,3,3,3,2,2,2,2,2,2,1,0,0],
-  [0,1,2,3,3,3,2,2,2,2,2,2,2,2,1,0],
-  [0,1,2,3,3,2,2,2,2,2,2,2,2,2,1,0],
-  [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
-  [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-  [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
-  [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-  [0,0,0,0,1,1,2,2,2,1,1,0,0,0,0,0],
-  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,1,4,5,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
-];
-
-const ORCHARD_TREE_PAL = [null,'#145014','#286038','#40a050','#5a3210','#7a4820','#d82020'];
-const ORCHARD_TREE_PX = [
-  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-  [0,0,0,0,1,1,2,3,3,2,1,1,0,0,0,0],
-  [0,0,0,1,2,3,3,3,3,2,2,2,1,0,0,0],
-  [0,0,1,2,3,3,3,2,2,2,2,2,2,1,0,0],
-  [0,1,2,3,3,3,2,6,2,2,2,2,2,2,1,0],
-  [0,1,2,3,3,2,2,2,2,2,2,2,6,2,1,0],
-  [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
-  [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
-  [0,0,1,2,2,6,2,2,2,2,2,2,1,0,0,0],
-  [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
-  [0,0,0,0,1,1,2,2,2,1,1,0,0,0,0,0],
-  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,1,4,5,1,0,0,0,0,0,0,0],
-  [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
-];
-
-function drawTree(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  drawPixelArt(OAK_TREE_PX, OAK_TREE_PAL, sx, sy, 2*s, 2*s);
-}
-
-function drawStump(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  // Dark outline
-  ctx.fillStyle = '#2a1406';
-  ctx.fillRect(sx+s*0.14, sy+s*0.14, s*0.72, s*0.72);
-  // Outer wood ring
-  ctx.fillStyle = '#7a4e28';
-  ctx.fillRect(sx+s*0.18, sy+s*0.18, s*0.64, s*0.64);
-  // Mid ring
-  ctx.fillStyle = '#5a3818';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.5, s*0.26, 0, Math.PI*2); ctx.fill();
-  // Inner ring
-  ctx.fillStyle = '#9a6838';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.5, s*0.18, 0, Math.PI*2); ctx.fill();
-  // Heartwood
-  ctx.fillStyle = '#5a3818';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.5, s*0.08, 0, Math.PI*2); ctx.fill();
-}
-
-function drawGrave(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  // Dark outline
-  ctx.fillStyle = '#202028';
-  ctx.fillRect(sx+s*0.2, sy+s*0.08, s*0.6, s*0.82);
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.2, s*0.3, Math.PI, 0); ctx.fill();
-  // Stone face
-  ctx.fillStyle = '#8080a0';
-  ctx.fillRect(sx+s*0.24, sy+s*0.12, s*0.52, s*0.76);
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.2, s*0.26, Math.PI, 0); ctx.fill();
-  // Cross
-  ctx.fillStyle = '#202028';
-  ctx.fillRect(sx+s*0.46, sy+s*0.26, s*0.08, s*0.38);
-  ctx.fillRect(sx+s*0.33, sy+s*0.38, s*0.34, s*0.08);
-}
-
-const HOUSE_PAL = [null,'#1c1c1c','#c8a040','#9a7228','#6a5018','#808080','#c8b890','#78b8d0','#603018','#3a2810'];
-const HOUSE_PX = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,5,5,4,1],
-  [1,3,3,3,3,3,3,2,4,4,4,4,5,5,4,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,6,6,6,7,7,7,6,6,6,7,7,7,6,6,1],
-  [1,6,6,6,7,7,7,6,6,6,7,7,7,6,6,1],
-  [1,6,6,6,6,6,6,8,8,8,6,6,6,6,6,1],
-  [1,6,9,9,9,6,6,8,8,8,6,6,9,9,9,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-];
-
-function drawHouse(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  drawPixelArt(HOUSE_PX, HOUSE_PAL, sx, sy, 11*s, 11*s);
-}
-
-const KENNEL_PAL = [null,'#1c1c1c','#c8a040','#9a7228','#6a5018','#c8b890','#a09868','#1a0c04'];
-const KENNEL_PX = [
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,3,3,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,3,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-  [1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1],
-  [1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1],
-  [1,5,5,1,1,1,1,6,6,1,1,1,1,5,5,1],
-  [1,5,5,1,7,7,7,7,7,7,7,1,5,5,5,1],
-  [1,5,5,1,7,7,7,7,7,7,7,1,5,5,5,1],
-  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-];
-
-function drawKennel(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  drawPixelArt(KENNEL_PX, KENNEL_PAL, sx, sy, 4*s, 4*s);
-}
-
-function drawDog(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  ctx.fillStyle = '#c8844a';
-  ctx.fillRect(sx+s*0.1, sy+s*0.35, s*0.6, s*0.35);
-  ctx.fillRect(sx+s*0.55, sy+s*0.2, s*0.35, s*0.3);
-  ctx.fillStyle = '#a0602a';
-  ctx.fillRect(sx+s*0.58, sy+s*0.1, s*0.1, s*0.18);
-  ctx.fillRect(sx+s*0.76, sy+s*0.1, s*0.1, s*0.18);
-  ctx.fillStyle = '#c8844a';
-  ctx.fillRect(sx+s*0.02, sy+s*0.2, s*0.12, s*0.2);
-  ctx.fillStyle = '#a0602a';
-  ctx.fillRect(sx+s*0.15, sy+s*0.65, s*0.12, s*0.22);
-  ctx.fillRect(sx+s*0.35, sy+s*0.65, s*0.12, s*0.22);
-  ctx.fillRect(sx+s*0.5,  sy+s*0.65, s*0.12, s*0.22);
-}
-
-function drawSheep(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  ctx.fillStyle = '#eee';
-  ctx.fillRect(sx+s*0.1, sy+s*0.2, s*0.75, s*0.5);
-  ctx.fillStyle = '#555';
-  ctx.fillRect(sx+s*0.7, sy+s*0.3, s*0.2, s*0.22);
-  ctx.fillStyle = '#888';
-  ctx.fillRect(sx+s*0.15, sy+s*0.65, s*0.12, s*0.2);
-  ctx.fillRect(sx+s*0.55, sy+s*0.65, s*0.12, s*0.2);
-}
-
-function drawChicken(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  ctx.fillStyle = '#f0e0a0';
-  ctx.fillRect(sx+s*0.2, sy+s*0.3, s*0.55, s*0.4);
-  ctx.fillStyle = '#d44';
-  ctx.fillRect(sx+s*0.62, sy+s*0.18, s*0.22, s*0.22);
-  ctx.fillStyle = '#fa0';
-  ctx.fillRect(sx+s*0.8,  sy+s*0.28, s*0.14, s*0.08);
-  ctx.fillRect(sx+s*0.3,  sy+s*0.68, s*0.08, s*0.2);
-  ctx.fillRect(sx+s*0.52, sy+s*0.68, s*0.08, s*0.2);
-}
-
-const FLOWER_COLORS = ['#ff4444','#ffdd00','#cc44ff','#ff88cc','#f0f0f0'];
-
-function drawFlower(sx, sy, colorIdx) {
-  const s = TILE * GAME_SCALE;
-  const cx = sx + s * 0.5;
-  const cy = sy + s * 0.46;
-  const pr = s * 0.13;
-  const po = s * 0.17;
-  // Stem
-  ctx.fillStyle = '#3a7a28';
-  ctx.fillRect(cx - s*0.04, cy + s*0.12, s*0.08, s*0.32);
-  // Petals
-  ctx.fillStyle = FLOWER_COLORS[colorIdx];
-  [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy]) => {
-    ctx.beginPath(); ctx.arc(cx+dx*po, cy+dy*po, pr, 0, Math.PI*2); ctx.fill();
-  });
-  // Diagonal petals (slightly smaller)
-  ctx.fillStyle = FLOWER_COLORS[colorIdx] + 'cc';
-  [[1,-1],[1,1],[-1,1],[-1,-1]].forEach(([dx,dy]) => {
-    ctx.beginPath(); ctx.arc(cx+dx*po*0.72, cy+dy*po*0.72, pr*0.72, 0, Math.PI*2); ctx.fill();
-  });
-  // Center
-  ctx.fillStyle = '#ffee44';
-  ctx.beginPath(); ctx.arc(cx, cy, pr*0.75, 0, Math.PI*2); ctx.fill();
-  // Center dot
-  ctx.fillStyle = '#c88000';
-  ctx.beginPath(); ctx.arc(cx, cy, pr*0.3, 0, Math.PI*2); ctx.fill();
-}
-
-function drawCampfire(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  ctx.fillStyle = '#6B3A2A';
-  ctx.save();
-  ctx.translate(sx+s*0.5, sy+s*0.7);
-  ctx.rotate(0.5);  ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
-  ctx.rotate(-1);   ctx.fillRect(-s*0.4, -s*0.07, s*0.8, s*0.14);
-  ctx.restore();
-  ctx.fillStyle = '#ff6600';
-  ctx.beginPath();
-  ctx.moveTo(sx+s*0.5, sy+s*0.15); ctx.lineTo(sx+s*0.3, sy+s*0.65); ctx.lineTo(sx+s*0.7, sy+s*0.65);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#ffcc00';
-  ctx.beginPath();
-  ctx.moveTo(sx+s*0.5, sy+s*0.25); ctx.lineTo(sx+s*0.38, sy+s*0.62); ctx.lineTo(sx+s*0.62, sy+s*0.62);
-  ctx.closePath(); ctx.fill();
-}
-
-const TENT_PAL = [null,'#1c1c1c','#507838','#3a6028','#242c1c','#101810'];
-const TENT_PX = [
-  [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
-  [0,0,0,0,0,0,1,2,3,1,0,0,0,0,0,0],
-  [0,0,0,0,0,1,2,2,3,3,1,0,0,0,0,0],
-  [0,0,0,0,1,2,2,2,3,3,3,1,0,0,0,0],
-  [0,0,0,1,2,2,2,2,3,3,3,3,1,0,0,0],
-  [0,0,1,2,2,2,2,2,3,3,3,3,3,1,0,0],
-  [0,1,2,2,2,2,2,2,3,3,3,3,3,3,1,0],
-  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
-  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
-  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
-  [0,1,2,2,2,2,2,2,3,3,3,3,3,3,1,0],
-  [0,0,1,2,2,1,4,4,4,4,1,3,3,1,0,0],
-  [0,0,0,1,2,1,5,5,5,5,1,3,1,0,0,0],
-  [0,0,0,0,1,1,5,5,5,5,1,1,0,0,0,0],
-  [0,0,0,0,0,1,5,5,5,5,1,0,0,0,0,0],
-  [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
-];
-
-function drawTent(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  drawPixelArt(TENT_PX, TENT_PAL, sx, sy, 5*s, 6*s);
-}
-
-function drawOrchardTree(sx, sy) {
-  const s = TILE * GAME_SCALE;
-  drawPixelArt(ORCHARD_TREE_PX, ORCHARD_TREE_PAL, sx, sy, 2*s, 2*s);
-}
+function drawTree(sx, sy)        { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.tree,         sx, sy,  2*s,  2*s); }
+function drawOrchardTree(sx, sy) { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.tree_orchard, sx, sy,  2*s,  2*s); }
+function drawStump(sx, sy)       { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.stump,        sx, sy,    s,    s); }
+function drawGrave(sx, sy)       { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.grave,        sx, sy,    s,    s); }
+function drawDog(sx, sy)         { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.dog,          sx, sy,    s,    s); }
+function drawSheep(sx, sy)       { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.sheep,        sx, sy,    s,    s); }
+function drawChicken(sx, sy)     { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.chicken,      sx, sy,    s,    s); }
+function drawCampfire(sx, sy)    { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.campfire,     sx, sy,    s,    s); }
+function drawHouse(sx, sy)       { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.cottage,      sx, sy, 11*s, 11*s); }
+function drawKennel(sx, sy)      { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.kennel,       sx, sy,  4*s,  4*s); }
+function drawTent(sx, sy)        { const s=TILE*GAME_SCALE; ctx.drawImage(IMG.tent,         sx, sy,  5*s,  6*s); }
+function drawFlower(sx, sy, ci)  { const s=TILE*GAME_SCALE; ctx.drawImage(IMG[FLOWER_IMGS[ci]], sx, sy, s, s); }
 
 // ── Sprites list ───────────────────────────────────────────────────────────
 const sprites = [];
@@ -585,41 +343,13 @@ function drawMap(cam) {
       const sh = Math.ceil(tS);
 
       if (t === T.GRASS) {
-        const v = grassNoise[ti(c, r)];
-        ctx.fillStyle = `rgb(${42+v},${88+v},${34+v})`;
-        ctx.fillRect(sx, sy, sw, sh);
-        // Blade strokes — deterministic per tile
-        ctx.fillStyle = `rgba(10,55,5,0.45)`;
-        for (let g = 0; g < 5; g++) {
-          const gx = sx + (((c*7+r*3+g*11) & 31) / 31) * sw;
-          const gy = sy + (((c*3+r*11+g*7) & 31) / 31) * sh;
-          ctx.fillRect(gx, gy, Math.max(1, tS*0.06), Math.max(2, tS*0.22));
-        }
+        ctx.drawImage(IMG.grass, sx, sy, sw, sh);
       } else if (t === T.MOWED) {
-        ctx.fillStyle = '#7abf5e';
-        ctx.fillRect(sx, sy, sw, sh);
-        ctx.fillStyle = 'rgba(0,0,0,0.055)';
-        if (((c>>1) + (r>>1)) & 1) ctx.fillRect(sx, sy, sw, sh);
+        ctx.drawImage(IMG.grass_mowed, sx, sy, sw, sh);
       } else if (t === T.PATH) {
-        // Pokemon-style dirt path — warm sandy base with subtle noise variation
-        const pv = grassNoise[ti(c, r)]; // reuse noise for dirt variation
-        const pr = 178 + Math.floor(pv * 0.4);
-        const pg = 148 + Math.floor(pv * 0.35);
-        const pb = 98  + Math.floor(pv * 0.2);
-        ctx.fillStyle = `rgb(${pr},${pg},${pb})`;
-        ctx.fillRect(sx, sy, sw, sh);
-        // Small scattered pebble/dirt flecks — deterministic
-        for (let p = 0; p < 4; p++) {
-          const fx = sx + (((c*13+r*5+p*17)&31)/31) * sw;
-          const fy = sy + (((c*7+r*11+p*3) &31)/31) * sh;
-          const dark = ((c*11+r*7+p*9)&3) < 2;
-          ctx.fillStyle = dark ? `rgba(120,90,55,0.35)` : `rgba(210,185,140,0.4)`;
-          ctx.fillRect(fx, fy, Math.max(1, sw*0.13), Math.max(1, sh*0.13));
-        }
+        ctx.drawImage(IMG.path_cobble, sx, sy, sw, sh);
       } else if (t === T.FLOWER) {
-        const v = grassNoise[ti(c, r)];
-        ctx.fillStyle = `rgb(${42+v},${88+v},${34+v})`;
-        ctx.fillRect(sx, sy, sw, sh);
+        ctx.drawImage(IMG.grass, sx, sy, sw, sh);
         drawFlower(sx, sy, (c*5 + r*7) % 5);
       } else if (t === T.BORDER) {
         ctx.fillStyle = '#4a3820';
@@ -1003,6 +733,7 @@ function loop(ms) {
   lastMs = ms;
 
   ctx.clearRect(0, 0, VW, VH);
+  ctx.imageSmoothingEnabled = false;
 
   if (gameState === STATE.HOME) {
     drawHome(dt);
