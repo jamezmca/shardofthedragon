@@ -60,8 +60,8 @@
 
 <div id="qpage">
   <div id="top-bar">
-    <span id="top-left">change subject</span>
-    <span id="top-right">0 answered</span>
+    <span id="top-left">&larr; change subject</span>
+    <span id="top-right">0</span>
   </div>
   <div id="question-wrap"></div>
   <input id="answer-input" type="text"
@@ -784,7 +784,7 @@ function startTopic(key) {
   currentTopic  = key;
   totalAnswered = 0;
   home.style.display  = 'none';
-  qpage.style.display = '';
+  qpage.style.display = 'block';
   document.getElementById('top-right').textContent = '0 answered';
   nextQuestion();
 }
