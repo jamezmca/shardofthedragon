@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Basic Algebra Practice | Year 9–10 Maths</title>
+  <meta name="description" content="Free procedurally generated algebra practice for Year 9–10 students. Collecting like terms, expanding brackets, factorising, solving equations, substitution and more. Infinite questions.">
+  <meta name="keywords" content="algebra practice, year 9 maths, year 10 algebra, collecting like terms, expanding brackets, factorising quadratics, solving equations, substitution, rearranging formulas">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Basic Algebra Practice">
+  <meta property="og:description" content="Free infinite algebra practice for Year 9–10 — procedurally generated questions with instant feedback.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; max-width: 600px; margin: 0 auto; padding: 24px 16px; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    ul { list-style: none; padding: 0; margin: 0 auto; display: table; }
+    li { margin: 7px 0; }
+    li a { cursor: pointer; text-decoration: underline; font-size: 1em; }
+    li a:hover { text-decoration: none; }
+    .sep { border: none; border-top: 1px solid #ccc; margin: 8px 0; }
+    #qpage { display: none; }
+    #top-bar { display: flex; justify-content: space-between; align-items: flex-start; }
+    #top-left { cursor: pointer; text-decoration: underline; font-size: 0.9em; }
+    #top-right { font-size: 0.9em; }
+    #question-wrap { text-align: center; margin: 48px auto 24px; font-size: 1.1em; line-height: 2.2; }
+    #answer-input {
+      display: block; width: 240px; margin: 0 auto;
+      font-size: 1.1em; padding: 6px 8px; text-align: center;
+    }
+    #hint { text-align: center; margin-top: 8px; font-size: 0.85em; color: #555; }
+    #feedback { text-align: center; margin-top: 18px; font-size: 1.5em; min-height: 1.8em; }
+    #answer-reveal { text-align: center; margin-top: 8px; font-size: 1em; }
+  </style>
+</head>
+<body>
+
+<div id="home">
+  <h2>Basic Algebra</h2>
+  <ul id="topic-list">
+    <li><a data-topic="like-terms">1. Collecting Like Terms</a></li>
+    <li><a data-topic="mult-terms">2. Multiplying &amp; Dividing Terms</a></li>
+    <li><a data-topic="single-bracket">3. Expanding Single Brackets</a></li>
+    <li><a data-topic="double-bracket">4. Expanding Double Brackets</a></li>
+    <li><a data-topic="factorise-hcf">5. Factorising (HCF)</a></li>
+    <li><a data-topic="factorise-quad">6. Factorising Quadratics</a></li>
+    <li><a data-topic="solve-eq">7. Solving Equations</a></li>
+    <li><a data-topic="substitution">8. Substitution into Formulas</a></li>
+    <li><a data-topic="rearrange">9. Rearranging Formulas</a></li>
+    <hr class="sep">
+    <li><a data-topic="mix">Mix of All Topics</a></li>
+  </ul>
+</div>
+
+<div id="qpage">
+  <div id="top-bar">
+    <span id="top-left">change subject</span>
+    <span id="top-right">0 answered</span>
+  </div>
+  <div id="question-wrap"></div>
+  <input id="answer-input" type="text"
+    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    placeholder="your answer">
+  <div id="hint">press Enter to submit</div>
+  <div id="feedback"></div>
+  <div id="answer-reveal"></div>
+</div>
+
+<script>
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function rnd(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function pick(arr)  { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// Normalise an answer string for comparison: strip spaces, lowercase, unify operators
+function norm(s) {
+  return String(s)
+    .replace(/\s+/g, '')
+    .toLowerCase()
+    .replace(/\*\*/g, '^')
+    .replace(/[×·]/g, '')
+    .replace(/\*/g, '')
+    .replace(/÷/g, '/');
+}
+
+// Render a question string: replaces \( ... \) spans with KaTeX HTML, rest is plain text
+function renderQ(str) {
+  return str.replace(/\\\((.+?)\\\)/g, (_, math) =>
+    katex.renderToString(math, { throwOnError: false })
+  );
+}
+
+// Render an answer string as inline KaTeX
+function renderA(str) {
+  try { return katex.renderToString(str, { displayMode: false, throwOnError: false }); }
+  catch(e) { return str; }
+}
+
+// ── Session state ─────────────────────────────────────────────────────────────
+const KEYS = [
+  'like-terms','mult-terms','single-bracket','double-bracket',
+  'factorise-hcf','factorise-quad','solve-eq','substitution','rearrange'
+];
+
+// Per-topic correct counts at each level (shared between dedicated + mix sessions)
+const stats = {};
+KEYS.forEach(k => { stats[k] = { c1: 0, c2: 0, c3: 0 }; });
+
+let totalAnswered = 0;
+let currentTopic  = null;  // topic key or 'mix'
+let currentQ      = null;  // { qText, aLatex, check, topicKey, level }
+let attempts      = 0;
+let waitingForNext = false;
+
+// ── Difficulty selector ───────────────────────────────────────────────────────
+function pickLevel(key) {
+  const s = stats[key];
+  if (s.c1 < 20) return 1;
+  if (s.c2 < 20) return Math.random() < 0.5 ? 1 : 2;
+  // ≥20 correct at L2: 5:5:10 ratio = 25% / 25% / 50%
+  const r = Math.random();
+  return r < 0.25 ? 1 : r < 0.5 ? 2 : 3;
+}
+
+// ── Question generators ───────────────────────────────────────────────────────
+// Each returns { qText (uses \(...\) for math), aLatex (answer in LaTeX), check(inp)→bool }
+
+// 1. Collecting Like Terms
+function genLikeTerms(level) {
+  const v = pick(['x','y','a','n']);
+  if (level === 1) {
+    // ax + bx
+    const a = rnd(2,9), b = rnd(2,9), s = a + b;
+    return {
+      qText: `Simplify \\(${a}${v} + ${b}${v}\\)`,
+      aLatex: `${s}${v}`,
+      check: inp => norm(inp) === norm(`${s}${v}`)
+    };
+  }
+  if (level === 2) {
+    // ax + bw + cx  (two variables)
+    const w = v === 'x' ? 'y' : 'x';
+    const a = rnd(2,7), b = rnd(2,7), c = rnd(2,7), s = a + c;
+    const a1 = `${s}${v}+${b}${w}`, a2 = `${b}${w}+${s}${v}`;
+    return {
+      qText: `Simplify \\(${a}${v} + ${b}${w} + ${c}${v}\\)`,
+      aLatex: `${s}${v} + ${b}${w}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // level 3: subtraction + constant
+  const w = v === 'x' ? 'y' : 'x';
+  const a = rnd(5,9), c = rnd(2, a - 1), b = rnd(2,7), k = rnd(1,9), s = a - c;
+  const a1 = `${s}${v}+${b}${w}+${k}`, a2 = `${b}${w}+${s}${v}+${k}`;
+  return {
+    qText: `Simplify \\(${a}${v} + ${b}${w} - ${c}${v} + ${k}\\)`,
+    aLatex: `${s}${v} + ${b}${w} + ${k}`,
+    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+  };
+}
+
+// 2. Multiplying Terms
+function genMultTerms(level) {
+  const v = pick(['x','y','a','n']);
+  if (level === 1) {
+    const a = rnd(2,8), b = rnd(2,8), p = a * b;
+    return {
+      qText: `Simplify \\(${a} \\times ${b}${v}\\)`,
+      aLatex: `${p}${v}`,
+      check: inp => norm(inp) === norm(`${p}${v}`)
+    };
+  }
+  if (level === 2) {
+    const w = v === 'x' ? 'y' : 'x';
+    const a = rnd(2,7), b = rnd(2,7), p = a * b;
+    const a1 = `${p}${v}${w}`, a2 = `${p}${w}${v}`;
+    return {
+      qText: `Simplify \\(${a}${v} \\times ${b}${w}\\)`,
+      aLatex: `${p}${v}${w}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // level 3: ax^2 × bx
+  const a = rnd(2,5), b = rnd(2,5), p = a * b;
+  return {
+    qText: `Simplify \\(${a}${v}^2 \\times ${b}${v}\\)`,
+    aLatex: `${p}${v}^3`,
+    check: inp => norm(inp) === norm(`${p}${v}^3`)
+  };
+}
+
+// 3. Expanding Single Brackets
+function genSingleBracket(level) {
+  const v = pick(['x','y','a','n']);
+  if (level === 1) {
+    // a(v + b)
+    const a = rnd(2,8), b = rnd(2,9), r1 = a, r2 = a * b;
+    const ans = `${r1}${v}+${r2}`;
+    return {
+      qText: `Expand \\(${a}(${v} + ${b})\\)`,
+      aLatex: `${r1}${v} + ${r2}`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  if (level === 2) {
+    // a(bv + c)
+    const a = rnd(2,6), b = rnd(2,5), c = rnd(2,8), r1 = a*b, r2 = a*c;
+    const ans = `${r1}${v}+${r2}`;
+    return {
+      qText: `Expand \\(${a}(${b}${v} + ${c})\\)`,
+      aLatex: `${r1}${v} + ${r2}`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  // level 3: av(bv + c)
+  const a = rnd(2,5), b = rnd(2,5), c = rnd(2,7), r1 = a*b, r2 = a*c;
+  const ans = `${r1}${v}^2+${r2}${v}`;
+  return {
+    qText: `Expand \\(${a}${v}(${b}${v} + ${c})\\)`,
+    aLatex: `${r1}${v}^2 + ${r2}${v}`,
+    check: inp => norm(inp) === norm(ans)
+  };
+}
+
+// 4. Expanding Double Brackets
+function genDoubleBracket(level) {
+  if (level === 1) {
+    // (x+a)(x+b) all positive
+    const a = rnd(1,8), b = rnd(1,8), mid = a+b, last = a*b;
+    const ans = `x^2+${mid}x+${last}`;
+    return {
+      qText: `Expand \\((x + ${a})(x + ${b})\\)`,
+      aLatex: `x^2 + ${mid}x + ${last}`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  if (level === 2) {
+    // (x+a)(x-b), a > b so middle term is positive
+    const a = rnd(3,8), b = rnd(1, a-1), mid = a-b, last = a*b;
+    const aStr = mid === 0 ? `x^2-${last}` : `x^2+${mid}x-${last}`;
+    const aLatex = mid === 0 ? `x^2 - ${last}` : `x^2 + ${mid}x - ${last}`;
+    return {
+      qText: `Expand \\((x + ${a})(x - ${b})\\)`,
+      aLatex,
+      check: inp => norm(inp) === norm(aStr)
+    };
+  }
+  // level 3: (x-a)(x-b)
+  const a = rnd(1,6), b = rnd(1,6), mid = a+b, last = a*b;
+  const ans = `x^2-${mid}x+${last}`;
+  return {
+    qText: `Expand \\((x - ${a})(x - ${b})\\)`,
+    aLatex: `x^2 - ${mid}x + ${last}`,
+    check: inp => norm(inp) === norm(ans)
+  };
+}
+
+// 5. Factorising (HCF)
+function genFactoriseHCF(level) {
+  const v = pick(['x','y','a','n']);
+  if (level === 1) {
+    // av + ab → a(v+b)
+    const a = rnd(2,8), b = rnd(2,8), t2 = a*b;
+    const ans = `${a}(${v}+${b})`;
+    return {
+      qText: `Factorise fully \\(${a}${v} + ${t2}\\)`,
+      aLatex: `${a}(${v} + ${b})`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  if (level === 2) {
+    // av^2 + bv → v(av+b)
+    const a = rnd(2,7), b = rnd(2,9);
+    const ans = `${v}(${a}${v}+${b})`;
+    return {
+      qText: `Factorise fully \\(${a}${v}^2 + ${b}${v}\\)`,
+      aLatex: `${v}(${a}${v} + ${b})`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  // level 3: abv^2 + acv → av(bv+c)
+  const a = rnd(2,5), b = rnd(2,5), c = rnd(2,7), t1 = a*b, t2 = a*c;
+  const ans = `${a}${v}(${b}${v}+${c})`;
+  return {
+    qText: `Factorise fully \\(${t1}${v}^2 + ${t2}${v}\\)`,
+    aLatex: `${a}${v}(${b}${v} + ${c})`,
+    check: inp => norm(inp) === norm(ans)
+  };
+}
+
+// 6. Factorising Quadratics
+function genFactoriseQuad(level) {
+  if (level === 1) {
+    // x^2 + (a+b)x + ab, both positive
+    const a = rnd(1,7), b = rnd(1,7), mid = a+b, last = a*b;
+    const a1 = `(x+${a})(x+${b})`, a2 = `(x+${b})(x+${a})`;
+    return {
+      qText: `Factorise \\(x^2 + ${mid}x + ${last}\\)`,
+      aLatex: `(x + ${a})(x + ${b})`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  if (level === 2) {
+    // (x+a)(x-b), a > b → x^2 + (a-b)x - ab
+    const a = rnd(3,8), b = rnd(1, a-1), mid = a-b, last = a*b;
+    const midStr = mid === 0 ? '' : `+ ${mid}x `;
+    const qStr = `x^2 ${midStr}- ${last}`;
+    const a1 = `(x+${a})(x-${b})`, a2 = `(x-${b})(x+${a})`;
+    return {
+      qText: `Factorise \\(${qStr}\\)`,
+      aLatex: `(x + ${a})(x - ${b})`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // level 3: (x-a)(x-b)
+  const a = rnd(1,7), b = rnd(1,7), mid = a+b, last = a*b;
+  const a1 = `(x-${a})(x-${b})`, a2 = `(x-${b})(x-${a})`;
+  return {
+    qText: `Factorise \\(x^2 - ${mid}x + ${last}\\)`,
+    aLatex: `(x - ${a})(x - ${b})`,
+    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+  };
+}
+
+// 7. Solving Equations
+function genSolveEq(level) {
+  const v = pick(['x','n','k']);
+  function eqCheck(x) {
+    return inp => norm(inp) === norm(`${x}`) || norm(inp) === norm(`${v}=${x}`);
+  }
+  if (level === 1) {
+    if (Math.random() < 0.5) {
+      // v + a = b
+      const x = rnd(-4,9), a = rnd(2,8), b = x + a;
+      return {
+        qText: `Solve \\(${v} + ${a} = ${b}\\)`,
+        aLatex: `${v} = ${x}`,
+        check: eqCheck(x)
+      };
+    }
+    // av = b
+    const x = rnd(2,9), a = rnd(2,8), b = x * a;
+    return {
+      qText: `Solve \\(${a}${v} = ${b}\\)`,
+      aLatex: `${v} = ${x}`,
+      check: eqCheck(x)
+    };
+  }
+  if (level === 2) {
+    // av + b = c
+    const x = rnd(1,8), a = rnd(2,6), b = rnd(1,9), c = a*x + b;
+    return {
+      qText: `Solve \\(${a}${v} + ${b} = ${c}\\)`,
+      aLatex: `${v} = ${x}`,
+      check: eqCheck(x)
+    };
+  }
+  // level 3: av + b = cv + d (variables on both sides)
+  const x = rnd(1,8), a = rnd(4,9), c = rnd(1, a-2), d = rnd(2,8);
+  const b = (c - a) * x + d; // derive b so ax+b = cx+d holds
+  const bAbs = Math.abs(b);
+  const qStr = b >= 0
+    ? `${a}${v} + ${b} = ${c}${v} + ${d}`
+    : `${a}${v} - ${bAbs} = ${c}${v} + ${d}`;
+  return {
+    qText: `Solve \\(${qStr}\\)`,
+    aLatex: `${v} = ${x}`,
+    check: eqCheck(x)
+  };
+}
+
+// 8. Substitution into Formulas
+function genSubstitution(level) {
+  if (level === 1) {
+    const m = rnd(2,6), c = rnd(1,8), x = rnd(1,6), y = m*x + c;
+    return {
+      qText: `If \\(y = ${m}x + ${c}\\), find \\(y\\) when \\(x = ${x}\\)`,
+      aLatex: `${y}`,
+      check: inp => norm(inp) === norm(`${y}`) || norm(inp) === norm(`y=${y}`)
+    };
+  }
+  if (level === 2) {
+    const l = rnd(3,12), w = rnd(2,10), A = l*w;
+    return {
+      qText: `If \\(A = lw\\), find \\(A\\) when \\(l = ${l}\\) and \\(w = ${w}\\)`,
+      aLatex: `${A}`,
+      check: inp => norm(inp) === norm(`${A}`) || norm(inp) === norm(`a=${A}`)
+    };
+  }
+  const u = rnd(2,10), a = rnd(2,6), t = rnd(2,8), vv = u + a*t;
+  return {
+    qText: `If \\(v = u + at\\), find \\(v\\) when \\(u = ${u}\\), \\(a = ${a}\\), \\(t = ${t}\\)`,
+    aLatex: `${vv}`,
+    check: inp => norm(inp) === norm(`${vv}`) || norm(inp) === norm(`v=${vv}`)
+  };
+}
+
+// 9. Rearranging Formulas
+function genRearrange(level) {
+  if (level === 1) {
+    // y = x + a  →  x = y - a
+    const a = rnd(2,9);
+    const ans = `x=y-${a}`;
+    return {
+      qText: `Make \\(x\\) the subject of \\(y = x + ${a}\\)`,
+      aLatex: `x = y - ${a}`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
+  if (level === 2) {
+    // y = mx + c  →  x = (y-c)/m
+    const m = rnd(2,7), c = rnd(2,8);
+    const a1 = `x=(y-${c})/${m}`, a2 = `(y-${c})/${m}`;
+    return {
+      qText: `Make \\(x\\) the subject of \\(y = ${m}x + ${c}\\)`,
+      aLatex: `x = \\dfrac{y - ${c}}{${m}}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // level 3: v = u + at  →  a = (v-u)/t
+  return {
+    qText: `Make \\(a\\) the subject of \\(v = u + at\\)`,
+    aLatex: `a = \\dfrac{v - u}{t}`,
+    check: inp => norm(inp) === norm('a=(v-u)/t') || norm(inp) === norm('(v-u)/t')
+  };
+}
+
+// ── Generator map ──────────────────────────────────────────────────────────────
+const GEN = {
+  'like-terms':      genLikeTerms,
+  'mult-terms':      genMultTerms,
+  'single-bracket':  genSingleBracket,
+  'double-bracket':  genDoubleBracket,
+  'factorise-hcf':   genFactoriseHCF,
+  'factorise-quad':  genFactoriseQuad,
+  'solve-eq':        genSolveEq,
+  'substitution':    genSubstitution,
+  'rearrange':       genRearrange,
+};
+
+// ── Next question ─────────────────────────────────────────────────────────────
+function nextQuestion() {
+  const key   = currentTopic === 'mix' ? pick(KEYS) : currentTopic;
+  const level = pickLevel(key);
+  const q     = GEN[key](level);
+  currentQ    = { ...q, topicKey: key, level };
+  attempts    = 0;
+  waitingForNext = false;
+
+  document.getElementById('question-wrap').innerHTML = renderQ(currentQ.qText);
+  document.getElementById('feedback').textContent    = '';
+  document.getElementById('answer-reveal').innerHTML = '';
+  document.getElementById('hint').textContent        = 'press Enter to submit';
+
+  const inp = document.getElementById('answer-input');
+  inp.value    = '';
+  inp.disabled = false;
+  inp.focus();
+}
+
+// ── Submit / advance ──────────────────────────────────────────────────────────
+function submitAnswer() {
+  if (waitingForNext) {
+    waitingForNext = false;
+    nextQuestion();
+    return;
+  }
+
+  const inp = document.getElementById('answer-input');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  totalAnswered++;
+  document.getElementById('top-right').textContent = `${totalAnswered} answered`;
+
+  const correct = currentQ.check(val);
+
+  if (correct) {
+    const s = stats[currentQ.topicKey];
+    if      (currentQ.level === 1) s.c1++;
+    else if (currentQ.level === 2) s.c2++;
+    else                           s.c3++;
+
+    document.getElementById('feedback').textContent = '✅';
+    document.getElementById('hint').textContent     = 'press Enter for next';
+    inp.disabled   = true;
+    waitingForNext = true;
+  } else {
+    attempts++;
+    if (attempts >= 2) {
+      document.getElementById('feedback').textContent    = '❌';
+      document.getElementById('answer-reveal').innerHTML = 'Answer: ' + renderA(currentQ.aLatex);
+      document.getElementById('hint').textContent        = 'press Enter for next';
+      inp.disabled   = true;
+      waitingForNext = true;
+    } else {
+      document.getElementById('feedback').textContent = '❌ try again';
+      inp.value = '';
+      inp.focus();
+    }
+  }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const home  = document.getElementById('home');
+const qpage = document.getElementById('qpage');
+
+function goHome() {
+  qpage.style.display = 'none';
+  home.style.display  = '';
+  currentTopic   = null;
+  waitingForNext = false;
+}
+
+function startTopic(key) {
+  currentTopic  = key;
+  totalAnswered = 0;
+  home.style.display  = 'none';
+  qpage.style.display = '';
+  document.getElementById('top-right').textContent = '0 answered';
+  nextQuestion();
+}
+
+document.getElementById('topic-list').addEventListener('click', e => {
+  const a = e.target.closest('[data-topic]');
+  if (a) startTopic(a.dataset.topic);
+});
+
+document.getElementById('top-left').addEventListener('click', goHome);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && qpage.style.display !== 'none') {
+    e.preventDefault();
+    submitAnswer();
+  }
+});
+</script>
+</body>
+</html>
