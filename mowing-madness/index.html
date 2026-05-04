@@ -49,9 +49,9 @@ function resize() {
   VH = window.innerHeight;
   canvas.width  = VW;
   canvas.height = VH;
-  // target ~28 tiles visible on the narrow axis
+  // target ~14 tiles visible on the narrow axis (zoomed in)
   const minDim = Math.min(VW, VH);
-  GAME_SCALE = Math.max(1.5, Math.min(4, minDim / (28 * TILE)));
+  GAME_SCALE = Math.max(2, Math.min(8, minDim / (14 * TILE)));
 }
 resize();
 window.addEventListener('resize', resize);
@@ -285,7 +285,12 @@ function hitButton(e) {
 }
 
 canvas.addEventListener('pointerdown', e => {
-  const b = hitButton(e); if (b) { BTN[b] = true; e.preventDefault(); }
+  const b = hitButton(e);
+  if (b) {
+    BTN[b] = true;
+    e.preventDefault();
+    if (gameState === STATE.HOME) startGame();
+  }
 });
 canvas.addEventListener('pointermove', e => {
   // allow sliding between buttons
@@ -369,7 +374,8 @@ function drawMap(cam) {
   for (const sp of sprites) {
     const sx = sp.col * tS - cx;
     const sy = sp.row * tS - cy;
-    if (sx > VW + tS*3 || sy > VH + tS*3 || sx < -tS*4 || sy < -tS*4) continue;
+    const cullPad = sp.type === 'house' ? tS*12 : tS*4;
+    if (sx > VW + tS*3 || sy > VH + tS*3 || sx < -cullPad || sy < -cullPad) continue;
     switch(sp.type) {
       case 'house':    drawHouse(sx, sy);    break;
       case 'kennel':   drawKennel(sx, sy);   break;
