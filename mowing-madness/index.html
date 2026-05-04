@@ -155,6 +155,19 @@ const grassNoise = new Uint8Array(MAP_COLS * MAP_ROWS);
 // ── Sprite drawing ─────────────────────────────────────────────────────────
 // All take world-pixel (sx, sy) = top-left of tile, and use TILE * GAME_SCALE.
 
+function drawPixelArt(px, pal, sx, sy, sw, sh) {
+  const rows = px.length, cols = px[0].length;
+  const pw = sw / cols, ph = sh / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const ci = px[r][c];
+      if (!pal[ci]) continue;
+      ctx.fillStyle = pal[ci];
+      ctx.fillRect(Math.round(sx + c*pw), Math.round(sy + r*ph), Math.ceil(pw), Math.ceil(ph));
+    }
+  }
+}
+
 function drawMower(screenX, screenY, angle) {
   const s = TILE * GAME_SCALE;
   ctx.save();
@@ -174,23 +187,49 @@ function drawMower(screenX, screenY, angle) {
   ctx.restore();
 }
 
+const OAK_TREE_PAL = [null,'#145014','#2a7830','#40b048','#5a3210','#7a4820'];
+const OAK_TREE_PX = [
+  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+  [0,0,0,0,1,1,2,3,3,2,1,1,0,0,0,0],
+  [0,0,0,1,2,3,3,3,3,2,2,2,1,0,0,0],
+  [0,0,1,2,3,3,3,2,2,2,2,2,2,1,0,0],
+  [0,1,2,3,3,3,2,2,2,2,2,2,2,2,1,0],
+  [0,1,2,3,3,2,2,2,2,2,2,2,2,2,1,0],
+  [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+  [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+  [0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0],
+  [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+  [0,0,0,0,1,1,2,2,2,1,1,0,0,0,0,0],
+  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,1,4,5,1,0,0,0,0,0,0,0],
+  [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
+];
+
+const ORCHARD_TREE_PAL = [null,'#145014','#286038','#40a050','#5a3210','#7a4820','#d82020'];
+const ORCHARD_TREE_PX = [
+  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+  [0,0,0,0,1,1,2,3,3,2,1,1,0,0,0,0],
+  [0,0,0,1,2,3,3,3,3,2,2,2,1,0,0,0],
+  [0,0,1,2,3,3,3,2,2,2,2,2,2,1,0,0],
+  [0,1,2,3,3,3,2,6,2,2,2,2,2,2,1,0],
+  [0,1,2,3,3,2,2,2,2,2,2,2,6,2,1,0],
+  [0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0],
+  [0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0],
+  [0,0,1,2,2,6,2,2,2,2,2,2,1,0,0,0],
+  [0,0,0,1,2,2,2,2,2,2,2,1,0,0,0,0],
+  [0,0,0,0,1,1,2,2,2,1,1,0,0,0,0,0],
+  [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,4,5,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,1,4,5,1,0,0,0,0,0,0,0],
+  [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
+];
+
 function drawTree(sx, sy) {
   const s = TILE * GAME_SCALE;
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  ctx.beginPath(); ctx.ellipse(sx+s*0.5, sy+s*0.9, s*0.44, s*0.12, 0, 0, Math.PI*2); ctx.fill();
-  // Dark outline ring
-  ctx.fillStyle = '#145014';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.46, s*0.5, 0, Math.PI*2); ctx.fill();
-  // Main canopy
-  ctx.fillStyle = '#247830';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.44, s*0.43, 0, Math.PI*2); ctx.fill();
-  // Top-left highlight
-  ctx.fillStyle = '#38a845';
-  ctx.beginPath(); ctx.arc(sx+s*0.36, sy+s*0.32, s*0.22, 0, Math.PI*2); ctx.fill();
-  // Trunk stub
-  ctx.fillStyle = '#7a4820';
-  ctx.fillRect(sx+s*0.42, sy+s*0.82, s*0.16, s*0.15);
+  drawPixelArt(OAK_TREE_PX, OAK_TREE_PAL, sx, sy, 2*s, 2*s);
 }
 
 function drawStump(sx, sy) {
@@ -426,26 +465,7 @@ function drawTent(sx, sy) {
 
 function drawOrchardTree(sx, sy) {
   const s = TILE * GAME_SCALE;
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
-  ctx.beginPath(); ctx.ellipse(sx+s*0.5, sy+s*0.9, s*0.44, s*0.12, 0, 0, Math.PI*2); ctx.fill();
-  // Dark outline
-  ctx.fillStyle = '#145820';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.46, s*0.5, 0, Math.PI*2); ctx.fill();
-  // Main canopy (slightly yellower-green for fruit tree)
-  ctx.fillStyle = '#289038';
-  ctx.beginPath(); ctx.arc(sx+s*0.5, sy+s*0.44, s*0.43, 0, Math.PI*2); ctx.fill();
-  // Highlight
-  ctx.fillStyle = '#44b850';
-  ctx.beginPath(); ctx.arc(sx+s*0.36, sy+s*0.32, s*0.22, 0, Math.PI*2); ctx.fill();
-  // Trunk stub
-  ctx.fillStyle = '#7a4820';
-  ctx.fillRect(sx+s*0.42, sy+s*0.82, s*0.16, s*0.15);
-  // Apple dots
-  ctx.fillStyle = '#cc2020';
-  [[0.34,0.5],[0.62,0.38],[0.66,0.58],[0.42,0.66]].forEach(([dx,dy]) => {
-    ctx.beginPath(); ctx.arc(sx+s*dx, sy+s*dy, s*0.07, 0, Math.PI*2); ctx.fill();
-  });
+  drawPixelArt(ORCHARD_TREE_PX, ORCHARD_TREE_PAL, sx, sy, 2*s, 2*s);
 }
 
 // ── Sprites list ───────────────────────────────────────────────────────────
