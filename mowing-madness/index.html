@@ -115,16 +115,19 @@ graves.forEach(([c,r]) => setTile(c,r,T.SOLID));
 setRect(5,38,9,43,T.SOLID);
 setTile(12,41,T.SOLID);
 
-// Kennel + dog
-setRect(18,20,21,23,T.SOLID);
-setTile(23,21,T.SOLID);
+// Kennel + dog — above the path
+setRect(18,14,21,17,T.SOLID);
+setTile(23,15,T.SOLID);
 
 // Animals
 [[30,20],[32,22],[28,25],[42,30],[44,28],[46,32]].forEach(([c,r]) => setTile(c,r,T.SOLID));
 
-// Paths
-for (let c = 1; c < MAP_COLS-1; c++) setTile(c, 22, T.PATH);
-for (let r = 14; r < 46; r++) setTile(32, r, T.PATH);
+// Path — exits house south, runs east across map, then a rectangular loop
+for (let r = 13; r <= 19; r++) setTile(9, r, T.PATH);          // house exit (vertical join)
+for (let c = 2; c <= 62; c++) setTile(c, 19, T.PATH);          // main east-west path
+for (let r = 20; r <= 28; r++) setTile(26, r, T.PATH);         // loop west leg
+for (let c = 26; c <= 38; c++) setTile(c, 28, T.PATH);         // loop bottom
+for (let r = 20; r <= 28; r++) setTile(38, r, T.PATH);         // loop east leg
 
 // Flowers — scattered around, hitting one ends the game
 const flowers = [
@@ -133,7 +136,7 @@ const flowers = [
   [60,24],[6,25],[14,28],[38,28],[50,29],[57,26],
   [3,34],[25,37],[45,37],[60,37],
   [12,44],[36,44],[50,44],[62,44],
-  [2,8],[2,18],[25,17],
+  [2,8],[2,16],[25,17],
 ];
 flowers.forEach(([c,r]) => setTile(c,r,T.FLOWER));
 
@@ -194,8 +197,8 @@ function drawFlower(sx, sy, ci)  { const s=TILE*GAME_SCALE; ctx.drawImage(IMG[FL
 // ── Sprites list ───────────────────────────────────────────────────────────
 const sprites = [];
 sprites.push({ type: 'house',    col: 4,  row: 3  });
-sprites.push({ type: 'kennel',   col: 18, row: 20 });
-sprites.push({ type: 'dog',      col: 23, row: 21 });
+sprites.push({ type: 'kennel',   col: 18, row: 14 });
+sprites.push({ type: 'dog',      col: 23, row: 15 });
 sprites.push({ type: 'tent',     col: 5,  row: 38 });
 sprites.push({ type: 'campfire', col: 12, row: 41 });
 orchardTrees.forEach(([c,r])  => sprites.push({ type: 'otree',   col: c, row: r }));
@@ -357,8 +360,7 @@ function drawMap(cam) {
         ctx.fillStyle = '#7a5e38';
         if ((c+r) % 4 === 0) ctx.fillRect(sx+sw*0.15, sy+sh*0.08, sw*0.7, sh*0.84);
       } else if (t === T.SOLID) {
-        ctx.fillStyle = '#5a8a3a';
-        ctx.fillRect(sx, sy, sw, sh);
+        ctx.drawImage(IMG.grass, sx, sy, sw, sh);
       }
     }
   }
