@@ -55,7 +55,7 @@
       pointer-events: none;
     }
 
-    .coin-back { transform: rotateY(180deg); }
+    .coin-back { transform: rotateX(180deg); }
 
     /* ── Leaf canvas ───────────────────────────────────────────────── */
     #leaf-canvas {
@@ -375,7 +375,7 @@
         }
       }
 
-      coinWrap.style.transform = `translateY(${coinY}px) rotateY(${coinA}deg)`;
+      coinWrap.style.transform = `translateY(${coinY}px) rotateX(${coinA}deg)`;
       updateLeaves(t, dt);
       requestAnimationFrame(frame);
     }
