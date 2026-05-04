@@ -267,89 +267,54 @@ function drawGrave(sx, sy) {
   ctx.fillRect(sx+s*0.33, sy+s*0.38, s*0.34, s*0.08);
 }
 
+const HOUSE_PAL = [null,'#1c1c1c','#c8a040','#9a7228','#6a5018','#808080','#c8b890','#78b8d0','#603018','#3a2810'];
+const HOUSE_PX = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,4,4,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,5,5,4,1],
+  [1,3,3,3,3,3,3,2,4,4,4,4,5,5,4,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,6,6,6,7,7,7,6,6,6,7,7,7,6,6,1],
+  [1,6,6,6,7,7,7,6,6,6,7,7,7,6,6,1],
+  [1,6,6,6,6,6,6,8,8,8,6,6,6,6,6,1],
+  [1,6,9,9,9,6,6,8,8,8,6,6,9,9,9,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
+
 function drawHouse(sx, sy) {
   const s = TILE * GAME_SCALE;
-  const w = 11*s, h = 11*s;
-
-  // Outer border
-  ctx.fillStyle = '#202020';
-  ctx.fillRect(sx-2, sy-2, w+4, h+4);
-
-  // Roof — fills top ~74% of the footprint (flat, viewed from above)
-  // Left half (lighter)
-  ctx.fillStyle = '#c03030';
-  ctx.fillRect(sx, sy, w*0.5, h*0.74);
-  // Right half (darker — shadow side)
-  ctx.fillStyle = '#902020';
-  ctx.fillRect(sx+w*0.5, sy, w*0.5, h*0.74);
-  // Ridge line down the centre
-  ctx.fillStyle = '#e04848';
-  ctx.fillRect(sx+w*0.5-Math.max(1,s*0.1), sy, Math.max(2,s*0.2), h*0.74);
-
-  // Chimney on roof
-  ctx.fillStyle = '#484848';
-  ctx.fillRect(sx+w*0.72, sy+h*0.06, s*1.1, s*1.3);
-  ctx.fillStyle = '#686868';
-  ctx.fillRect(sx+w*0.72+2, sy+h*0.06+2, s*1.1-4, s*1.3-2);
-
-  // Front wall strip — bottom 26%
-  ctx.fillStyle = '#d8c888';
-  ctx.fillRect(sx, sy+h*0.74, w, h*0.26);
-  // Wall / roof divider
-  ctx.fillStyle = '#202020';
-  ctx.fillRect(sx, sy+h*0.74, w, 2);
-
-  // Windows
-  [[w*0.1, h*0.78],[w*0.66, h*0.78]].forEach(([wx,wy]) => {
-    const ww = s*2.0, wh = s*1.7;
-    ctx.fillStyle = '#202020'; ctx.fillRect(sx+wx-1, sy+wy-1, ww+2, wh+2);
-    ctx.fillStyle = '#88cce8'; ctx.fillRect(sx+wx, sy+wy, ww, wh);
-    ctx.fillStyle = '#202020';
-    ctx.fillRect(sx+wx+ww/2-1, sy+wy, 2, wh);
-    ctx.fillRect(sx+wx, sy+wy+wh/2-1, ww, 2);
-  });
-
-  // Door
-  const dx = sx+w*0.42, dy = sy+h*0.745, dw = s*2.1, dh = h*0.255;
-  ctx.fillStyle = '#202020'; ctx.fillRect(dx-1, dy, dw+2, dh);
-  ctx.fillStyle = '#904010'; ctx.fillRect(dx, dy, dw, dh-1);
-  ctx.fillStyle = '#b05820'; ctx.fillRect(dx+2, dy+2, dw-4, dh-4);
-  // Knob
-  ctx.fillStyle = '#d0a030';
-  ctx.fillRect(sx+w*0.42+s*1.6, sy+h*0.74+h*0.12, Math.max(2,s*0.18), Math.max(2,s*0.18));
+  drawPixelArt(HOUSE_PX, HOUSE_PAL, sx, sy, 11*s, 11*s);
 }
+
+const KENNEL_PAL = [null,'#1c1c1c','#c8a040','#9a7228','#6a5018','#c8b890','#a09868','#1a0c04'];
+const KENNEL_PX = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,3,3,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,3,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,2,2,2,2,2,2,1,1,4,4,4,4,4,4,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1],
+  [1,5,5,5,5,5,5,5,5,5,5,5,5,5,5,1],
+  [1,5,5,1,1,1,1,6,6,1,1,1,1,5,5,1],
+  [1,5,5,1,7,7,7,7,7,7,7,1,5,5,5,1],
+  [1,5,5,1,7,7,7,7,7,7,7,1,5,5,5,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+];
 
 function drawKennel(sx, sy) {
   const s = TILE * GAME_SCALE;
-  const w = 4*s, h = 4*s;
-  // Outer border
-  ctx.fillStyle = '#202020';
-  ctx.fillRect(sx-2, sy-2, w+4, h+4);
-  // Roof left half
-  ctx.fillStyle = '#c03030';
-  ctx.fillRect(sx, sy, w*0.5, h*0.68);
-  // Roof right half (darker)
-  ctx.fillStyle = '#902020';
-  ctx.fillRect(sx+w*0.5, sy, w*0.5, h*0.68);
-  // Ridge
-  ctx.fillStyle = '#e04848';
-  ctx.fillRect(sx+w*0.5-1, sy, 2, h*0.68);
-  // Front wall
-  ctx.fillStyle = '#d8c888';
-  ctx.fillRect(sx, sy+h*0.68, w, h*0.32);
-  ctx.fillStyle = '#202020';
-  ctx.fillRect(sx, sy+h*0.68, w, 2);
-  // Door arch
-  ctx.fillStyle = '#202020';
-  ctx.beginPath();
-  ctx.arc(sx+w*0.5, sy+h*0.76, s*0.5, Math.PI, 0);
-  ctx.rect(sx+w*0.5-s*0.5, sy+h*0.76, s, h*0.24);
-  ctx.fill();
-  ctx.fillStyle = '#281408';
-  ctx.beginPath();
-  ctx.arc(sx+w*0.5, sy+h*0.76, s*0.4, Math.PI, 0);
-  ctx.rect(sx+w*0.5-s*0.4, sy+h*0.76, s*0.8, h*0.24);
-  ctx.fill();
+  drawPixelArt(KENNEL_PX, KENNEL_PAL, sx, sy, 4*s, 4*s);
 }
 
 function drawDog(sx, sy) {
@@ -438,29 +403,29 @@ function drawCampfire(sx, sy) {
   ctx.closePath(); ctx.fill();
 }
 
+const TENT_PAL = [null,'#1c1c1c','#507838','#3a6028','#242c1c','#101810'];
+const TENT_PX = [
+  [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,1,2,3,1,0,0,0,0,0,0],
+  [0,0,0,0,0,1,2,2,3,3,1,0,0,0,0,0],
+  [0,0,0,0,1,2,2,2,3,3,3,1,0,0,0,0],
+  [0,0,0,1,2,2,2,2,3,3,3,3,1,0,0,0],
+  [0,0,1,2,2,2,2,2,3,3,3,3,3,1,0,0],
+  [0,1,2,2,2,2,2,2,3,3,3,3,3,3,1,0],
+  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
+  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
+  [1,2,2,2,2,2,2,2,3,3,3,3,3,3,3,1],
+  [0,1,2,2,2,2,2,2,3,3,3,3,3,3,1,0],
+  [0,0,1,2,2,1,4,4,4,4,1,3,3,1,0,0],
+  [0,0,0,1,2,1,5,5,5,5,1,3,1,0,0,0],
+  [0,0,0,0,1,1,5,5,5,5,1,1,0,0,0,0],
+  [0,0,0,0,0,1,5,5,5,5,1,0,0,0,0,0],
+  [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+];
+
 function drawTent(sx, sy) {
   const s = TILE * GAME_SCALE;
-  const w = 5*s, h = 6*s;
-  // Dark outline
-  ctx.fillStyle = '#182818';
-  ctx.beginPath();
-  ctx.moveTo(sx, sy+h); ctx.lineTo(sx+w/2, sy); ctx.lineTo(sx+w, sy+h);
-  ctx.closePath(); ctx.fill();
-  // Left face (lighter)
-  ctx.fillStyle = '#507838';
-  ctx.beginPath();
-  ctx.moveTo(sx+2, sy+h-2); ctx.lineTo(sx+w/2, sy+4); ctx.lineTo(sx+w/2, sy+h-2);
-  ctx.closePath(); ctx.fill();
-  // Right face (darker)
-  ctx.fillStyle = '#385828';
-  ctx.beginPath();
-  ctx.moveTo(sx+w/2, sy+4); ctx.lineTo(sx+w-2, sy+h-2); ctx.lineTo(sx+w/2, sy+h-2);
-  ctx.closePath(); ctx.fill();
-  // Door opening
-  ctx.fillStyle = '#182818';
-  ctx.beginPath();
-  ctx.moveTo(sx+w*0.38, sy+h-2); ctx.lineTo(sx+w/2, sy+h*0.44); ctx.lineTo(sx+w*0.62, sy+h-2);
-  ctx.closePath(); ctx.fill();
+  drawPixelArt(TENT_PX, TENT_PAL, sx, sy, 5*s, 6*s);
 }
 
 function drawOrchardTree(sx, sy) {
