@@ -49,11 +49,10 @@ const INSET    = IS_TOUCH ? 32 : 0;
 let touchChase = null; // {x,y} client coords while finger is down
 
 function resize() {
-  VW = window.innerWidth  - 2 * INSET;
-  VH = window.innerHeight - 2 * INSET;
+  VW = window.innerWidth;
+  VH = window.innerHeight;
   canvas.width  = VW;
   canvas.height = VH;
-  if (INSET) { canvas.style.left = INSET + 'px'; canvas.style.top = INSET + 'px'; }
   const minDim = Math.min(VW, VH);
   GAME_SCALE = Math.max(2, Math.min(8, minDim / (14 * TILE)));
 }
@@ -347,8 +346,8 @@ function endGame(reason) {
 function getCam() {
   let cx = mower.x * GAME_SCALE - VW / 2;
   let cy = mower.y * GAME_SCALE - VH / 2;
-  cx = Math.max(0, Math.min(MAP_W * GAME_SCALE - VW, cx));
-  cy = Math.max(0, Math.min(MAP_H * GAME_SCALE - VH, cy));
+  cx = Math.max(-INSET, Math.min(MAP_W * GAME_SCALE - VW + INSET, cx));
+  cy = Math.max(-INSET, Math.min(MAP_H * GAME_SCALE - VH + INSET, cy));
   return { cx, cy };
 }
 
