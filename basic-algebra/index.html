@@ -121,8 +121,8 @@ let waitingForNext = false;
 // ── Difficulty selector ───────────────────────────────────────────────────────
 function pickLevel(key) {
   const s = stats[key];
-  if (s.c1 < 20) return 1;
-  if (s.c2 < 20) return Math.random() < 0.5 ? 1 : 2;
+  if (s.c1 < 7) return 1;
+  if (s.c2 < 7) return Math.random() < 0.5 ? 1 : 2;
   // ≥20 correct at L2: 5:5:10 ratio = 25% / 25% / 50%
   const r = Math.random();
   return r < 0.25 ? 1 : r < 0.5 ? 2 : 3;
