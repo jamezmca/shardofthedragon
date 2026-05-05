@@ -44,12 +44,16 @@ const BANNER_H = 30;
 let GAME_SCALE = 2;
 let VW = 0, VH = 0;
 
+const IS_TOUCH = window.matchMedia('(pointer: coarse)').matches;
+const INSET    = IS_TOUCH ? 32 : 0;
+let touchChase = null; // {x,y} client coords while finger is down
+
 function resize() {
-  VW = window.innerWidth;
-  VH = window.innerHeight;
+  VW = window.innerWidth  - 2 * INSET;
+  VH = window.innerHeight - 2 * INSET;
   canvas.width  = VW;
   canvas.height = VH;
-  // target ~14 tiles visible on the narrow axis (zoomed in)
+  if (INSET) { canvas.style.left = INSET + 'px'; canvas.style.top = INSET + 'px'; }
   const minDim = Math.min(VW, VH);
   GAME_SCALE = Math.max(2, Math.min(8, minDim / (14 * TILE)));
 }
@@ -252,7 +256,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => { keys[e.code] = false; });
 
-// ── On-screen D-pad ────────────────────────────────────────────────────────
+// ── On-screen D-pad (desktop only) ────────────────────────────────────────
 const BTN = { up: false, down: false, left: false, right: false };
 
 function btnSize() { return Math.round(Math.max(36, Math.min(56, VW * 0.065))); }
@@ -284,23 +288,39 @@ function hitButton(e) {
   return null;
 }
 
-canvas.addEventListener('pointerdown', e => {
-  const b = hitButton(e);
-  if (b) {
-    BTN[b] = true;
+if (IS_TOUCH) {
+  // ── Chase-touch controls ─────────────────────────────────────────────────
+  canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    if (gameState === STATE.HOME) startGame();
-  }
-});
-canvas.addEventListener('pointermove', e => {
-  // allow sliding between buttons
-  if (e.buttons === 0) return;
-  const b = hitButton(e);
-  Object.keys(BTN).forEach(k => BTN[k] = false);
-  if (b) BTN[b] = true;
-});
-canvas.addEventListener('pointerup',     () => Object.keys(BTN).forEach(k => BTN[k] = false));
-canvas.addEventListener('pointercancel', () => Object.keys(BTN).forEach(k => BTN[k] = false));
+    if (gameState === STATE.HOME || gameState === STATE.END) { startGame(); return; }
+    const t = e.touches[0];
+    touchChase = { x: t.clientX, y: t.clientY };
+  }, { passive: false });
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length) touchChase = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, { passive: false });
+  canvas.addEventListener('touchend',    () => { touchChase = null; });
+  canvas.addEventListener('touchcancel', () => { touchChase = null; });
+} else {
+  // ── Desktop D-pad pointer events ─────────────────────────────────────────
+  canvas.addEventListener('pointerdown', e => {
+    const b = hitButton(e);
+    if (b) {
+      BTN[b] = true;
+      e.preventDefault();
+      if (gameState === STATE.HOME) startGame();
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (e.buttons === 0) return;
+    const b = hitButton(e);
+    Object.keys(BTN).forEach(k => BTN[k] = false);
+    if (b) BTN[b] = true;
+  });
+  canvas.addEventListener('pointerup',     () => Object.keys(BTN).forEach(k => BTN[k] = false));
+  canvas.addEventListener('pointercancel', () => Object.keys(BTN).forEach(k => BTN[k] = false));
+}
 
 // ── Game flow ──────────────────────────────────────────────────────────────
 function startGame() {
@@ -554,6 +574,7 @@ function drawPixelKey(x, y, size, dir, active) {
 }
 
 function drawButtons() {
+  if (IS_TOUCH) return;
   const d = dpadLayout();
   const { bs } = d;
   const isUp    = keys['ArrowUp']    || BTN.up;
@@ -647,10 +668,28 @@ function checkFlower() {
 
 // ── Update ─────────────────────────────────────────────────────────────────
 function update(dt) {
-  const fwd   = keys['ArrowUp']    || BTN.up;
-  const back  = keys['ArrowDown']  || BTN.down;
+  let fwd   = keys['ArrowUp']    || BTN.up;
+  let back  = keys['ArrowDown']  || BTN.down;
   const left  = keys['ArrowLeft']  || BTN.left;
   const right = keys['ArrowRight'] || BTN.right;
+
+  // Chase-touch: steer toward finger, always forward
+  if (touchChase) {
+    const cam = getCam();
+    const rect = canvas.getBoundingClientRect();
+    const sx = (touchChase.x - rect.left) * (VW / rect.width);
+    const sy = (touchChase.y - rect.top)  * (VH / rect.height);
+    const wx = (sx + cam.cx) / GAME_SCALE;
+    const wy = (sy + cam.cy) / GAME_SCALE;
+    const dx = wx - mower.x, dy = wy - mower.y;
+    if (Math.sqrt(dx*dx + dy*dy) > TILE * 0.4) {
+      let diff = Math.atan2(dy, dx) - mower.angle;
+      while (diff >  Math.PI) diff -= 2 * Math.PI;
+      while (diff < -Math.PI) diff += 2 * Math.PI;
+      mower.angle += Math.sign(diff) * Math.min(Math.abs(diff), TURN_SPEED * dt);
+      fwd = true;
+    }
+  }
 
   if (fwd)       mower.speed =  MOWER_SPEED;
   else if (back) mower.speed = -MOWER_SPEED * 0.7;
@@ -689,10 +728,16 @@ function drawHome(dt) {
   const isz = Math.max(8, Math.min(11, VW * 0.014));
   ctx.font = `${isz}px "Press Start 2P"`;
   ctx.fillStyle = '#fff';
-  ctx.fillText('▲ / ▼   FORWARD & REVERSE', VW/2, VH/2 + isz*0.5);
-  ctx.fillText('◀ / ▶   TURN', VW/2, VH/2 + isz*3);
-  ctx.fillStyle = '#ffdd44';
-  ctx.fillText('PRESS ANY ARROW TO START', VW/2, VH/2 + isz*7);
+  if (IS_TOUCH) {
+    ctx.fillText('TAP & DRAG TO STEER', VW/2, VH/2 + isz*0.5);
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillText('TAP ANYWHERE TO START', VW/2, VH/2 + isz*7);
+  } else {
+    ctx.fillText('▲ / ▼   FORWARD & REVERSE', VW/2, VH/2 + isz*0.5);
+    ctx.fillText('◀ / ▶   TURN', VW/2, VH/2 + isz*3);
+    ctx.fillStyle = '#ffdd44';
+    ctx.fillText('PRESS ANY ARROW TO START', VW/2, VH/2 + isz*7);
+  }
   ctx.textAlign = 'left';
 }
 
