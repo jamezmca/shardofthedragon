@@ -32,6 +32,7 @@
     #hint { text-align: center; margin-top: 8px; font-size: 0.85em; color: #555; }
     #feedback { text-align: center; margin-top: 18px; font-size: 1.5em; min-height: 1.8em; }
     #answer-reveal { text-align: center; margin-top: 8px; font-size: 1em; }
+    @media (pointer: fine) { #btn-action { display: none !important; } }
   </style>
 </head>
 <body>
@@ -39,22 +40,6 @@
 <div id="home">
   <h2>Basic Algebra</h2>
   <ul id="topic-list">
-    <li><a data-topic="like-terms">1. Collecting Like Terms</a></li>
-    <li><a data-topic="mult-terms">2. Multiplying &amp; Dividing Terms</a></li>
-    <li><a data-topic="single-bracket">3. Expanding Single Brackets</a></li>
-    <li><a data-topic="double-bracket">4. Expanding Double Brackets</a></li>
-    <li><a data-topic="factorise-hcf">5. Factorising (HCF)</a></li>
-    <li><a data-topic="factorise-quad">6. Factorising Quadratics</a></li>
-    <li><a data-topic="solve-eq">7. Solving Equations</a></li>
-    <li><a data-topic="substitution">8. Substitution into Formulas</a></li>
-    <li><a data-topic="rearrange">9. Rearranging Formulas</a></li>
-    <li><a data-topic="index-laws">10. Index Laws</a></li>
-    <li><a data-topic="alg-fractions">11. Algebraic Fractions</a></li>
-    <li><a data-topic="inequalities">12. Inequalities</a></li>
-    <li><a data-topic="complete-square">13. Completing the Square</a></li>
-    <li><a data-topic="simultaneous">14. Simultaneous Equations</a></li>
-    <hr class="sep">
-    <li><a data-topic="mix">Mix of All Topics</a></li>
   </ul>
 </div>
 
@@ -111,9 +96,63 @@ const KEYS = [
   'index-laws','alg-fractions','inequalities','complete-square','simultaneous'
 ];
 
-// Per-topic correct counts at each level (shared between dedicated + mix sessions)
+const TOPIC_LABELS = {
+  'like-terms':      '1. Collecting Like Terms',
+  'mult-terms':      '2. Multiplying & Dividing Terms',
+  'single-bracket':  '3. Expanding Single Brackets',
+  'double-bracket':  '4. Expanding Double Brackets',
+  'factorise-hcf':   '5. Factorising (HCF)',
+  'factorise-quad':  '6. Factorising Quadratics',
+  'solve-eq':        '7. Solving Equations',
+  'substitution':    '8. Substitution into Formulas',
+  'rearrange':       '9. Rearranging Formulas',
+  'index-laws':      '10. Index Laws',
+  'alg-fractions':   '11. Algebraic Fractions',
+  'inequalities':    '12. Inequalities',
+  'complete-square': '13. Completing the Square',
+  'simultaneous':    '14. Simultaneous Equations',
+};
+
+// Per-topic correct counts at each level + total completed (shared between dedicated + mix sessions)
 const stats = {};
-KEYS.forEach(k => { stats[k] = { c1: 0, c2: 0, c3: 0 }; });
+KEYS.forEach(k => { stats[k] = { c1: 0, c2: 0, c3: 0, total: 0 }; });
+
+function saveStats() {
+  localStorage.setItem('algebra-stats', JSON.stringify(stats));
+}
+
+function loadStats() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('algebra-stats'));
+    if (!saved) return;
+    KEYS.forEach(k => {
+      if (saved[k]) {
+        stats[k].c1    = saved[k].c1    || 0;
+        stats[k].c2    = saved[k].c2    || 0;
+        stats[k].c3    = saved[k].c3    || 0;
+        stats[k].total = saved[k].total || 0;
+      }
+    });
+  } catch(e) {}
+}
+
+function renderTopicList() {
+  const ul = document.getElementById('topic-list');
+  let html = '';
+  KEYS.forEach(k => {
+    const t = stats[k].total;
+    const count = t ? ` [${t}]` : '';
+    html += `<li><a data-topic="${k}">${TOPIC_LABELS[k]}${count}</a></li>`;
+  });
+  html += '<hr class="sep">';
+  const mixTotal = KEYS.reduce((sum, k) => sum + stats[k].total, 0);
+  const mixCount = mixTotal ? ` [${mixTotal}]` : '';
+  html += `<li><a data-topic="mix">Mix of All Topics${mixCount}</a></li>`;
+  ul.innerHTML = html;
+}
+
+loadStats();
+renderTopicList();
 
 let totalAnswered = 0;
 let currentTopic  = null;  // topic key or 'mix'
@@ -758,6 +797,8 @@ function submitAnswer() {
     document.getElementById('btn-action').textContent = 'Next question';
     inp.disabled   = true;
     waitingForNext = true;
+    stats[currentQ.topicKey].total++;
+    saveStats();
   } else {
     attempts++;
     if (attempts >= 2) {
@@ -767,6 +808,8 @@ function submitAnswer() {
       document.getElementById('btn-action').textContent  = 'Next question';
       inp.disabled   = true;
       waitingForNext = true;
+      stats[currentQ.topicKey].total++;
+      saveStats();
     } else {
       document.getElementById('feedback').textContent = '❌ try again';
       inp.value = '';
@@ -784,14 +827,17 @@ function goHome() {
   home.style.display  = '';
   currentTopic   = null;
   waitingForNext = false;
+  renderTopicList();
 }
 
 function startTopic(key) {
   currentTopic  = key;
-  totalAnswered = 0;
+  totalAnswered = key === 'mix'
+    ? KEYS.reduce((sum, k) => sum + stats[k].total, 0)
+    : stats[key].total;
   home.style.display  = 'none';
   qpage.style.display = 'block';
-  document.getElementById('top-right').textContent = '0';
+  document.getElementById('top-right').textContent = `${totalAnswered}`;
   nextQuestion();
 }
 
