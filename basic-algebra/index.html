@@ -70,6 +70,9 @@
   <div id="hint">press Enter to submit</div>
   <div id="feedback"></div>
   <div id="answer-reveal"></div>
+  <div style="text-align:center;margin-top:16px;">
+    <button id="btn-action" onclick="submitAnswer()" style="font-size:1em;padding:8px 24px;font-family:inherit;cursor:pointer;">Submit</button>
+  </div>
 </div>
 
 <script>
@@ -719,6 +722,7 @@ function nextQuestion() {
   document.getElementById('feedback').textContent    = '';
   document.getElementById('answer-reveal').innerHTML = '';
   document.getElementById('hint').textContent        = 'press Enter to submit';
+  document.getElementById('btn-action').textContent  = 'Submit';
 
   const inp = document.getElementById('answer-input');
   inp.value    = '';
@@ -749,8 +753,9 @@ function submitAnswer() {
     else if (currentQ.level === 2) s.c2++;
     else                           s.c3++;
 
-    document.getElementById('feedback').textContent = '✅';
-    document.getElementById('hint').textContent     = 'press Enter for next';
+    document.getElementById('feedback').textContent   = '✅';
+    document.getElementById('hint').textContent       = 'press Enter for next';
+    document.getElementById('btn-action').textContent = 'Next question';
     inp.disabled   = true;
     waitingForNext = true;
   } else {
@@ -759,6 +764,7 @@ function submitAnswer() {
       document.getElementById('feedback').textContent    = '❌';
       document.getElementById('answer-reveal').innerHTML = 'Answer: ' + renderA(currentQ.aLatex);
       document.getElementById('hint').textContent        = 'press Enter for next';
+      document.getElementById('btn-action').textContent  = 'Next question';
       inp.disabled   = true;
       waitingForNext = true;
     } else {
