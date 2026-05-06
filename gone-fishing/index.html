@@ -57,6 +57,60 @@ const ROWS = Array.from({ length: N_ROWS }, () => ({
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SKY — STARS, CONSTELLATIONS, MILKY WAY
+// ─────────────────────────────────────────────────────────────────────────────
+// All positions are normalised [0-1] within the sky area (x across, y down).
+
+const N_STARS = 310;
+const STARS = Array.from({ length: N_STARS }, () => ({
+  x:    rnd(0.01, 0.99),
+  y:    rnd(0.03, 0.94),
+  sz:   rnd(0.3, 1.5),
+  base: rnd(0.35, 0.92),   // base alpha
+  tph:  rnd(0, TAU),       // twinkle phase
+  tspd: rnd(0.5, 2.2),     // twinkle speed
+  warm: Math.random() < 0.10,  // ~10% slightly warm-tinted
+}));
+
+// Two constellations defined as normalised sky coords + connection lines.
+// Orion sits in the right-centre; Big Dipper upper-left.
+const CONSTELLATIONS = [
+  {
+    stars: [
+      { x: 0.635, y: 0.26, sz: 2.4, warm: true  },  // Betelgeuse (orangeish)
+      { x: 0.700, y: 0.22, sz: 2.0 },                // Bellatrix
+      { x: 0.618, y: 0.47, sz: 1.7 },                // Alnitak  (belt)
+      { x: 0.658, y: 0.49, sz: 1.9 },                // Alnilam  (belt)
+      { x: 0.695, y: 0.47, sz: 1.6 },                // Mintaka  (belt)
+      { x: 0.720, y: 0.65, sz: 2.6, blue: true  },   // Rigel (blue-white)
+      { x: 0.605, y: 0.67, sz: 1.7 },                // Saiph
+    ],
+    lines: [[0,1],[0,2],[1,4],[2,3],[3,4],[2,6],[4,5]],
+  },
+  {
+    stars: [
+      { x: 0.220, y: 0.15, sz: 1.8 },  // Dubhe
+      { x: 0.268, y: 0.22, sz: 1.6 },  // Merak
+      { x: 0.305, y: 0.30, sz: 1.5 },  // Phad
+      { x: 0.255, y: 0.34, sz: 1.4 },  // Megrez
+      { x: 0.185, y: 0.37, sz: 1.7 },  // Alioth
+      { x: 0.115, y: 0.40, sz: 1.5 },  // Mizar
+      { x: 0.048, y: 0.34, sz: 1.8 },  // Alkaid
+    ],
+    lines: [[0,1],[1,2],[2,3],[0,3],[3,4],[4,5],[5,6]],
+  },
+];
+
+// Milky Way: a set of overlapping soft gradient passes forming a diagonal band.
+// Defined as { cx, cy, angle, width } all in normalised sky units.
+const MW_PASSES = [
+  { cx: 0.48, cy: 0.50, angle: -0.38, w: 0.55, h: 2.0, a: 0.042 },
+  { cx: 0.44, cy: 0.48, angle: -0.38, w: 0.32, h: 2.0, a: 0.055 },
+  { cx: 0.46, cy: 0.52, angle: -0.34, w: 0.18, h: 2.0, a: 0.038 },
+  { cx: 0.50, cy: 0.44, angle: -0.42, w: 0.12, h: 2.0, a: 0.028 },  // secondary arm
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WAVE FUNCTION
 // ─────────────────────────────────────────────────────────────────────────────
 // Returns the y-displacement (in px) for position wx along a row.
@@ -67,7 +121,9 @@ function waveY(row, wx, depth, t, drift) {
   const amp = AMP_MIN + (AMP_MAX - AMP_MIN) * depth;
   let dy = 0;
   for (const [f, a, ph, sp] of row.layers) {
-    dy += a * amp * Math.sin(f * wx + ph + t * sp * row.rowSpd + drift);
+    // Far rows (depth→0) run at ~55% speed; near rows (depth→1) at full speed
+    const spd = sp * row.rowSpd * (0.55 + depth * 0.45);
+    dy += a * amp * Math.sin(f * wx + ph + t * spd + drift * (0.55 + depth * 0.45));
   }
   return dy;
 }
@@ -160,6 +216,132 @@ function drawRow(row, rowY, depth, halfW, t, drift) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MILKY WAY
+// ─────────────────────────────────────────────────────────────────────────────
+function drawMilkyWay(horizY) {
+  ctx.save();
+  // Clip to sky only
+  ctx.beginPath();
+  ctx.rect(0, 0, W, horizY);
+  ctx.clip();
+
+  for (const p of MW_PASSES) {
+    const sx = p.cx * W;
+    const sy = p.cy * horizY;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(p.angle);
+    const bw = p.w * W;
+    const bh = p.h * horizY;
+    // Perpendicular gradient gives the soft band cross-section
+    const g = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+    g.addColorStop(0,    'rgba(0,0,0,0)');
+    g.addColorStop(0.20, `rgba(16,20,36,${p.a})`);
+    g.addColorStop(0.42, `rgba(22,28,50,${p.a * 1.6})`);
+    g.addColorStop(0.50, `rgba(26,32,58,${p.a * 2.0})`);
+    g.addColorStop(0.58, `rgba(22,28,50,${p.a * 1.6})`);
+    g.addColorStop(0.80, `rgba(16,20,36,${p.a})`);
+    g.addColorStop(1,    'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+    ctx.restore();
+  }
+
+  // Tiny star-dust sprinkled along the band (very faint, many small dots)
+  const dustSeed = 77;
+  let ds = dustSeed;
+  function dr() { ds = (ds * 1664525 + 1013904223) >>> 0; return ds / 0xffffffff; }
+  for (let i = 0; i < 180; i++) {
+    // Place dust within a diagonal band across the sky
+    const along = dr();   // 0-1 along band length
+    const across = (dr() - 0.5) * 0.22;  // spread around band centre
+    const bx = (0.18 + along * 0.64) * W + across * W * Math.cos(-0.38 + Math.PI/2);
+    const by = (0.08 + along * 0.84) * horizY + across * W * Math.sin(-0.38 + Math.PI/2);
+    const da = dr() * 0.18 + 0.04;
+    ctx.fillStyle = `rgba(200,210,230,${da.toFixed(3)})`;
+    ctx.fillRect(bx | 0, by | 0, 1, 1);
+  }
+
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STARS & CONSTELLATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+function drawStars(horizY, t) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, horizY);
+  ctx.clip();
+
+  // ── Constellation lines (drawn first, under stars) ──────────────────────
+  for (const con of CONSTELLATIONS) {
+    ctx.strokeStyle = 'rgba(140,160,210,0.08)';
+    ctx.lineWidth   = 0.8;
+    for (const [a, b] of con.lines) {
+      const ax = con.stars[a].x * W, ay = con.stars[a].y * horizY;
+      const bx = con.stars[b].x * W, by = con.stars[b].y * horizY;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
+  }
+
+  // ── Background stars ─────────────────────────────────────────────────────
+  for (const s of STARS) {
+    const sx = s.x * W;
+    const sy = s.y * horizY;
+    // Atmospheric fade: stars near the horizon dim out
+    const horizFade = Math.max(0, 1 - (s.y ** 2.5) * 0.7);
+    const twinkle   = 0.65 + 0.35 * Math.sin(t * s.tspd + s.tph);
+    const alpha     = s.base * twinkle * horizFade;
+    if (alpha < 0.02) continue;
+
+    const r = s.warm ? 255 : Math.round(180 + (1 - s.base) * 50);
+    const g = s.warm ? 220 : Math.round(195 + (1 - s.base) * 40);
+    const b = s.warm ? 170 : 255;
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+
+    const sz = s.sz * (0.88 + 0.12 * twinkle);
+    // Larger stars get a soft cross-glow
+    if (sz > 1.1) {
+      ctx.globalAlpha = alpha * 0.25;
+      ctx.fillRect(sx - sz * 2, sy - 0.6, sz * 4, 1.2);
+      ctx.fillRect(sx - 0.6, sy - sz * 2, 1.2, sz * 4);
+      ctx.globalAlpha = 1;
+    }
+    ctx.fillRect(sx - sz * 0.5, sy - sz * 0.5, sz, sz);
+  }
+
+  // ── Constellation stars (brighter, on top) ───────────────────────────────
+  for (const con of CONSTELLATIONS) {
+    for (const s of con.stars) {
+      const sx = s.x * W, sy = s.y * horizY;
+      const twinkle = 0.82 + 0.18 * Math.sin(t * 1.1 + s.x * 7.3);
+      const alpha   = 0.75 * twinkle * Math.max(0, 1 - (s.y ** 3) * 0.5);
+
+      let r = 210, g = 220, b = 255;
+      if (s.warm) { r = 255; g = 200; b = 140; }  // Betelgeuse orange
+      if (s.blue) { r = 160; g = 190; b = 255; }  // Rigel blue-white
+
+      // Soft glow
+      ctx.fillStyle = `rgba(${r},${g},${b},${(alpha * 0.07).toFixed(3)})`;
+      const glowR = s.sz * 2.2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, glowR, 0, TAU);
+      ctx.fill();
+
+      // Core pixel
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+      ctx.fillRect(sx - s.sz * 0.5, sy - s.sz * 0.5, s.sz, s.sz);
+    }
+  }
+
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BACKGROUND
 // ─────────────────────────────────────────────────────────────────────────────
 function drawBackground(horizY) {
@@ -234,6 +416,8 @@ function frame(ms) {
   const swayX   = Math.sin(t * 0.07) * swayAmt;
 
   drawBackground(horizY);
+  drawMilkyWay(horizY);
+  drawStars(horizY, t);
 
   ctx.save();
   ctx.lineCap = 'round';
