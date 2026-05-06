@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gone Fishing</title>
+<meta name="description" content="A meditative 2D canvas ocean — calm, atmospheric, infinite depth.">
+<style>
+  * { margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #010407; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const cv  = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+
+function resize() {
+  W = cv.width  = window.innerWidth;
+  H = cv.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIGURATION
+// ─────────────────────────────────────────────────────────────────────────────
+const N_ROWS    = 90;    // total wave rows
+const HORIZ_F   = 0.44;  // horizon as fraction of canvas height (0=top, 1=bottom)
+const ROW_EXP   = 2.8;   // row y-spacing exponent: higher → denser rows near horizon
+const WIDTH_EXP = 1.5;   // row width exponent: how quickly trapezoid narrows toward horizon
+const AMP_MAX   = 24;    // wave amplitude at viewer (px)
+const AMP_MIN   = 0.35;  // wave amplitude at horizon (px)
+const STK_MAX   = 2.8;   // stroke width at viewer
+const STK_MIN   = 0.3;   // stroke width at horizon
+const STEP_PX   = 4;     // horizontal sampling step for path building
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WAVE ROW DATA  (generated once — each row has stable random params)
+// ─────────────────────────────────────────────────────────────────────────────
+// Each row has 4 layered sine components: [frequency, amplitude-ratio, phase, speed]
+const TAU = Math.PI * 2;
+function rnd(a, b) { return a + Math.random() * (b - a); }
+
+const ROWS = Array.from({ length: N_ROWS }, () => ({
+  layers: [
+    [rnd(0.003, 0.007), 1.00, rnd(0, TAU), rnd(0.30, 0.65)],
+    [rnd(0.009, 0.016), 0.42, rnd(0, TAU), rnd(0.70, 1.20)],
+    [rnd(0.018, 0.030), 0.20, rnd(0, TAU), rnd(0.20, 0.50)],
+    [rnd(0.036, 0.055), 0.09, rnd(0, TAU), rnd(1.10, 1.90)],
+  ],
+  rowSpd: rnd(0.35, 0.90),  // per-row global speed multiplier (variation in drift)
+  shimOff: rnd(0, TAU),     // shimmer phase offset
+}));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WAVE FUNCTION
+// ─────────────────────────────────────────────────────────────────────────────
+// Returns the y-displacement (in px) for position wx along a row.
+// depth  : 0 = at horizon, 1 = at viewer
+// t      : elapsed seconds
+// drift  : slow global forward phase applied to all layers (unified ocean drift)
+function waveY(row, wx, depth, t, drift) {
+  const amp = AMP_MIN + (AMP_MAX - AMP_MIN) * depth;
+  let dy = 0;
+  for (const [f, a, ph, sp] of row.layers) {
+    dy += a * amp * Math.sin(f * wx + ph + t * sp * row.rowSpd + drift);
+  }
+  return dy;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COLOR HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+// depth 0 → deep dark navy / depth 1 → slightly brighter teal-navy
+function baseRGB(depth) {
+  return [
+    ( 3 + depth * 10) | 0,
+    ( 7 + depth * 28) | 0,
+    (20 + depth * 50) | 0,
+  ];
+}
+function crestRGB(depth) {
+  return [
+    ( 8 + depth * 24) | 0,
+    (22 + depth * 72) | 0,
+    (48 + depth * 90) | 0,
+  ];
+}
+function shimmerRGB(depth) {
+  return [
+    (18 + depth * 55) | 0,
+    (60 + depth * 120) | 0,
+    (95 + depth * 100) | 0,
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DRAW ONE ROW
+// ─────────────────────────────────────────────────────────────────────────────
+function drawRow(row, rowY, depth, halfW, t, drift) {
+  if (halfW < 1.5) return;
+
+  const x0 = W / 2 - halfW;
+  const x1 = W / 2 + halfW;
+  const stk = STK_MIN + (STK_MAX - STK_MIN) * depth;
+
+  // Pre-sample wave positions along this row
+  const pts = [];
+  for (let px = x0; px <= x1 + STEP_PX; px += STEP_PX) {
+    const sx = Math.min(px, x1);
+    pts.push(sx, rowY + waveY(row, sx, depth, t, drift));
+  }
+  if (pts.length < 4) return;
+
+  const [br, bg, bb] = baseRGB(depth);
+
+  // ── Main wave stroke ──────────────────────────────────────────────────────
+  ctx.beginPath();
+  ctx.moveTo(pts[0], pts[1]);
+  for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+  ctx.strokeStyle = `rgb(${br},${bg},${bb})`;
+  ctx.lineWidth = stk;
+  ctx.stroke();
+
+  // ── Crest highlight (a second, brighter stroke slightly above) ────────────
+  // Starts fading in at depth > 0.2 for atmospheric variation
+  if (depth > 0.18) {
+    const ha = ((depth - 0.18) / 0.82) ** 1.4;
+    const [cr, cg, cb] = crestRGB(depth);
+    ctx.beginPath();
+    const off = stk * 0.65;
+    ctx.moveTo(pts[0], pts[1] - off);
+    for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1] - off);
+    ctx.strokeStyle = `rgba(${cr},${cg},${cb},${(ha * 0.38).toFixed(3)})`;
+    ctx.lineWidth = stk * 0.45;
+    ctx.stroke();
+  }
+
+  // ── Specular shimmer dots at wave crests ──────────────────────────────────
+  // Only visible for rows in the nearer half of the view
+  if (depth > 0.45) {
+    const sa = ((depth - 0.45) / 0.55) ** 1.6;
+    const [sr, sg, sb] = shimmerRGB(depth);
+    ctx.fillStyle = `rgba(${sr},${sg},${sb},${(sa * 0.75).toFixed(3)})`;
+    for (let i = 2; i < pts.length - 2; i += 2) {
+      const y_prev = pts[i - 1];
+      const y_curr = pts[i + 1];
+      const y_next = pts[i + 3];
+      // Local minimum in canvas-y = wave crest (canvas y increases downward)
+      if (y_curr < y_prev && y_curr < y_next) {
+        const sz = (1 + depth * 3.5) * sa;
+        ctx.fillRect(pts[i] - sz * 0.5, pts[i + 1] - sz * 0.5, sz, sz);
+      }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BACKGROUND
+// ─────────────────────────────────────────────────────────────────────────────
+function drawBackground(horizY) {
+  // Dark sky gradient above — subtle, almost black
+  const sky = ctx.createLinearGradient(0, 0, 0, horizY);
+  sky.addColorStop(0,    '#010407');
+  sky.addColorStop(0.65, '#010508');
+  sky.addColorStop(1,    '#020810');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, horizY);
+
+  // Deep water gradient below horizon
+  const water = ctx.createLinearGradient(0, horizY, 0, H);
+  water.addColorStop(0,   '#030c1e');
+  water.addColorStop(0.3, '#040e22');
+  water.addColorStop(1,   '#050f24');
+  ctx.fillStyle = water;
+  ctx.fillRect(0, horizY, W, H - horizY);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HORIZON FOG / HAZE
+// ─────────────────────────────────────────────────────────────────────────────
+function drawHorizonFog(horizY) {
+  // Atmospheric haze band centred on the horizon line
+  const fogH   = H * 0.14;
+  const fogTop = horizY - fogH * 0.35;
+  const fog    = ctx.createLinearGradient(0, fogTop, 0, fogTop + fogH);
+  fog.addColorStop(0,    'rgba(2,8,18,0)');
+  fog.addColorStop(0.30, 'rgba(3,10,22,0.52)');
+  fog.addColorStop(0.55, 'rgba(4,12,24,0.48)');
+  fog.addColorStop(1,    'rgba(3,10,20,0)');
+  ctx.fillStyle = fog;
+  ctx.fillRect(0, fogTop, W, fogH);
+
+  // Faint luminous line right at the horizon (distant-light reflection)
+  const glow = ctx.createLinearGradient(0, horizY - 2, 0, horizY + 4);
+  glow.addColorStop(0, 'rgba(15,40,70,0)');
+  glow.addColorStop(0.4, 'rgba(15,40,70,0.18)');
+  glow.addColorStop(1,   'rgba(15,40,70,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(W * 0.1, horizY - 2, W * 0.8, 6);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VIGNETTE
+// ─────────────────────────────────────────────────────────────────────────────
+function drawVignette() {
+  // Radial darkening at edges — keeps focus on the centre-depth
+  const vig = ctx.createRadialGradient(W / 2, H * 0.62, H * 0.18, W / 2, H * 0.62, H * 0.92);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.48)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN LOOP
+// ─────────────────────────────────────────────────────────────────────────────
+function frame(ms) {
+  const t      = ms / 1000;
+  const horizY = H * HORIZ_F;
+  const waterH = H - horizY;
+
+  // Slow global forward drift — gives unified ocean movement feeling over time.
+  // All rows share this phase advancement so the surface feels like one body of water.
+  const drift = t * 0.18;
+
+  // Subtle camera sway: the whole surface gently shifts side-to-side over time.
+  // Near rows are shifted more than far rows (parallax) for extra depth.
+  const swayAmt = W * 0.018;
+  const swayX   = Math.sin(t * 0.07) * swayAmt;
+
+  drawBackground(horizY);
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Draw rows from horizon (i=0) to viewer (i=N_ROWS-1)
+  for (let i = 0; i < N_ROWS; i++) {
+    // tLin : linear depth, 0 = horizon, 1 = viewer
+    const tLin = i / (N_ROWS - 1);
+
+    // Row y-position: exponential spacing compresses many rows near the horizon,
+    // creating the illusion of great depth receding into the screen.
+    // rowY = horizonY + waterHeight × tLin^ROW_EXP
+    const rowY = horizY + waterH * Math.pow(tLin, ROW_EXP);
+
+    // All rows span full width — perspective is conveyed through spacing,
+    // amplitude, colour and stroke weight rather than trapezoid width.
+    const halfW = W / 2;
+
+    // Parallax sway: near rows (tLin→1) sway more; far rows barely move.
+    const rowCenterX = W / 2 + swayX * tLin * tLin;
+    // Shift the row's world-x origin so waves stay phase-consistent with sway.
+    // We pass a wx offset into the wave function instead of moving the path centre.
+    const wxOffset = -swayX * tLin * tLin;
+
+    // Draw. The wave function uses (sx + wxOffset) as the world-x coordinate,
+    // so waves scroll naturally with the sway without phase discontinuities.
+    drawRowWithOffset(ROWS[i], rowY, tLin, halfW, rowCenterX, wxOffset, t, drift);
+  }
+  ctx.restore();
+
+  drawHorizonFog(horizY);
+  drawVignette();
+
+  requestAnimationFrame(frame);
+}
+
+// Version of drawRow that accepts a centre-x and world-x offset for sway.
+function drawRowWithOffset(row, rowY, depth, halfW, centreX, wxOff, t, drift) {
+  if (halfW < 1.5) return;
+
+  const x0 = centreX - halfW;
+  const x1 = centreX + halfW;
+  const stk = STK_MIN + (STK_MAX - STK_MIN) * depth;
+
+  const pts = [];
+  for (let px = x0; px <= x1 + STEP_PX; px += STEP_PX) {
+    const sx = Math.min(px, x1);
+    pts.push(sx, rowY + waveY(row, sx + wxOff, depth, t, drift));
+  }
+  if (pts.length < 4) return;
+
+  const [br, bg, bb] = baseRGB(depth);
+
+  // Main stroke
+  ctx.beginPath();
+  ctx.moveTo(pts[0], pts[1]);
+  for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]);
+  ctx.strokeStyle = `rgb(${br},${bg},${bb})`;
+  ctx.lineWidth   = stk;
+  ctx.stroke();
+
+  // Crest highlight
+  if (depth > 0.18) {
+    const ha = ((depth - 0.18) / 0.82) ** 1.4;
+    const [cr, cg, cb] = crestRGB(depth);
+    const off = stk * 0.65;
+    ctx.beginPath();
+    ctx.moveTo(pts[0], pts[1] - off);
+    for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1] - off);
+    ctx.strokeStyle = `rgba(${cr},${cg},${cb},${(ha * 0.38).toFixed(3)})`;
+    ctx.lineWidth   = stk * 0.45;
+    ctx.stroke();
+  }
+
+  // Specular shimmer
+  if (depth > 0.45) {
+    const sa = ((depth - 0.45) / 0.55) ** 1.6;
+    const [sr, sg, sb] = shimmerRGB(depth);
+    ctx.fillStyle = `rgba(${sr},${sg},${sb},${(sa * 0.75).toFixed(3)})`;
+    for (let i = 2; i < pts.length - 2; i += 2) {
+      if (pts[i + 1] < pts[i - 1] && pts[i + 1] < pts[i + 3]) {
+        const sz = (1 + depth * 3.5) * sa;
+        ctx.fillRect(pts[i] - sz * 0.5, pts[i + 1] - sz * 0.5, sz, sz);
+      }
+    }
+  }
+}
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

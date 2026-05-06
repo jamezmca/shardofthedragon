@@ -32,43 +32,35 @@ body { display: flex; flex-direction: column; height: 100dvh; }
 
 .tile {
   flex-shrink: 0;
-  width: 54px;
-  height: 66px;
+  width: 54px; height: 66px;
   border: 2px solid #333;
   border-radius: 3px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   background: #181818;
-  image-rendering: pixelated;
 }
-.tile.active  { border-color: #eee; }
-.tile.locked  { opacity: 0.35; cursor: default; }
-.tile canvas  { display: block; width: 100%; height: 54px; image-rendering: pixelated; }
+.tile.active { border-color: #eee; }
+.tile.locked { opacity: 0.35; cursor: default; }
+.tile canvas { display: block; width: 100%; height: 54px; image-rendering: pixelated; }
 .tile-lbl {
   position: absolute;
   bottom: 2px; left: 0; right: 0;
-  text-align: center;
-  font-size: 8px;
-  color: #888;
+  text-align: center; font-size: 8px; color: #888;
 }
 .tile-stamp {
   position: absolute;
   inset: 0 0 14px 0;
   display: flex; align-items: center; justify-content: center;
   background: rgba(0,0,0,0.55);
-  color: #c00;
-  font-size: 7px;
-  font-weight: bold;
-  letter-spacing: 1px;
+  color: #c00; font-size: 7px; font-weight: bold; letter-spacing: 1px;
   transform: rotate(-12deg);
   pointer-events: none;
 }
 .tile-best {
   position: absolute;
   top: 2px; right: 3px;
-  font-size: 7px;
-  color: #fc0;
+  font-size: 7px; color: #fc0;
 }
 .tile-lock {
   position: absolute;
@@ -76,13 +68,10 @@ body { display: flex; flex-direction: column; height: 100dvh; }
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
 }
+.tile-train { border-color: #446; }
 
 /* ── Main ── */
-#main {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
+#main { flex: 1; position: relative; overflow: hidden; }
 #gc {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -92,94 +81,104 @@ body { display: flex; flex-direction: column; height: 100dvh; }
   image-rendering: pixelated;
 }
 
-/* ── Stats ── */
+/* ── Stats panel ── */
 #stats {
   position: absolute;
   top: 10px; left: 10px;
-  background: rgba(0,0,0,0.78);
+  background: rgba(0,0,0,0.82);
   border: 1px solid #333;
-  padding: 9px 13px;
-  font-size: 11px;
-  line-height: 1.9;
+  padding: 9px 11px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
   pointer-events: none;
-  max-width: 190px;
+  max-width: 240px;
 }
-#stats .gname { font-size: 13px; color: #fc0; margin-bottom: 3px; }
-#stats .crime { color: #f88; font-style: italic; font-size: 10px; margin-top: 5px; line-height: 1.5; }
+#face-mini { image-rendering: pixelated; flex-shrink: 0; border: 1px solid #444; }
+#stats-text { font-size: 11px; line-height: 1.85; min-width: 0; }
+#stats-text .gname { font-size: 12px; color: #fc0; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#stats-text .crime { color: #f88; font-style: italic; font-size: 10px; margin-top: 4px; line-height: 1.5; }
 
 /* ── Toggle ── */
 #toggle {
   position: absolute;
   top: 10px; right: 10px;
-  display: flex; gap: 0;
+  display: flex;
 }
 #toggle button {
-  background: #1a1a1a;
-  color: #aaa;
+  background: #1a1a1a; color: #aaa;
   border: 1px solid #444;
   padding: 6px 12px;
-  font-family: monospace;
-  font-size: 11px;
+  font-family: monospace; font-size: 11px;
   cursor: pointer;
 }
 #toggle button:first-child { border-right: none; border-radius: 3px 0 0 3px; }
 #toggle button:last-child  { border-radius: 0 3px 3px 0; }
 #toggle button.on { background: #333; color: #eee; border-color: #888; }
 
-/* ── Execute btn (mobile) ── */
+/* ── Tutorial hint ── */
+#tut-hint {
+  position: absolute;
+  bottom: 60px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,20,0.88);
+  border: 1px solid #556;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: #aac;
+  text-align: center;
+  letter-spacing: 1px;
+  pointer-events: none;
+  display: none;
+  white-space: nowrap;
+}
+@media (pointer: coarse) { #tut-hint { bottom: 80px; } }
+
+/* ── Execute btn (touch only) ── */
 #exec-btn {
   position: absolute;
   bottom: 14px; left: 50%;
   transform: translateX(-50%);
-  background: #5a0000;
-  color: #fdd;
+  background: #5a0000; color: #fdd;
   border: 2px solid #a00;
   padding: 11px 32px;
-  font-family: monospace;
-  font-size: 14px;
-  cursor: pointer;
-  letter-spacing: 2px;
-  border-radius: 2px;
+  font-family: monospace; font-size: 14px;
+  cursor: pointer; letter-spacing: 2px; border-radius: 2px;
 }
 #exec-btn:disabled { opacity: 0.35; cursor: default; }
 @media (pointer: fine) { #exec-btn { display: none; } }
 
-/* ── Result overlay ── */
-#result {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-#result.show { display: flex; }
-#res-score { font-size: 80px; font-weight: bold; line-height: 1; }
-#res-verdict { font-size: 18px; letter-spacing: 3px; }
-#res-detail { font-size: 12px; color: #aaa; text-align: center; line-height: 2; }
-#res-btns { display: flex; gap: 10px; margin-top: 6px; }
-#res-btns button {
-  background: #1a1a1a;
-  color: #ddd;
-  border: 1px solid #555;
-  padding: 9px 22px;
-  font-family: monospace;
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 2px;
-}
-#res-btns button:hover { background: #333; }
-
-/* ── Hint ── */
+/* ── Keyboard hint ── */
 #hint {
   position: absolute;
   bottom: 14px; right: 14px;
-  font-size: 10px;
-  color: #555;
+  font-size: 10px; color: #555;
   pointer-events: none;
 }
 @media (pointer: coarse) { #hint { display: none; } }
+
+/* ── Result overlay ── */
+#result {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.87);
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+}
+#result.show { display: flex; }
+#res-score  { font-size: 80px; font-weight: bold; line-height: 1; }
+#res-verdict { font-size: 18px; letter-spacing: 3px; }
+#res-detail  { font-size: 12px; color: #aaa; text-align: center; line-height: 2; }
+#res-btns { display: flex; gap: 10px; margin-top: 6px; }
+#res-btns button {
+  background: #1a1a1a; color: #ddd;
+  border: 1px solid #555;
+  padding: 9px 22px;
+  font-family: monospace; font-size: 12px;
+  cursor: pointer; border-radius: 2px;
+}
+#res-btns button:hover { background: #333; }
 </style>
 </head>
 <body>
@@ -188,12 +187,17 @@ body { display: flex; flex-direction: column; height: 100dvh; }
 <div id="main">
   <canvas id="gc"></canvas>
 
-  <div id="stats"></div>
+  <div id="stats">
+    <canvas id="face-mini" width="64" height="64"></canvas>
+    <div id="stats-text"></div>
+  </div>
 
   <div id="toggle">
     <button id="btn-photo" class="on" onclick="setView('photo')">PHOTO</button>
     <button id="btn-xray"        onclick="setView('xray')">X-RAY</button>
   </div>
+
+  <div id="tut-hint"></div>
 
   <button id="exec-btn" disabled onclick="doExecute()">EXECUTE</button>
   <div id="hint">draw slash · SPACE to execute</div>
@@ -213,38 +217,92 @@ body { display: flex; flex-direction: column; height: 100dvh; }
 // ── Giraffe data ──────────────────────────────────────────────────────────────
 const GIRAFFES = [
   {
+    name: 'Training I',
+    sub: 'The Bone',
+    isTutorial: true, tutView: 'xray',
+    tutHint: 'X-RAY shows the bone angle. Cut perpendicular to it.',
+    height: '—', weight: '—', age: '—',
+    crime: 'A training dummy. No crimes. Feel free.',
+    fatness: 0.0, boniness: 1.0,
+    boneSign: 1,
+    spotSeed: 11,
+    skinCol: '#9aaabb', spotCol: '#5a6a7a',
+  },
+  {
+    name: 'Training II',
+    sub: 'The Flesh',
+    isTutorial: true, tutView: 'photo',
+    tutHint: 'PHOTO shows the skin & fat. Cut perpendicular to the surface.',
+    height: '—', weight: '—', age: '—',
+    crime: 'Another dummy. Particularly well-padded.',
+    fatness: 1.0, boniness: 0.0,
+    boneSign: -1,
+    spotSeed: 77,
+    skinCol: '#E0C060', spotCol: '#A07820',
+  },
+  {
     name: 'Gerald Longneck III',
+    sub: null,
+    isTutorial: false,
     height: '5.2m', weight: '820kg', age: 14,
-    crime: 'Consumed the last leaf of the Sacred Acacia of Nairobi. Showed zero remorse.',
-    fatness: 0.18,   // lean elder — cut should lean toward bone perp
-    boniness: 0.72,
+    crime: 'Consumed the last leaf of the Sacred Acacia of Nairobi. No remorse shown.',
+    fatness: 0.18, boniness: 0.72,
+    boneSign: 1,
     spotSeed: 1337,
     skinCol: '#C8A84B', spotCol: '#7B5218',
   },
   {
     name: 'Beatrice Patchworth',
+    sub: null,
+    isTutorial: false,
     height: '4.1m', weight: '1240kg', age: 5,
     crime: "Sat on a tourist's Land Rover deliberately. Twice. Smirked both times.",
-    fatness: 0.82,   // very fat young giraffe — cut should lean toward skin normal
-    boniness: 0.22,
+    fatness: 0.82, boniness: 0.22,
+    boneSign: -1,
     spotSeed: 420,
     skinCol: '#D4B356', spotCol: '#8A6120',
   },
 ];
-GIRAFFES.forEach((g, i) => { g.id = i; });
+GIRAFFES.forEach((g, i) => {
+  g.id = i;
+  g.spots = makeSpots(g.spotSeed);
+});
+
+function makeSpots(seed, n = 13) {
+  const s = [];
+  let r = seed >>> 0;
+  for (let i = 0; i < n; i++) {
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const u = r / 0xffffffff;
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const v = r / 0xffffffff;
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const rad = 0.04 + (r / 0xffffffff) * 0.11;
+    s.push({ u, v, rad });
+  }
+  return s;
+}
+
+function inSpot(u, v, spots) {
+  for (const s of spots) {
+    const du = u - s.u, dv = v - s.v;
+    if (du * du + dv * dv < s.rad * s.rad) return true;
+  }
+  return false;
+}
 
 // ── Persist ───────────────────────────────────────────────────────────────────
-let saved = { unlocked: 1, best: [] };
+let saved = {};
 try { saved = JSON.parse(localStorage.getItem('samgiraffe') || '{}'); } catch(e) {}
-if (!saved.unlocked) saved.unlocked = 1;
+if (!saved.unlocked || saved.unlocked < 2) saved.unlocked = 2; // both tutorials always open
 if (!saved.best) saved.best = [];
 function persist() { localStorage.setItem('samgiraffe', JSON.stringify(saved)); }
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let lvl     = 0;
-let view    = 'photo';   // 'photo' | 'xray'
-let cut     = null;      // {x1,y1,x2,y2}
-let phase   = 'idle';    // 'idle' | 'anim' | 'done'
+let view    = 'photo';
+let cut     = null;
+let phase   = 'idle';   // 'idle' | 'anim' | 'done'
 let drawing = false;
 let drawPt  = null;
 let blood   = [];
@@ -264,61 +322,75 @@ function resize() {
 window.addEventListener('resize', resize);
 
 // ── Geometry ──────────────────────────────────────────────────────────────────
+// Neck spans full diagonal — from bottom-right corner to top-left corner
 function geo(g) {
-  const p1 = { x: CW * 0.78, y: CH * 0.90 }; // bottom-right
-  const p2 = { x: CW * 0.22, y: CH * 0.10 }; // top-left
-  const dx = p2.x - p1.x, dy = p2.y - p1.y;
-  const len = Math.hypot(dx, dy);
-  const ang = Math.atan2(dy, dx);              // neck direction angle
-  const px = -dy / len, py = dx / len;         // perpendicular unit vector
+  const p1 = { x: CW, y: CH };   // bottom-right (off-screen intentional for overflow)
+  const p2 = { x: 0,  y: 0  };   // top-left
+  const dx  = p2.x - p1.x;       // = -CW
+  const dy  = p2.y - p1.y;       // = -CH
+  const len = Math.hypot(dx, dy); // canvas diagonal
+  const ang = Math.atan2(dy, dx);
+  const px  = -dy / len;          // perpendicular unit vector
+  const py  =  dx / len;
 
-  const scale    = CW / 500;
-  const halfSkin = (50 + g.fatness * 70) * scale;
-  const halfBone = (12 + g.boniness * 14) * scale;
-  const boneOff  = (0.06 + g.boniness * 0.09) * (g.id % 2 === 0 ? 1 : -1); // bone tilt offset
+  const scale    = Math.min(CW, CH) / 400;
+  const halfSkin = (52 + g.fatness * 72) * scale;
+  const halfBone = (13 + g.boniness * 15) * scale;
+  // Bone angular offset — small so bone stays within neck
+  const boneOff  = (0.008 + g.boniness * 0.016) * g.boneSign;
+  const boneAng  = ang + boneOff;
+  // Bone perpendicular (width direction for bone polygon)
+  const bpx = Math.sin(boneAng);   // = -sin(boneAng) rotated... perpendicular to boneAng
+  const bpy = -Math.cos(boneAng);  // perp to direction boneAng: rotate 90° → (-sin, cos) but let's use standard
+  // Actually: direction boneAng → (cos(boneAng), sin(boneAng))
+  // Perpendicular (rotate +90°) → (-sin(boneAng), cos(boneAng))
+  const bpxV = -Math.sin(boneAng);
+  const bpyV =  Math.cos(boneAng);
 
-  return { p1, p2, dx, dy, len, ang, px, py, halfSkin, halfBone, boneOff };
+  return { p1, p2, dx, dy, len, ang, px, py, halfSkin, halfBone, boneOff, boneAng, bpxV, bpyV };
 }
 
-// ── Spot pattern per giraffe ──────────────────────────────────────────────────
-function makeSpots(seed, n = 12) {
-  const s = [];
-  let r = seed;
-  for (let i = 0; i < n; i++) {
-    r = (r * 1664525 + 1013904223) >>> 0;
-    const u = (r / 0xffffffff);
-    r = (r * 1664525 + 1013904223) >>> 0;
-    const v = (r / 0xffffffff);
-    r = (r * 1664525 + 1013904223) >>> 0;
-    const rad = 0.05 + (r / 0xffffffff) * 0.12;
-    s.push({ u, v, rad });
-  }
-  return s;
-}
-GIRAFFES.forEach(g => { g.spots = makeSpots(g.spotSeed); });
+// ── Neck paths ────────────────────────────────────────────────────────────────
+const TAPER = 0.82;
 
-function inSpot(u, v, spots) {
-  for (const s of spots) {
-    const du = u - s.u, dv = v - s.v;
-    if (du*du + dv*dv < s.rad * s.rad) return true;
-  }
-  return false;
+function neckPath(G) {
+  const { p1, p2, px, py, halfSkin } = G;
+  const hw1 = halfSkin, hw2 = halfSkin * TAPER;
+  const p = new Path2D();
+  p.moveTo(p1.x + px * hw1, p1.y + py * hw1);
+  p.lineTo(p2.x + px * hw2, p2.y + py * hw2);
+  p.lineTo(p2.x - px * hw2, p2.y - py * hw2);
+  p.lineTo(p1.x - px * hw1, p1.y - py * hw1);
+  p.closePath();
+  return p;
 }
 
-// ── Neck drawing ──────────────────────────────────────────────────────────────
-const PSIZ = () => Math.max(3, Math.round(CW / 100));
+function bonePath(G) {
+  // Bone traces the same center line (p1→p2) but uses bone's perpendicular direction
+  const { p1, p2, halfBone, bpxV, bpyV } = G;
+  const hw1 = halfBone, hw2 = halfBone * TAPER;
+  const p = new Path2D();
+  p.moveTo(p1.x + bpxV * hw1, p1.y + bpyV * hw1);
+  p.lineTo(p2.x + bpxV * hw2, p2.y + bpyV * hw2);
+  p.lineTo(p2.x - bpxV * hw2, p2.y - bpyV * hw2);
+  p.lineTo(p1.x - bpxV * hw1, p1.y - bpyV * hw1);
+  p.closePath();
+  return p;
+}
+
+// ── Drawing ───────────────────────────────────────────────────────────────────
+function PSIZ() { return Math.max(4, Math.round(Math.min(CW, CH) / 70)); }
 
 function drawNeck(g, G, clipSide, tx, ty, rot) {
-  // clipSide: null | 'head' | 'body'  (head = p2 side, body = p1 side)
   ctx.save();
 
   if (clipSide && cut) {
     const { x1, y1, x2, y2 } = cut;
     const cdx = x2 - x1, cdy = y2 - y1;
-    const cl   = Math.hypot(cdx, cdy);
-    const ex   = cdx / cl, ey = cdy / cl;
-    const ext  = Math.hypot(CW, CH) + 300;
-    // Perpendicular toward p2 (head side)
+    const cl  = Math.hypot(cdx, cdy) || 1;
+    const ext = Math.hypot(CW, CH) + 400;
+    const ex  = cdx / cl, ey = cdy / cl;
+    // Normal toward p2 (head / top-left side)
     let nx = -cdy / cl, ny = cdx / cl;
     const side = (G.p2.x - x1) * cdy - (G.p2.y - y1) * cdx;
     if (side < 0) { nx = -nx; ny = -ny; }
@@ -333,7 +405,7 @@ function drawNeck(g, G, clipSide, tx, ty, rot) {
     ctx.clip();
   }
 
-  if (tx || ty || rot) {
+  if (tx !== 0 || ty !== 0 || rot !== 0) {
     const mx = cut ? (cut.x1 + cut.x2) / 2 : CW / 2;
     const my = cut ? (cut.y1 + cut.y2) / 2 : CH / 2;
     ctx.translate(mx + tx, my + ty);
@@ -341,80 +413,73 @@ function drawNeck(g, G, clipSide, tx, ty, rot) {
     ctx.translate(-mx, -my);
   }
 
-  if (view === 'photo') drawPhotoNeck(g, G);
-  else                  drawXrayNeck(g, G);
+  view === 'photo' ? drawPhoto(g, G) : drawXray(g, G);
 
   ctx.restore();
 }
 
-function drawPhotoNeck(g, G) {
+function drawPhoto(g, G) {
+  const np = neckPath(G);
+
+  // 1. Solid base fill — zero gaps
+  ctx.fillStyle = g.skinCol;
+  ctx.fill(np);
+
+  // 2. Pixel-art spots overlaid, clipped to neck shape
+  ctx.save();
+  ctx.clip(np);
   const { p1, p2, px, py, halfSkin, len } = G;
-  const ps = PSIZ();
-  const steps = Math.ceil(len / ps);
+  const ps     = PSIZ();
+  const steps  = Math.ceil(len / ps);
+  ctx.fillStyle = g.spotCol;
 
   for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const taper = 1 - t * 0.15;
-    const hw = halfSkin * taper;
+    const t  = i / steps;
+    const hw = halfSkin * (1 - t * 0.18);
     const cx = p1.x + (p2.x - p1.x) * t;
     const cy = p1.y + (p2.y - p1.y) * t;
-
-    const halfSteps = Math.ceil(hw / ps);
-    for (let j = -halfSteps; j <= halfSteps; j++) {
-      const d  = j * ps;
-      const wx = Math.round((cx + px * d) / ps) * ps;
-      const wy = Math.round((cy + py * d) / ps) * ps;
-      const v  = (d / hw + 1) / 2;          // 0..1 across
-      const spot = inSpot(t, v, g.spots);
-      ctx.fillStyle = spot ? g.spotCol : g.skinCol;
-      ctx.fillRect(wx, wy, ps, ps);
+    const ns = Math.ceil(hw / ps);
+    for (let j = -ns; j <= ns; j++) {
+      const d = j * ps;
+      const v = hw > 0 ? (d / hw * 0.5 + 0.5) : 0.5;
+      if (inSpot(t, Math.max(0, Math.min(1, v)), g.spots)) {
+        ctx.fillRect(cx + px * d - ps / 2, cy + py * d - ps / 2, ps, ps);
+      }
     }
   }
+  ctx.restore();
 }
 
-function drawXrayNeck(g, G) {
-  const { p1, p2, px, py, halfSkin, halfBone, boneOff, len, ang } = G;
-  const ps    = PSIZ();
-  const boneAng = ang + boneOff;
-  const bpx   = -Math.sin(boneAng);
-  const bpy   =  Math.cos(boneAng);
-  const steps = Math.ceil(len / ps);
+function drawXray(g, G) {
+  const np = neckPath(G);
+  const bp = bonePath(G);
 
-  for (let i = 0; i <= steps; i++) {
-    const t     = i / steps;
-    const taper = 1 - t * 0.15;
-    const hw    = halfSkin * taper;
-    const boneHW = halfBone * taper;
-    const cx = p1.x + (p2.x - p1.x) * t;
-    const cy = p1.y + (p2.y - p1.y) * t;
-    // Bone center at this step (slightly different direction)
-    const bx = p1.x + Math.cos(boneAng) * t * len;
-    const by = p1.y + Math.sin(boneAng) * t * len;
+  // Dark neck fill
+  ctx.fillStyle = '#0d1520';
+  ctx.fill(np);
 
-    const halfSteps = Math.ceil(hw / ps);
-    for (let j = -halfSteps; j <= halfSteps; j++) {
-      const d  = j * ps;
-      const wx = Math.round((cx + px * d) / ps) * ps;
-      const wy = Math.round((cy + py * d) / ps) * ps;
+  // Edge highlight
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.lineWidth = 4;
+  ctx.stroke(np);
 
-      // Distance from bone center
-      const ddx = (cx + px * d) - bx;
-      const ddy = (cy + py * d) - by;
-      const boneDist = Math.abs(ddx * bpx + ddy * bpy);
-
-      let col;
-      if (boneDist < boneHW) {
-        const bf = boneDist / boneHW;
-        const br = Math.round(220 + bf * 20);
-        col = `rgb(${br},${br},${br})`;
-      } else {
-        const ef = Math.abs(d) / hw;
-        col = ef > 0.88 ? '#445566' : '#0e1520';
-      }
-      ctx.fillStyle = col;
-      ctx.fillRect(wx, wy, ps, ps);
-    }
-  }
+  // Bone — clipped inside neck so it never overflows
+  ctx.save();
+  ctx.clip(np);
+  ctx.fillStyle = '#dde0e8';
+  ctx.fill(bp);
+  // Bright bone center line
+  const { p1, p2, halfBone, bpxV, bpyV } = G;
+  const hw = halfBone * 0.28;
+  const highlight = new Path2D();
+  highlight.moveTo(p1.x + bpxV * hw, p1.y + bpyV * hw);
+  highlight.lineTo(p2.x + bpxV * hw * TAPER, p2.y + bpyV * hw * TAPER);
+  highlight.lineTo(p2.x - bpxV * hw * TAPER, p2.y - bpyV * hw * TAPER);
+  highlight.lineTo(p1.x - bpxV * hw, p1.y - bpyV * hw);
+  highlight.closePath();
+  ctx.fillStyle = '#fff';
+  ctx.fill(highlight);
+  ctx.restore();
 }
 
 // ── Main render ───────────────────────────────────────────────────────────────
@@ -426,12 +491,11 @@ function render() {
   const G = geo(g);
 
   if (phase === 'done' && cut) {
-    // Body stays, head falls
-    const ft2  = fallT * fallT;
-    const fallY  = ft2 * CH * 0.7;
-    const fallX  = -fallT * CW * 0.08;
-    const fallR  = fallT * 0.5;
-    drawNeck(g, G, 'body', 0,     0,     0);
+    const ft2   = fallT * fallT;
+    const fallY = ft2 * CH * 0.75;
+    const fallX = -fallT * CW * 0.07;
+    const fallR = fallT * 0.45;
+    drawNeck(g, G, 'body', 0, 0, 0);
     drawNeck(g, G, 'head', fallX, fallY, fallR);
   } else {
     drawNeck(g, G, null, 0, 0, 0);
@@ -445,104 +509,80 @@ function render() {
 
   // Cut line
   if (cut && phase !== 'anim') {
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth   = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+    ctx.lineWidth = 2;
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(cut.x1, cut.y1);
     ctx.lineTo(cut.x2, cut.y2);
     ctx.stroke();
     ctx.fillStyle = '#fff';
-    [{ x: cut.x1, y: cut.y1 }, { x: cut.x2, y: cut.y2 }].forEach(p => {
-      ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
-    });
+    [[cut.x1, cut.y1], [cut.x2, cut.y2]].forEach(([x, y]) =>
+      ctx.fillRect(x - 3, y - 3, 6, 6)
+    );
   }
 }
 
-// ── Score ─────────────────────────────────────────────────────────────────────
-function score(g, G, c) {
-  const cutAng  = Math.atan2(c.y2 - c.y1, c.x2 - c.x1);
-  const cutLen  = Math.hypot(c.x2 - c.x1, c.y2 - c.y1);
+// ── Scoring ───────────────────────────────────────────────────────────────────
+function scorecut(g, G, c) {
+  const cutAng = Math.atan2(c.y2 - c.y1, c.x2 - c.x1);
+  const cutLen = Math.hypot(c.x2 - c.x1, c.y2 - c.y1);
 
-  // Skin normal = perp to neck. Bone perp = perp to bone axis.
+  // Ideal angle = weighted blend: fat → skin perpendicular, bone → bone perpendicular
   const skinPerpAng = G.ang + Math.PI / 2;
-  const bonePerpAng = (G.ang + G.boneOff) + Math.PI / 2;
-
-  // Ideal = weighted blend: fat → skin normal, bone → bone perp
+  const bonePerpAng = G.boneAng + Math.PI / 2;
   const fw = 0.2 + g.fatness  * 0.6;
   const bw = 0.2 + g.boniness * 0.6;
   const idealAng = (skinPerpAng * fw + bonePerpAng * bw) / (fw + bw);
 
-  // Angle diff (handle wrap-around and 180° symmetry of a line)
   let diff = cutAng - idealAng;
   while (diff >  Math.PI) diff -= 2 * Math.PI;
   while (diff < -Math.PI) diff += 2 * Math.PI;
   diff = Math.min(Math.abs(diff), Math.PI - Math.abs(diff));
   const angleScore = Math.max(0, 1 - diff / (Math.PI / 4));
 
-  // Power: ideal cut length scales with resistance
   const resistance = 0.18 + g.fatness * 0.14 + g.boniness * 0.18;
   const maxLen     = Math.hypot(CW, CH);
   const power      = cutLen / maxLen;
   const ratio      = power / resistance;
 
   let powerScore;
-  if (ratio < 0.6) {
-    powerScore = 0;         // too weak
-  } else if (ratio < 1.0) {
-    powerScore = (ratio - 0.6) / 0.4;
-  } else if (ratio < 1.6) {
-    powerScore = 1 - (ratio - 1) / 0.6 * 0.35;
-  } else {
-    powerScore = Math.max(0, 0.65 - (ratio - 1.6) * 1.3); // explosion territory
-  }
+  if      (ratio < 0.6)  powerScore = 0;
+  else if (ratio < 1.0)  powerScore = (ratio - 0.6) / 0.4;
+  else if (ratio < 1.6)  powerScore = 1 - (ratio - 1) / 0.6 * 0.3;
+  else                   powerScore = Math.max(0, 0.7 - (ratio - 1.6) * 1.2);
 
   const cutThrough = ratio >= 0.6;
   const explosion  = ratio > 2.2;
   const total      = Math.round((angleScore * 0.6 + powerScore * 0.4) * 100);
-
   return { total, angleScore, powerScore, cutThrough, explosion };
 }
 
 // ── Execute ───────────────────────────────────────────────────────────────────
 function doExecute() {
   if (!cut || phase !== 'idle') return;
-  const g = GIRAFFES[lvl];
-  const G = geo(g);
-  const sc = score(g, G, cut);
+  const g  = GIRAFFES[lvl];
+  const G  = geo(g);
+  const sc = scorecut(g, G, cut);
 
-  if (!sc.cutThrough) {
-    showNoCut();
-    return;
-  }
+  if (!sc.cutThrough) { showNoCut(); return; }
 
   phase = 'anim';
   document.getElementById('exec-btn').disabled = true;
 
-  // Spawn blood at cut midpoint
   const mx = (cut.x1 + cut.x2) / 2;
   const my = (cut.y1 + cut.y2) / 2;
-  spawnBlood(mx, my, sc.explosion ? 150 : 50);
+  spawnBlood(mx, my, sc.explosion ? 160 : 55);
 
-  const t0 = performance.now();
-  const dur = 1100;
-
+  const t0 = performance.now(), dur = 1100;
   function frame(now) {
     const t = Math.min((now - t0) / dur, 1);
-
-    blood.forEach(p => {
-      p.x += p.vx; p.y += p.vy;
-      p.vy += 0.25;
-      p.a  -= 0.013;
-    });
-    blood = blood.filter(p => p.a > 0);
-
-    fallT = t < 0.35 ? 0 : ((t - 0.35) / 0.65) ** 1.6;
-
+    blood.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.a -= 0.012; });
+    blood  = blood.filter(p => p.a > 0);
+    fallT  = t < 0.32 ? 0 : ((t - 0.32) / 0.68) ** 1.7;
     render();
-
     if (t < 1) requestAnimationFrame(frame);
-    else       showResult(sc, G);
+    else       showResult(sc);
   }
   requestAnimationFrame(frame);
 }
@@ -551,28 +591,22 @@ function spawnBlood(mx, my, n) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
     const spd = 1 + Math.random() * 7;
-    blood.push({
-      x: mx, y: my,
-      vx: Math.cos(a) * spd,
-      vy: Math.sin(a) * spd - 3,
-      a: 0.7 + Math.random() * 0.3,
-      s: 2 + Math.ceil(Math.random() * 4),
-    });
+    blood.push({ x: mx, y: my, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 3,
+                 a: 0.7 + Math.random() * 0.3, s: 2 + Math.ceil(Math.random() * 4) });
   }
 }
 
 function showNoCut() {
-  document.getElementById('res-score').textContent   = '—';
-  document.getElementById('res-score').style.color   = '#666';
+  document.getElementById('res-score').textContent  = '—';
+  document.getElementById('res-score').style.color  = '#666';
   document.getElementById('res-verdict').textContent = 'INSUFFICIENT FORCE';
   document.getElementById('res-detail').textContent  = 'Draw a longer slash.';
   document.getElementById('btn-next').style.display  = 'none';
   document.getElementById('result').classList.add('show');
 }
 
-function showResult(sc, G) {
+function showResult(sc) {
   phase = 'done';
-
   if (saved.best[lvl] == null || sc.total > saved.best[lvl]) saved.best[lvl] = sc.total;
   if (sc.total > 0 && lvl + 1 < GIRAFFES.length)
     saved.unlocked = Math.max(saved.unlocked, lvl + 2);
@@ -580,8 +614,8 @@ function showResult(sc, G) {
   buildStrip();
 
   const col = sc.total >= 80 ? '#44ee88' : sc.total >= 50 ? '#fc0' : '#f44';
-  document.getElementById('res-score').textContent = sc.total;
-  document.getElementById('res-score').style.color = col;
+  document.getElementById('res-score').textContent  = sc.total;
+  document.getElementById('res-score').style.color  = col;
 
   const verdict =
     sc.total >= 90 ? 'FLAWLESS EXECUTION' :
@@ -593,27 +627,37 @@ function showResult(sc, G) {
   document.getElementById('res-detail').innerHTML =
     `Angle ${Math.round(sc.angleScore * 100)}%  ·  Power ${Math.round(sc.powerScore * 100)}%<br>` +
     `Best: ${saved.best[lvl]}`;
-
   document.getElementById('btn-next').style.display =
     (lvl + 1 < GIRAFFES.length && saved.unlocked > lvl + 1) ? '' : 'none';
-
   document.getElementById('result').classList.add('show');
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function selectLevel(i) {
   if (i >= saved.unlocked) return;
-  lvl    = i;
-  view   = 'photo';
-  cut    = null;
-  phase  = 'idle';
-  blood  = [];
-  fallT  = 0;
+  lvl     = i;
+  cut     = null;
+  phase   = 'idle';
+  blood   = [];
+  fallT   = 0;
   drawing = false;
+
+  const g = GIRAFFES[i];
+  view = g.isTutorial ? g.tutView : 'photo';
+
   document.getElementById('exec-btn').disabled = true;
   document.getElementById('result').classList.remove('show');
-  document.getElementById('btn-photo').classList.add('on');
-  document.getElementById('btn-xray').classList.remove('on');
+  document.getElementById('btn-photo').classList.toggle('on', view === 'photo');
+  document.getElementById('btn-xray').classList.toggle('on',  view === 'xray');
+
+  const tutEl = document.getElementById('tut-hint');
+  if (g.isTutorial) {
+    tutEl.textContent = g.tutHint;
+    tutEl.style.display = 'block';
+  } else {
+    tutEl.style.display = 'none';
+  }
+
   buildStrip();
   updateStats();
   render();
@@ -629,7 +673,7 @@ function setView(v) {
   render();
 }
 
-// ── Strip ─────────────────────────────────────────────────────────────────────
+// ── Level strip ───────────────────────────────────────────────────────────────
 function buildStrip() {
   const strip = document.getElementById('strip');
   strip.innerHTML = '';
@@ -637,9 +681,9 @@ function buildStrip() {
     const tile = document.createElement('div');
     tile.className = 'tile'
       + (i === lvl ? ' active' : '')
-      + (i >= saved.unlocked ? ' locked' : '');
+      + (i >= saved.unlocked ? ' locked' : '')
+      + (g.isTutorial ? ' tile-train' : '');
 
-    // Tiny mugshot canvas
     const mc = document.createElement('canvas');
     mc.width = 54; mc.height = 54;
     drawMugshot(mc, g);
@@ -647,7 +691,7 @@ function buildStrip() {
 
     const lbl = document.createElement('div');
     lbl.className = 'tile-lbl';
-    lbl.textContent = `LVL ${i + 1}`;
+    lbl.textContent = g.isTutorial ? `T${i + 1}` : `LVL ${i - 1}`;
     tile.appendChild(lbl);
 
     if (saved.best[i] != null) {
@@ -657,7 +701,7 @@ function buildStrip() {
       tile.appendChild(bs);
       const st = document.createElement('div');
       st.className = 'tile-stamp';
-      st.textContent = 'EXECUTED';
+      st.textContent = 'DONE';
       tile.appendChild(st);
     }
 
@@ -674,57 +718,75 @@ function buildStrip() {
   });
 }
 
+// ── Mugshot ───────────────────────────────────────────────────────────────────
 function drawMugshot(mc, g) {
   const tc = mc.getContext('2d');
   const w = mc.width, h = mc.height;
   tc.clearRect(0, 0, w, h);
-  // Head
-  tc.fillStyle = g.skinCol;
-  tc.fillRect(w*.28, h*.06, w*.44, h*.32);
-  // Ears
-  tc.fillRect(w*.22, h*.10, w*.10, h*.12);
-  tc.fillRect(w*.68, h*.10, w*.10, h*.12);
-  // Horns
-  tc.fillStyle = '#8B6530';
-  tc.fillRect(w*.33, h*.02, w*.07, h*.10);
-  tc.fillRect(w*.60, h*.02, w*.07, h*.10);
-  // Neck
-  tc.fillStyle = g.skinCol;
-  tc.fillRect(w*.34, h*.36, w*.32, h*.50);
-  // Spots
-  tc.fillStyle = g.spotCol;
-  g.spots.slice(0, 5).forEach(s => {
-    const sx = w*.34 + s.u * w*.32;
-    const sy = h*.36 + s.v * h*.50;
-    tc.fillRect(sx, sy, w*.09, h*.09);
-  });
-  // Eyes
-  tc.fillStyle = '#000';
-  tc.fillRect(w*.36, h*.14, w*.08, h*.08);
-  tc.fillRect(w*.56, h*.14, w*.08, h*.08);
-  tc.fillStyle = '#fff';
-  tc.fillRect(w*.38, h*.15, w*.03, h*.03);
-  tc.fillRect(w*.58, h*.15, w*.03, h*.03);
-  // Nostrils
-  tc.fillStyle = g.spotCol;
-  tc.fillRect(w*.40, h*.28, w*.05, h*.04);
-  tc.fillRect(w*.55, h*.28, w*.05, h*.04);
+
+  if (g.isTutorial && g.tutView === 'xray') {
+    // Ghostly x-ray mugshot
+    tc.fillStyle = '#0d1520';
+    tc.fillRect(0, 0, w, h);
+    tc.fillStyle = '#dde';
+    // Skull-ish bone shapes
+    tc.fillRect(w*.3, h*.08, w*.4, h*.28);   // head bone
+    tc.fillRect(w*.38, h*.34, w*.24, h*.48); // neck bone
+    tc.fillStyle = '#0d1520';
+    tc.fillRect(w*.36, h*.14, w*.1, h*.1);   // eye socket
+    tc.fillRect(w*.54, h*.14, w*.1, h*.1);
+  } else {
+    // Normal giraffe mugshot
+    // Ears
+    tc.fillStyle = g.skinCol;
+    tc.fillRect(w*.20, h*.10, w*.12, h*.14);
+    tc.fillRect(w*.68, h*.10, w*.12, h*.14);
+    // Head
+    tc.fillRect(w*.28, h*.06, w*.44, h*.32);
+    // Horns
+    tc.fillStyle = '#8B6530';
+    tc.fillRect(w*.32, h*.01, w*.08, h*.11);
+    tc.fillRect(w*.60, h*.01, w*.08, h*.11);
+    // Neck
+    tc.fillStyle = g.skinCol;
+    tc.fillRect(w*.33, h*.36, w*.34, h*.50);
+    // Spots
+    tc.fillStyle = g.spotCol;
+    g.spots.slice(0, 6).forEach(s => {
+      tc.fillRect(w*.33 + s.u * w*.34 - w*.04, h*.06 + s.v * h*.80 - h*.04, w*.09, h*.09);
+    });
+    // Re-fill head/neck base where spots overlap
+    // (paint order: skin → spots → facial features)
+    // Eyes
+    tc.fillStyle = '#111';
+    tc.fillRect(w*.36, h*.14, w*.09, h*.09);
+    tc.fillRect(w*.55, h*.14, w*.09, h*.09);
+    tc.fillStyle = '#eee';
+    tc.fillRect(w*.37, h*.15, w*.04, h*.04);
+    tc.fillRect(w*.56, h*.15, w*.04, h*.04);
+    // Nostrils
+    tc.fillStyle = g.spotCol;
+    tc.fillRect(w*.40, h*.28, w*.06, h*.05);
+    tc.fillRect(w*.54, h*.28, w*.06, h*.05);
+  }
 }
 
 // ── Stats panel ───────────────────────────────────────────────────────────────
 function updateStats() {
   const g = GIRAFFES[lvl];
-  document.getElementById('stats').innerHTML =
-    `<div class="gname">${g.name}</div>` +
-    `<div>Height: ${g.height}</div>` +
-    `<div>Weight: ${g.weight}</div>` +
-    `<div>Age: ${g.age} yrs</div>` +
-    `<div class="crime">Crime:<br>${g.crime}</div>`;
+  const faceMini = document.getElementById('face-mini');
+  drawMugshot(faceMini, g);
+
+  const isReal = !g.isTutorial;
+  document.getElementById('stats-text').innerHTML =
+    `<div class="gname">${g.name}${g.sub ? ` <span style="color:#88a;font-size:10px">${g.sub}</span>` : ''}</div>` +
+    (isReal ? `<div>Height: ${g.height}</div><div>Weight: ${g.weight}</div><div>Age: ${g.age} yrs</div>` : '') +
+    `<div class="crime">${g.crime}</div>`;
 }
 
 // ── Input ─────────────────────────────────────────────────────────────────────
 function evtPos(e) {
-  const r = canvas.getBoundingClientRect();
+  const r  = canvas.getBoundingClientRect();
   const sx = CW / r.width, sy = CH / r.height;
   const src = e.touches ? e.touches[0] : e;
   return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
@@ -744,7 +806,7 @@ function onMove(e) {
   e.preventDefault();
   const p = evtPos(e);
   render();
-  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth   = 2;
   ctx.setLineDash([8, 5]);
   ctx.beginPath();
@@ -783,6 +845,12 @@ document.addEventListener('keydown', e => {
 // ── Boot ──────────────────────────────────────────────────────────────────────
 buildStrip();
 updateStats();
+const g0 = GIRAFFES[0];
+view = g0.tutView;
+document.getElementById('btn-photo').classList.toggle('on', view === 'photo');
+document.getElementById('btn-xray').classList.toggle('on',  view === 'xray');
+document.getElementById('tut-hint').textContent  = g0.tutHint;
+document.getElementById('tut-hint').style.display = 'block';
 resize();
 </script>
 </body>
