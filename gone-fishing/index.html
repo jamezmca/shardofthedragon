@@ -342,6 +342,105 @@ function drawStars(horizY, t) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MOON & REFLECTION
+// ─────────────────────────────────────────────────────────────────────────────
+// Normalised position within the sky area
+const MOON = { nx: 0.72, ny: 0.26 };
+
+function drawMoon(horizY) {
+  const mx = MOON.nx * W;
+  const my = MOON.ny * horizY;
+  const R  = Math.min(W, H) * 0.036;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, horizY);
+  ctx.clip();
+
+  // Wide atmospheric halo
+  const halo = ctx.createRadialGradient(mx, my, R, mx, my, R * 5.5);
+  halo.addColorStop(0,   'rgba(205,210,185,0.13)');
+  halo.addColorStop(0.45,'rgba(180,188,162,0.05)');
+  halo.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(mx, my, R * 5.5, 0, TAU);
+  ctx.fill();
+
+  // Inner glow ring
+  const inner = ctx.createRadialGradient(mx, my, R * 0.9, mx, my, R * 2);
+  inner.addColorStop(0,  'rgba(230,228,208,0.22)');
+  inner.addColorStop(1,  'rgba(0,0,0,0)');
+  ctx.fillStyle = inner;
+  ctx.beginPath();
+  ctx.arc(mx, my, R * 2, 0, TAU);
+  ctx.fill();
+
+  // Moon disc — off-white with subtle shading (light source offset)
+  const disc = ctx.createRadialGradient(mx - R * 0.22, my - R * 0.18, 0, mx, my, R);
+  disc.addColorStop(0,   'rgba(250,247,230,1.0)');
+  disc.addColorStop(0.65,'rgba(238,234,214,0.97)');
+  disc.addColorStop(1,   'rgba(210,206,186,0.90)');
+  ctx.fillStyle = disc;
+  ctx.beginPath();
+  ctx.arc(mx, my, R, 0, TAU);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawMoonReflection(horizY, t) {
+  const mx     = MOON.nx * W;
+  const waterH = H - horizY;
+  const N      = 24;  // vertical segments (for graduated lineWidth)
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, horizY, W, waterH);
+  ctx.clip();
+  ctx.lineCap = 'round';
+
+  // Two passes: a tight bright core and a wider diffuse glow
+  const passes = [
+    { phOff: 0,   widthMult: 1.8,  alphaMult: 0.7  },
+    { phOff: 2.1, widthMult: 7.0,  alphaMult: 0.18 },
+    { phOff: 4.4, widthMult: 14.0, alphaMult: 0.08 },
+  ];
+
+  for (const { phOff, widthMult, alphaMult } of passes) {
+    for (let seg = 0; seg < N; seg++) {
+      const d  = (seg + 0.5) / N;                   // depth 0→1 for this segment
+      const y0 = horizY + (seg / N) * waterH;
+      const y1 = horizY + ((seg + 1) / N) * waterH;
+
+      // Line width grows toward viewer (perspective spread of reflection)
+      const lw    = (2.0 + d * d * W * 0.07) * widthMult;
+      const alpha = 0.15 * Math.pow(1 - d, 1.4) * alphaMult;
+      if (alpha < 0.003) continue;
+
+      ctx.beginPath();
+      const STEP = 3;
+      for (let y = y0; y <= y1 + STEP; y += STEP) {
+        const yc = Math.min(y, y1);
+        const dd = (yc - horizY) / waterH;
+        // Three-frequency trembling scaled by depth (flat near horizon, wild near viewer)
+        const tremble =
+          Math.sin(yc * 0.055 + t * 1.55 + phOff)       * 13 * dd +
+          Math.sin(yc * 0.132 + t * 2.70 + phOff * 0.6) *  6 * dd +
+          Math.sin(yc * 0.027 + t * 0.85 + phOff * 1.3) * 21 * dd;
+        const cx = mx + tremble;
+        y <= y0 + 0.5 ? ctx.moveTo(cx, yc) : ctx.lineTo(cx, yc);
+      }
+      ctx.strokeStyle = `rgba(236,228,202,${alpha.toFixed(3)})`;
+      ctx.lineWidth   = lw;
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BACKGROUND
 // ─────────────────────────────────────────────────────────────────────────────
 function drawBackground(horizY) {
@@ -418,6 +517,7 @@ function frame(ms) {
   drawBackground(horizY);
   drawMilkyWay(horizY);
   drawStars(horizY, t);
+  drawMoon(horizY);
 
   ctx.save();
   ctx.lineCap = 'round';
@@ -449,6 +549,7 @@ function frame(ms) {
   }
   ctx.restore();
 
+  drawMoonReflection(horizY, t);
   drawHorizonFog(horizY);
   drawVignette();
 
