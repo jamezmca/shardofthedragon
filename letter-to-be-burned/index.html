@@ -11,10 +11,43 @@
 
     body {
       font-family: 'IM Fell English', serif;
-      background-color: #130a04;
+      -webkit-font-smoothing: antialiased;
+      /* quill pen cursor — nib at bottom-left (hotspot 2,38) */
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23c8a848' stroke-width='11' stroke-linecap='round' fill='none' opacity='0.35'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23dfc060' stroke-width='7' stroke-linecap='round' fill='none' opacity='0.55'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23f0e090' stroke-width='3' stroke-linecap='round' fill='none' opacity='0.8'/%3E%3Cline x1='5' y1='35' x2='36' y2='6' stroke='%238a6820' stroke-width='1.5'/%3E%3Cpath d='M2,38 L5,32 L9,36 Z' fill='%23180800'/%3E%3Ccircle cx='2' cy='38' r='1.8' fill='%23180800' opacity='0.5'/%3E%3C/svg%3E") 2 38, auto;
+
+      /* old dining table — dark walnut with grain and knots */
+      background-color: #3d2010;
       background-image:
-        radial-gradient(ellipse at 25% 25%, #1e0e06 0%, transparent 55%),
-        radial-gradient(ellipse at 75% 75%, #0a0502 0%, transparent 55%);
+        /* vignette */
+        radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,.62) 100%),
+        /* wood knots */
+        radial-gradient(ellipse 30px 54px at 13% 38%, rgba(22,8,2,.6) 0%, rgba(42,18,6,.3) 50%, transparent 100%),
+        radial-gradient(ellipse 20px 38px at 79% 63%, rgba(18,6,1,.52) 0%, transparent 72%),
+        radial-gradient(ellipse 15px 28px at 48% 84%, rgba(26,10,3,.44) 0%, transparent 68%),
+        radial-gradient(ellipse 24px 44px at 92% 22%, rgba(20,7,2,.48) 0%, transparent 70%),
+        /* fine grain lines */
+        repeating-linear-gradient(
+          7deg,
+          transparent 0px,   transparent 10px,
+          rgba(0,0,0,.05)    10px, rgba(0,0,0,.05)    11px,
+          transparent        11px, transparent        19px,
+          rgba(255,255,255,.013) 19px, rgba(255,255,255,.013) 20px
+        ),
+        /* medium grain lines */
+        repeating-linear-gradient(
+          6deg,
+          transparent 0px,      transparent 33px,
+          rgba(0,0,0,.065)      33px, rgba(0,0,0,.065)      35px,
+          transparent           35px, transparent           56px,
+          rgba(48,20,6,.046)    56px, rgba(48,20,6,.046)    58px
+        ),
+        /* colour variation patches */
+        radial-gradient(ellipse at 27% 20%, #5c3415 0%, transparent 50%),
+        radial-gradient(ellipse at 73% 78%, #301808 0%, transparent 46%),
+        radial-gradient(ellipse at 54% 48%, #4e2e12 0%, transparent 42%),
+        /* base */
+        linear-gradient(7deg, #4a2a12 0%, #38200e 28%, #522e14 62%, #3e2810 100%);
+
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -23,17 +56,94 @@
       padding: 50px 20px 90px;
     }
 
-    /* ── LETTER ─────────────────────────────────────── */
+    /* ── LETTER WRAPPER ──────────────────────────────── */
 
     #letter-wrapper {
       position: relative;
       width: 660px;
       max-width: 100%;
+      z-index: 0; /* stacking context so curl shadows stay behind paper */
+    }
+
+    /* corner-curl shadows */
+    #letter-wrapper::before,
+    #letter-wrapper::after {
+      content: '';
+      position: absolute;
+      bottom: 16px;
+      z-index: -1;
+      width: 36%;
+      height: 28px;
+      box-shadow: 0 18px 18px rgba(0,0,0,.52);
+    }
+    #letter-wrapper::before {
+      left: 12px;
+      transform-origin: bottom left;
+      transform: rotate(-4.5deg);
+    }
+    #letter-wrapper::after {
+      right: 12px;
+      transform-origin: bottom right;
+      transform: rotate(4.5deg);
+    }
+
+    /* ── ROUGH CLIP ──────────────────────────────────── */
+
+    /* clip-path here gives torn edges; burn clip-path goes on #letter-container */
+    #rough-clip {
+      position: relative;
+      clip-path: url(#rough-paper);
+    }
+
+    /* ── LETTER CONTAINER ────────────────────────────── */
+
+    /* ── COFFEE STAINS ───────────────────────────────── */
+    /* Organic blob shapes via asymmetric border-radius + blur;
+       each has a distinct silhouette so none look like cup rings */
+
+    .coffee-stain {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    /* upper-right — large, slouchy, rotated */
+    .coffee-stain.s1 {
+      width: 198px; height: 138px;
+      top: 22px; right: 42px;
+      border-radius: 62% 38% 52% 48% / 47% 53% 44% 56%;
+      background: rgba(108,68,22,.18);
+      transform: rotate(-17deg);
+      filter: blur(3px);
+    }
+
+    /* lower-left — medium, different lopsided shape */
+    .coffee-stain.s2 {
+      width: 162px; height: 116px;
+      bottom: 115px; left: 32px;
+      border-radius: 38% 62% 48% 52% / 58% 44% 56% 42%;
+      background: rgba(90,56,17,.14);
+      transform: rotate(13deg);
+      filter: blur(2.5px);
+    }
+
+    /* mid-right — small accent blob */
+    .coffee-stain.s3 {
+      width: 86px; height: 64px;
+      top: 218px; right: 92px;
+      border-radius: 55% 45% 68% 32% / 42% 62% 38% 58%;
+      background: rgba(102,65,20,.12);
+      transform: rotate(27deg);
+      filter: blur(2px);
     }
 
     #letter-container {
       position: relative;
       background:
+        /* aged wash patches (general mellowing, not ring stains) */
+        radial-gradient(ellipse at 70% 90%, rgba(115,73,26,.09) 0%, transparent 36%),
+        radial-gradient(ellipse at 88% 55%, rgba(108,70,24,.06) 0%, transparent 28%),
+        radial-gradient(ellipse at 8%  30%, rgba(100,64,22,.07) 0%, transparent 30%),
+        /* parchment base */
         radial-gradient(ellipse at 12% 88%, rgba(139,90,43,.28) 0%, transparent 45%),
         radial-gradient(ellipse at 88% 12%, rgba(160,115,55,.18) 0%, transparent 40%),
         radial-gradient(ellipse at 50% 50%, rgba(200,165,85,.07) 0%, transparent 70%),
@@ -43,7 +153,9 @@
         0 8px 24px rgba(0,0,0,.35),
         0 24px 64px rgba(0,0,0,.4),
         inset 0 0 60px rgba(180,140,60,.1),
-        inset 0 1px 0 rgba(255,255,255,.14);
+        inset 0 1px 0 rgba(255,255,255,.14),
+        /* bottom curvature — paper curves away from viewer */
+        inset 0 -24px 36px rgba(0,0,0,.09);
       padding: 64px 72px 88px;
       min-height: 580px;
       color: #1a0a00;
@@ -126,14 +238,14 @@
       z-index: 20;
       background: linear-gradient(
         to top,
-        rgba(0,0,0,0) 0%,
-        rgba(30,5,0,.55) 10%,
-        rgba(120,28,0,.88) 24%,
-        rgba(215,78,4,.84) 40%,
+        rgba(0,0,0,0)       0%,
+        rgba(30,5,0,.55)    10%,
+        rgba(120,28,0,.88)  24%,
+        rgba(215,78,4,.84)  40%,
         rgba(255,138,12,.68) 56%,
         rgba(255,195,45,.38) 72%,
         rgba(255,230,110,.12) 86%,
-        transparent 100%
+        transparent         100%
       );
     }
 
@@ -177,7 +289,7 @@
       background: transparent;
       border: 1px solid rgba(184,128,48,.32);
       padding: 7px 20px;
-      cursor: pointer;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23c8a848' stroke-width='11' stroke-linecap='round' fill='none' opacity='0.35'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23dfc060' stroke-width='7' stroke-linecap='round' fill='none' opacity='0.55'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23f0e090' stroke-width='3' stroke-linecap='round' fill='none' opacity='0.8'/%3E%3Cline x1='5' y1='35' x2='36' y2='6' stroke='%238a6820' stroke-width='1.5'/%3E%3Cpath d='M2,38 L5,32 L9,36 Z' fill='%23180800'/%3E%3Ccircle cx='2' cy='38' r='1.8' fill='%23180800' opacity='0.5'/%3E%3C/svg%3E") 2 38, pointer;
       flex-shrink: 0;
       transition: color .18s, border-color .18s, background .18s;
     }
@@ -209,12 +321,12 @@
 
     .tally-item {
       position: relative;
-      cursor: default;
       font-size: 18px;
       opacity: .5;
       flex-shrink: 0;
       transition: opacity .18s, transform .18s;
       line-height: 1;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23c8a848' stroke-width='11' stroke-linecap='round' fill='none' opacity='0.35'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23dfc060' stroke-width='7' stroke-linecap='round' fill='none' opacity='0.55'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23f0e090' stroke-width='3' stroke-linecap='round' fill='none' opacity='0.8'/%3E%3Cline x1='5' y1='35' x2='36' y2='6' stroke='%238a6820' stroke-width='1.5'/%3E%3Cpath d='M2,38 L5,32 L9,36 Z' fill='%23180800'/%3E%3Ccircle cx='2' cy='38' r='1.8' fill='%23180800' opacity='0.5'/%3E%3C/svg%3E") 2 38, default;
     }
     .tally-item:hover { opacity: .9; transform: scale(1.18); }
 
@@ -313,7 +425,7 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       padding: 9px 28px;
-      cursor: pointer;
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23c8a848' stroke-width='11' stroke-linecap='round' fill='none' opacity='0.35'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23dfc060' stroke-width='7' stroke-linecap='round' fill='none' opacity='0.55'/%3E%3Cpath d='M6,34 Q18,25 36,6' stroke='%23f0e090' stroke-width='3' stroke-linecap='round' fill='none' opacity='0.8'/%3E%3Cline x1='5' y1='35' x2='36' y2='6' stroke='%238a6820' stroke-width='1.5'/%3E%3Cpath d='M2,38 L5,32 L9,36 Z' fill='%23180800'/%3E%3Ccircle cx='2' cy='38' r='1.8' fill='%23180800' opacity='0.5'/%3E%3C/svg%3E") 2 38, pointer;
       border: 1px solid rgba(90,48,16,.32);
       background: transparent;
       color: #2e1400;
@@ -349,13 +461,28 @@
 </head>
 <body>
 
+  <!-- SVG clip-path for rough paper edges (points set by JS on load) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:block;width:0;height:0;overflow:hidden;" aria-hidden="true">
+    <defs>
+      <clipPath id="rough-paper" clipPathUnits="objectBoundingBox">
+        <polygon id="rough-polygon" points="0,0 1,0 1,1 0,1"/>
+      </clipPath>
+    </defs>
+  </svg>
+
   <div id="letter-wrapper">
-    <div id="letter-container">
-      <div id="to-line">
-        <span id="to-label">To,</span>
-        <input type="text" id="recipient" placeholder="the recipient" autocomplete="off" spellcheck="false">
+    <!-- rough-clip holds the torn-edge clip; letter-container gets the burn clip -->
+    <div id="rough-clip">
+      <div id="letter-container">
+        <div class="coffee-stain s1"></div>
+        <div class="coffee-stain s2"></div>
+        <div class="coffee-stain s3"></div>
+        <div id="to-line">
+          <span id="to-label">To,</span>
+          <input type="text" id="recipient" placeholder="the recipient" autocomplete="off" spellcheck="false">
+        </div>
+        <textarea id="body" placeholder="boy do I have a bone to pick with you...."></textarea>
       </div>
-      <textarea id="body" placeholder="Dear reader,&#10;&#10;boy do I have a bone to pick with you...."></textarea>
     </div>
     <div id="fire-line"></div>
   </div>
@@ -416,10 +543,7 @@
     }
 
     function esc(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     function formatDate() {
@@ -428,7 +552,44 @@
       });
     }
 
-    // DOM refs
+    // ── ROUGH PAPER EDGE ─────────────────────────────────────────────────────
+    // Generates a wavy polygon in objectBoundingBox coords (0–1)
+    // and sets it on the SVG clipPath used by #rough-clip.
+    function generateRoughClip() {
+      const N      = 24;    // sample points per edge
+      const lo     = 0.003; // min inset from edge
+      const spread = 0.015; // max additional inset
+      const pts    = [];
+      let prev;
+
+      // smoothed random inset (blends with previous value for organic feel)
+      function next() {
+        const v = lo + Math.random() * spread;
+        prev = (prev === undefined) ? v : (prev * 0.5 + v * 0.5);
+        return prev;
+      }
+      function reset() { prev = undefined; }
+
+      // top edge: left → right, y = inset from top
+      reset();
+      for (let i = 0; i <= N; i++) pts.push(`${(i/N).toFixed(4)},${next().toFixed(4)}`);
+
+      // right edge: top → bottom, x = 1 − inset from right
+      reset();
+      for (let i = 1; i <= N; i++) pts.push(`${(1 - next()).toFixed(4)},${(i/N).toFixed(4)}`);
+
+      // bottom edge: right → left, y = 1 − inset from bottom
+      reset();
+      for (let i = 1; i <= N; i++) pts.push(`${(1 - i/N).toFixed(4)},${(1 - next()).toFixed(4)}`);
+
+      // left edge: bottom → top, x = inset from left
+      reset();
+      for (let i = 1; i < N; i++) pts.push(`${next().toFixed(4)},${(1 - i/N).toFixed(4)}`);
+
+      document.getElementById('rough-polygon').setAttribute('points', pts.join(' '));
+    }
+
+    // ── DOM REFS ──────────────────────────────────────────────────────────────
     const $ = id => document.getElementById(id);
     const choiceModal    = $('choice-modal');
     const burnModal      = $('burn-modal');
@@ -442,6 +603,7 @@
     const show = m => m.classList.add('visible');
     const hide = m => m.classList.remove('visible');
 
+    // ── TALLIES ───────────────────────────────────────────────────────────────
     function renderTallies() {
       tallyArea.innerHTML = '';
       getHistory().forEach(entry => {
@@ -452,6 +614,7 @@
       });
     }
 
+    // ── BURN ANIMATION ────────────────────────────────────────────────────────
     function startBurnAnimation() {
       const duration = 3800;
       const start = performance.now();
@@ -459,22 +622,20 @@
       fireLine.classList.add('active');
 
       function tick(now) {
-        const raw = Math.min((now - start) / duration, 1);
-        // ease-in-quad: slow ignition, accelerating spread
-        const eased = raw * raw;
+        const raw   = Math.min((now - start) / duration, 1);
+        const eased = raw * raw; // ease-in-quad: slow catch, accelerating spread
         const burnPct = eased * 100;
 
+        // clip the inner container from the bottom (burn travels upward)
         letterCont.style.clipPath = `inset(0 0 ${burnPct}% 0)`;
 
-        const h = letterCont.offsetHeight;
+        // move fire-line so its upper glow sits at the clip boundary
+        const h          = letterCont.offsetHeight;
         const boundaryPx = (burnPct / 100) * h;
-        // sit fire-line so its upper body overlaps the visible paper edge
         fireLine.style.bottom = `${boundaryPx - 45}px`;
 
-        // fade out in final 10%
-        if (raw > 0.9) {
-          fireLine.style.opacity = String((1 - raw) / 0.1);
-        }
+        // fade fire-line out in the final 10%
+        if (raw > 0.9) fireLine.style.opacity = String((1 - raw) / 0.1);
 
         if (raw < 1) {
           requestAnimationFrame(tick);
@@ -487,7 +648,7 @@
       requestAnimationFrame(tick);
     }
 
-    // Event listeners
+    // ── EVENT LISTENERS ───────────────────────────────────────────────────────
     $('send-btn').addEventListener('click', () => show(choiceModal));
     $('cancel-btn').addEventListener('click', () => hide(choiceModal));
 
@@ -504,7 +665,7 @@
     $('police-ok-btn').addEventListener('click', () => {
       hide(policeModal);
       recipientInput.value = '';
-      bodyTextarea.value = '';
+      bodyTextarea.value   = '';
     });
 
     $('cancel-burn-btn').addEventListener('click', () => hide(burnModal));
@@ -515,6 +676,8 @@
       setTimeout(startBurnAnimation, 280);
     });
 
+    // ── INIT ──────────────────────────────────────────────────────────────────
+    generateRoughClip();
     renderTallies();
   </script>
 </body>
