@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Letter to be Burned</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'IM Fell English', serif;
+      background-color: #130a04;
+      background-image:
+        radial-gradient(ellipse at 25% 25%, #1e0e06 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 75%, #0a0502 0%, transparent 55%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 50px 20px 90px;
+    }
+
+    /* ── LETTER ─────────────────────────────────────── */
+
+    #letter-wrapper {
+      position: relative;
+      width: 660px;
+      max-width: 100%;
+    }
+
+    #letter-container {
+      position: relative;
+      background:
+        radial-gradient(ellipse at 12% 88%, rgba(139,90,43,.28) 0%, transparent 45%),
+        radial-gradient(ellipse at 88% 12%, rgba(160,115,55,.18) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(200,165,85,.07) 0%, transparent 70%),
+        linear-gradient(158deg, #f6e8be 0%, #edd98a 25%, #f3e3a5 55%, #e9d17e 80%, #f1e0a8 100%);
+      box-shadow:
+        0 2px 4px rgba(0,0,0,.2),
+        0 8px 24px rgba(0,0,0,.35),
+        0 24px 64px rgba(0,0,0,.4),
+        inset 0 0 60px rgba(180,140,60,.1),
+        inset 0 1px 0 rgba(255,255,255,.14);
+      padding: 64px 72px 88px;
+      min-height: 580px;
+      color: #1a0a00;
+    }
+
+    /* subtle ruled lines */
+    #letter-container::after {
+      content: '';
+      position: absolute;
+      inset: 64px 72px;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 29px,
+        rgba(90,48,16,.065) 29px,
+        rgba(90,48,16,.065) 30px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #to-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    #to-label {
+      font-style: italic;
+      color: #4a2a0a;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    #recipient {
+      flex: 1;
+      max-width: 320px;
+      border: none;
+      border-bottom: 1px solid rgba(90,48,16,.22);
+      background: transparent;
+      font-family: 'IM Fell English', serif;
+      font-size: 15px;
+      color: #1a0a00;
+      outline: none;
+      padding: 2px 6px;
+      transition: border-color .2s;
+    }
+    #recipient::placeholder { color: rgba(90,48,16,.36); font-style: italic; }
+    #recipient:focus { border-bottom-color: rgba(90,48,16,.48); }
+
+    #body {
+      width: 100%;
+      min-height: 460px;
+      border: none;
+      background: transparent;
+      font-family: 'IM Fell English', serif;
+      font-size: 17px;
+      line-height: 30px;
+      color: #1a0a00;
+      resize: none;
+      outline: none;
+      position: relative;
+      z-index: 1;
+    }
+    #body::placeholder { color: rgba(90,48,16,.3); font-style: italic; }
+
+    /* ── FIRE LINE ───────────────────────────────────── */
+
+    #fire-line {
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      height: 170px;
+      bottom: -90px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 20;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0) 0%,
+        rgba(30,5,0,.55) 10%,
+        rgba(120,28,0,.88) 24%,
+        rgba(215,78,4,.84) 40%,
+        rgba(255,138,12,.68) 56%,
+        rgba(255,195,45,.38) 72%,
+        rgba(255,230,110,.12) 86%,
+        transparent 100%
+      );
+    }
+
+    @keyframes flicker {
+      0%   { transform: scaleX(1.000) skewX( 0.0deg); filter: brightness(1.00); }
+      11%  { transform: scaleX(1.009) skewX(-1.4deg); filter: brightness(1.09); }
+      23%  { transform: scaleX(0.993) skewX( 0.9deg); filter: brightness(0.95); }
+      34%  { transform: scaleX(1.006) skewX(-0.5deg); filter: brightness(1.05); }
+      47%  { transform: scaleX(0.996) skewX( 1.6deg); filter: brightness(1.11); }
+      59%  { transform: scaleX(1.007) skewX(-1.1deg); filter: brightness(0.96); }
+      71%  { transform: scaleX(0.992) skewX( 0.7deg); filter: brightness(1.07); }
+      84%  { transform: scaleX(1.005) skewX(-1.9deg); filter: brightness(1.02); }
+      100% { transform: scaleX(1.000) skewX( 0.0deg); filter: brightness(1.00); }
+    }
+
+    #fire-line.active { animation: flicker .17s ease-in-out infinite; }
+
+    /* ── BOTTOM BAR ──────────────────────────────────── */
+
+    #bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 54px;
+      background: rgba(8,4,1,.95);
+      border-top: 1px solid rgba(100,58,18,.32);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      backdrop-filter: blur(6px);
+      gap: 16px;
+    }
+
+    #send-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 10.5px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #b88030;
+      background: transparent;
+      border: 1px solid rgba(184,128,48,.32);
+      padding: 7px 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color .18s, border-color .18s, background .18s;
+    }
+    #send-btn:hover {
+      color: #d4a050;
+      border-color: rgba(212,160,80,.55);
+      background: rgba(184,128,48,.07);
+    }
+    #send-btn:active { transform: scale(.98); }
+
+    /* ── TALLIES ─────────────────────────────────────── */
+
+    #tally-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(100,58,18,.28) transparent;
+      flex: 1;
+      justify-content: flex-end;
+    }
+    #tally-area::-webkit-scrollbar { height: 2px; }
+    #tally-area::-webkit-scrollbar-thumb {
+      background: rgba(100,58,18,.3);
+      border-radius: 2px;
+    }
+
+    .tally-item {
+      position: relative;
+      cursor: default;
+      font-size: 18px;
+      opacity: .5;
+      flex-shrink: 0;
+      transition: opacity .18s, transform .18s;
+      line-height: 1;
+    }
+    .tally-item:hover { opacity: .9; transform: scale(1.18); }
+
+    .tally-tooltip {
+      position: absolute;
+      bottom: calc(100% + 9px);
+      right: 0;
+      background: rgba(8,4,1,.97);
+      border: 1px solid rgba(100,58,18,.42);
+      color: #b08030;
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 7px 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .tally-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%; right: 7px;
+      border: 5px solid transparent;
+      border-top-color: rgba(100,58,18,.42);
+    }
+    .tally-item:hover .tally-tooltip { opacity: 1; }
+
+    /* ── MODALS ──────────────────────────────────────── */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .28s ease;
+    }
+    .modal-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background:
+        radial-gradient(ellipse at 15% 85%, rgba(139,90,43,.2) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 15%, rgba(160,115,55,.14) 0%, transparent 40%),
+        linear-gradient(155deg, #f6e8be 0%, #e9d080 45%, #f2e0a2 100%);
+      border: 1px solid rgba(90,48,16,.22);
+      box-shadow: 0 8px 24px rgba(0,0,0,.5), 0 24px 64px rgba(0,0,0,.55);
+      padding: 52px 60px;
+      max-width: 460px;
+      width: 92%;
+      text-align: center;
+      color: #1a0a00;
+      transform: translateY(10px);
+      transition: transform .28s ease;
+    }
+    .modal-overlay.visible .modal { transform: translateY(0); }
+
+    .modal h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #2e1400;
+      margin-bottom: 22px;
+    }
+
+    .modal p {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.78;
+      color: #261000;
+      margin-bottom: 38px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .modal-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 9px 28px;
+      cursor: pointer;
+      border: 1px solid rgba(90,48,16,.32);
+      background: transparent;
+      color: #2e1400;
+      transition: background .18s, border-color .18s;
+      min-width: 230px;
+    }
+    .modal-btn:hover { background: rgba(90,48,16,.08); }
+
+    .modal-btn.primary {
+      background: rgba(90,48,16,.1);
+      border-color: rgba(90,48,16,.45);
+    }
+    .modal-btn.primary:hover { background: rgba(90,48,16,.18); }
+
+    .modal-btn.flame {
+      color: #6e1500;
+      border-color: rgba(110,21,0,.38);
+    }
+    .modal-btn.flame:hover { background: rgba(110,21,0,.07); }
+    .modal-btn.flame.primary { background: rgba(110,21,0,.09); }
+    .modal-btn.flame.primary:hover { background: rgba(110,21,0,.17); }
+
+    .modal-btn.dim {
+      color: rgba(46,20,0,.45);
+      border-color: rgba(90,48,16,.18);
+      font-size: 9.5px;
+    }
+    .modal-btn.dim:hover {
+      background: rgba(90,48,16,.04);
+      color: rgba(46,20,0,.65);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="letter-wrapper">
+    <div id="letter-container">
+      <div id="to-line">
+        <span id="to-label">To,</span>
+        <input type="text" id="recipient" placeholder="the recipient" autocomplete="off" spellcheck="false">
+      </div>
+      <textarea id="body" placeholder="Dear reader,&#10;&#10;boy do I have a bone to pick with you...."></textarea>
+    </div>
+    <div id="fire-line"></div>
+  </div>
+
+  <div id="bottom-bar">
+    <button id="send-btn">Send</button>
+    <div id="tally-area"></div>
+  </div>
+
+  <!-- Choice modal -->
+  <div class="modal-overlay" id="choice-modal">
+    <div class="modal">
+      <h2>What shall become of this letter?</h2>
+      <p>Choose wisely. Some words, once loosed upon the world, cannot be recalled.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn flame" id="burn-btn">Commit it to the Flame</button>
+        <button class="modal-btn" id="send-recipient-btn">Send it to the Recipient</button>
+        <button class="modal-btn dim" id="cancel-btn">Return to the Letter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Burn acknowledgement modal -->
+  <div class="modal-overlay" id="burn-modal">
+    <div class="modal">
+      <h2>A Solemn Reckoning</h2>
+      <p>By committing these words to the flame, you acknowledge that you are prepared to release what was written here — to let it rest, and to move forward with your life, unburdened by what was penned.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn flame primary" id="confirm-burn-btn">I am ready. Let it burn.</button>
+        <button class="modal-btn dim" id="cancel-burn-btn">Not yet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ambivalence Police modal -->
+  <div class="modal-overlay" id="police-modal">
+    <div class="modal">
+      <h2>Intercepted</h2>
+      <p>This letter was seized by the Ambivalence Police. No action was taken, and no harm was done. Should you wish to proceed, you must commit these words anew.</p>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" id="police-ok-btn">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'burned_letters';
+
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function addToHistory(recipient, date) {
+      const h = getHistory();
+      h.push({ to: recipient || 'unknown', date });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function formatDate() {
+      return new Date().toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
+
+    // DOM refs
+    const $ = id => document.getElementById(id);
+    const choiceModal    = $('choice-modal');
+    const burnModal      = $('burn-modal');
+    const policeModal    = $('police-modal');
+    const fireLine       = $('fire-line');
+    const letterCont     = $('letter-container');
+    const recipientInput = $('recipient');
+    const bodyTextarea   = $('body');
+    const tallyArea      = $('tally-area');
+
+    const show = m => m.classList.add('visible');
+    const hide = m => m.classList.remove('visible');
+
+    function renderTallies() {
+      tallyArea.innerHTML = '';
+      getHistory().forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'tally-item';
+        div.innerHTML = `&#x1F4DC;<div class="tally-tooltip">To: ${esc(entry.to)}<br>${esc(entry.date)}</div>`;
+        tallyArea.appendChild(div);
+      });
+    }
+
+    function startBurnAnimation() {
+      const duration = 3800;
+      const start = performance.now();
+      fireLine.style.opacity = '1';
+      fireLine.classList.add('active');
+
+      function tick(now) {
+        const raw = Math.min((now - start) / duration, 1);
+        // ease-in-quad: slow ignition, accelerating spread
+        const eased = raw * raw;
+        const burnPct = eased * 100;
+
+        letterCont.style.clipPath = `inset(0 0 ${burnPct}% 0)`;
+
+        const h = letterCont.offsetHeight;
+        const boundaryPx = (burnPct / 100) * h;
+        // sit fire-line so its upper body overlaps the visible paper edge
+        fireLine.style.bottom = `${boundaryPx - 45}px`;
+
+        // fade out in final 10%
+        if (raw > 0.9) {
+          fireLine.style.opacity = String((1 - raw) / 0.1);
+        }
+
+        if (raw < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          fireLine.classList.remove('active');
+          setTimeout(() => location.reload(), 750);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    // Event listeners
+    $('send-btn').addEventListener('click', () => show(choiceModal));
+    $('cancel-btn').addEventListener('click', () => hide(choiceModal));
+
+    $('burn-btn').addEventListener('click', () => {
+      hide(choiceModal);
+      show(burnModal);
+    });
+
+    $('send-recipient-btn').addEventListener('click', () => {
+      hide(choiceModal);
+      show(policeModal);
+    });
+
+    $('police-ok-btn').addEventListener('click', () => {
+      hide(policeModal);
+      recipientInput.value = '';
+      bodyTextarea.value = '';
+    });
+
+    $('cancel-burn-btn').addEventListener('click', () => hide(burnModal));
+
+    $('confirm-burn-btn').addEventListener('click', () => {
+      hide(burnModal);
+      addToHistory(recipientInput.value.trim(), formatDate());
+      setTimeout(startBurnAnimation, 280);
+    });
+
+    renderTallies();
+  </script>
+</body>
+</html>
