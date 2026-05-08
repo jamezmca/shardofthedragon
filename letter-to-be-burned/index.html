@@ -111,7 +111,7 @@
       width: 198px; height: 138px;
       top: 22px; right: 42px;
       border-radius: 62% 38% 52% 48% / 47% 53% 44% 56%;
-      background: rgba(108,68,22,.18);
+      background: rgba(101,67,33,.20);
       transform: rotate(-17deg);
       filter: blur(3px);
     }
@@ -121,7 +121,7 @@
       width: 162px; height: 116px;
       bottom: 115px; left: 32px;
       border-radius: 38% 62% 48% 52% / 58% 44% 56% 42%;
-      background: rgba(90,56,17,.14);
+      background: rgba(88,58,28,.17);
       transform: rotate(13deg);
       filter: blur(2.5px);
     }
@@ -131,7 +131,7 @@
       width: 86px; height: 64px;
       top: 218px; right: 92px;
       border-radius: 55% 45% 68% 32% / 42% 62% 38% 58%;
-      background: rgba(102,65,20,.12);
+      background: rgba(96,63,30,.15);
       transform: rotate(27deg);
       filter: blur(2px);
     }
@@ -165,7 +165,7 @@
     #letter-container::after {
       content: '';
       position: absolute;
-      inset: 64px 72px;
+      inset: 124px 72px;
       background-image: repeating-linear-gradient(
         to bottom,
         transparent 0px,
@@ -224,6 +224,11 @@
       z-index: 1;
     }
     #body::placeholder { color: rgba(90,48,16,.3); font-style: italic; }
+
+    @media (max-width: 600px) {
+      #letter-container { padding: 36px 36px 56px; }
+      #letter-container::after { inset: 96px 36px; }
+    }
 
     /* ── FIRE LINE ───────────────────────────────────── */
 
