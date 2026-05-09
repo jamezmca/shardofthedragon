@@ -43,7 +43,7 @@
       overflow-x: auto;
     }
     #explanation div { margin-bottom: 2px; }
-    .expl-overview { font-style: italic; color: #444; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 8px !important; line-height: 1.6; }
+    .expl-overview { font-style: italic; color: #555; border-top: 1px solid #e0e0e0; padding-top: 8px; margin-top: 8px !important; line-height: 1.6; }
     .expl-level { margin-bottom: 8px; }
     .expl-more-wrap { margin-top: 3px; }
     .expl-more-btn { cursor: pointer; color: #aaa; font-size: 0.82em; }
@@ -903,17 +903,15 @@ function toggleExplanation() {
   if (!lines) return;
   const s = stats[currentQ.topicKey];
   const maxLevel = s.c1 < 7 ? 1 : s.c2 < 7 ? 2 : 3;
-  const visible = lines.slice(0, maxLevel + 1);
-  el.innerHTML = visible.map((l, i) => {
-    if (i === 0) return `<div class="expl-overview">${renderQ(l)}</div>`;
-    const sep = l.indexOf('|||');
-    const mathRaw = sep === -1 ? l : l.slice(0, sep);
-    const textRaw = sep === -1 ? '' : l.slice(sep + 3);
-    const mathHtml = renderQ(mathRaw).replace(/&ensp; · &ensp;/g, '<br>&emsp;');
-    const textHtml = textRaw ? renderQ(textRaw) : '';
-    if (!textHtml) return `<div class="expl-level">${mathHtml}</div>`;
-    return `<div class="expl-level">${mathHtml}<div class="expl-more-wrap"><span class="expl-more-btn" onclick="var l=this.closest('.expl-level');l.querySelector('.expl-text').style.display='block';this.parentElement.style.display='none'">see more</span></div><div class="expl-text" style="display:none">${textHtml}</div></div>`;
+  const overview = lines[0];
+  const levelLines = lines.slice(1, maxLevel + 1);
+  const levelsHtml = levelLines.map(l => {
+    const html = renderQ(l.split('|||').join('<br>&emsp;')).replace(/&ensp; · &ensp;/g, '<br>&emsp;');
+    return `<div class="expl-level">${html}</div>`;
   }).join('');
+  el.innerHTML = levelsHtml +
+    `<div class="expl-more-wrap"><span class="expl-more-btn" onclick="this.parentElement.nextElementSibling.style.display='block';this.parentElement.style.display='none'">see more</span></div>` +
+    `<div class="expl-overview" style="display:none">${renderQ(overview)}</div>`;
   el.style.display = 'block';
 }
 
