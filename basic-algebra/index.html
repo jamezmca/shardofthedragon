@@ -32,6 +32,17 @@
     #hint { text-align: center; margin-top: 8px; font-size: 0.85em; color: #555; }
     #feedback { text-align: center; margin-top: 18px; font-size: 1.5em; min-height: 1.8em; }
     #answer-reveal { text-align: center; margin-top: 8px; font-size: 1em; }
+    #explanation {
+      display: none;
+      margin-top: 28px;
+      padding: 14px 16px;
+      border-top: 1px solid #ddd;
+      font-size: 0.88em;
+      line-height: 2;
+      text-align: left;
+    }
+    #explanation div { margin-bottom: 2px; }
+    .expl-overview { font-style: italic; color: #444; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; margin-bottom: 8px !important; line-height: 1.6; }
     @media (pointer: fine) { #btn-action { display: none !important; } }
   </style>
 </head>
@@ -55,6 +66,7 @@
   <div id="hint">press Enter to submit</div>
   <div id="feedback"></div>
   <div id="answer-reveal"></div>
+  <div id="explanation"></div>
   <div style="text-align:center;margin-top:16px;">
     <button id="btn-action" onclick="submitAnswer()" style="font-size:1em;padding:8px 24px;font-family:inherit;cursor:pointer;">Submit</button>
   </div>
@@ -186,24 +198,36 @@ function genLikeTerms(level) {
     };
   }
   if (level === 2) {
-    // ax + bw + cx  (two variables)
+    // merged: two variables with subtraction and a constant
     const w = v === 'x' ? 'y' : 'x';
-    const a = rnd(2,7), b = rnd(2,7), c = rnd(2,7), s = a + c;
-    const a1 = `${s}${v}+${b}${w}`, a2 = `${b}${w}+${s}${v}`;
+    const a = rnd(5,9), c = rnd(2, a - 1), b = rnd(2,7), k = rnd(1,9), s = a - c;
+    const a1 = `${s}${v}+${b}${w}+${k}`, a2 = `${b}${w}+${s}${v}+${k}`;
     return {
-      qText: `Simplify \\(${a}${v} + ${b}${w} + ${c}${v}\\)`,
-      aLatex: `${s}${v} + ${b}${w}`,
+      qText: `Simplify \\(${a}${v} + ${b}${w} - ${c}${v} + ${k}\\)`,
+      aLatex: `${s}${v} + ${b}${w} + ${k}`,
       check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
     };
   }
-  // level 3: subtraction + constant
-  const w = v === 'x' ? 'y' : 'x';
-  const a = rnd(5,9), c = rnd(2, a - 1), b = rnd(2,7), k = rnd(1,9), s = a - c;
-  const a1 = `${s}${v}+${b}${w}+${k}`, a2 = `${b}${w}+${s}${v}+${k}`;
+  // level 3: multi-letter terms (xy) or mixed powers (ax² + bx - cx²)
+  if (Math.random() < 0.5) {
+    const w = v === 'x' ? 'y' : 'x';
+    const a = rnd(2,5), b = rnd(2,6), c = rnd(2,6), s = b + c;
+    const a1 = `${a}${v}^2${w}+${s}${v}${w}`, a2 = `${s}${v}${w}+${a}${v}^2${w}`;
+    return {
+      qText: `Simplify \\(${a}${v}^2${w} + ${b}${v}${w} + ${c}${v}${w}\\)`,
+      aLatex: `${a}${v}^2${w} + ${s}${v}${w}`,
+      check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    };
+  }
+  // mixed powers: ax² + bx - cx²
+  const a = rnd(5,9), c = rnd(2, a - 1), b = rnd(2,8), s = a - c;
+  const aL3 = s === 1 ? `${v}^2 + ${b}${v}` : `${s}${v}^2 + ${b}${v}`;
+  const chk3a = s === 1 ? `${v}^2+${b}${v}` : `${s}${v}^2+${b}${v}`;
+  const chk3b = s === 1 ? `${b}${v}+${v}^2` : `${b}${v}+${s}${v}^2`;
   return {
-    qText: `Simplify \\(${a}${v} + ${b}${w} - ${c}${v} + ${k}\\)`,
-    aLatex: `${s}${v} + ${b}${w} + ${k}`,
-    check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
+    qText: `Simplify \\(${a}${v}^2 + ${b}${v} - ${c}${v}^2\\)`,
+    aLatex: aL3,
+    check: inp => norm(inp) === norm(chk3a) || norm(inp) === norm(chk3b)
   };
 }
 
@@ -228,12 +252,22 @@ function genMultTerms(level) {
       check: inp => norm(inp) === norm(a1) || norm(inp) === norm(a2)
     };
   }
-  // level 3: ax^2 × bx
-  const a = rnd(2,5), b = rnd(2,5), p = a * b;
+  // level 3: ax^n × bx (same variable) or ax^n × bw (different variable)
+  if (Math.random() < 0.5) {
+    const a = rnd(2,5), b = rnd(2,5), p = a * b;
+    return {
+      qText: `Simplify \\(${a}${v}^2 \\times ${b}${v}\\)`,
+      aLatex: `${p}${v}^3`,
+      check: inp => norm(inp) === norm(`${p}${v}^3`)
+    };
+  }
+  const w = v === 'x' ? 'y' : 'x';
+  const a = rnd(2,5), b = rnd(2,5), p = a * b, n = rnd(2,3);
+  const mt3a = `${p}${v}^${n}${w}`, mt3b = `${p}${w}${v}^${n}`;
   return {
-    qText: `Simplify \\(${a}${v}^2 \\times ${b}${v}\\)`,
-    aLatex: `${p}${v}^3`,
-    check: inp => norm(inp) === norm(`${p}${v}^3`)
+    qText: `Simplify \\(${a}${v}^${n} \\times ${b}${w}\\)`,
+    aLatex: `${p}${v}^{${n}}${w}`,
+    check: inp => norm(inp) === norm(mt3a) || norm(inp) === norm(mt3b)
   };
 }
 
@@ -260,12 +294,26 @@ function genSingleBracket(level) {
       check: inp => norm(inp) === norm(ans)
     };
   }
-  // level 3: av(bv + c)
-  const a = rnd(2,5), b = rnd(2,5), c = rnd(2,7), r1 = a*b, r2 = a*c;
-  const ans = `${r1}${v}^2+${r2}${v}`;
+  // level 3: two single brackets — expand and simplify
+  const a3 = rnd(2,4), b3 = rnd(2,4), c3 = rnd(2,8);
+  const d3 = rnd(2,3), e3 = rnd(2,3), f3 = rnd(2,7);
+  if (Math.random() < 0.5) {
+    const r1 = a3*b3 - d3*e3, r2 = a3*c3 - d3*f3;
+    if (r1 > 0) {
+      const ans = `${r1}${v}${r2 >= 0 ? '+' : ''}${r2}`;
+      const aL = r2 >= 0 ? `${r1}${v} + ${r2}` : `${r1}${v} - ${Math.abs(r2)}`;
+      return {
+        qText: `Expand and simplify \\(${a3}(${b3}${v} + ${c3}) - ${d3}(${e3}${v} + ${f3})\\)`,
+        aLatex: aL,
+        check: inp => norm(inp) === norm(ans)
+      };
+    }
+  }
+  const r1 = a3*b3 + d3*e3, r2 = a3*c3 + d3*f3;
+  const ans = `${r1}${v}+${r2}`;
   return {
-    qText: `Expand \\(${a}${v}(${b}${v} + ${c})\\)`,
-    aLatex: `${r1}${v}^2 + ${r2}${v}`,
+    qText: `Expand and simplify \\(${a3}(${b3}${v} + ${c3}) + ${d3}(${e3}${v} + ${f3})\\)`,
+    aLatex: `${r1}${v} + ${r2}`,
     check: inp => norm(inp) === norm(ans)
   };
 }
@@ -307,26 +355,45 @@ function genDoubleBracket(level) {
 function genFactoriseHCF(level) {
   const v = pick(['x','y','a','n']);
   if (level === 1) {
-    // av + ab → a(v+b)
-    const a = rnd(2,8), b = rnd(2,8), t2 = a*b;
-    const ans = `${a}(${v}+${b})`;
+    // Find the HCF of two numbers
+    const f = rnd(2,9);
+    const coprimePairs = [[2,3],[2,5],[3,4],[3,5],[4,5],[2,7],[3,7],[5,6],[5,7],[4,7]];
+    const [pb, pc] = pick(coprimePairs);
     return {
-      qText: `Factorise fully \\(${a}${v} + ${t2}\\)`,
-      aLatex: `${a}(${v} + ${b})`,
-      check: inp => norm(inp) === norm(ans)
+      qText: `Find the HCF of \\(${f*pb}\\) and \\(${f*pc}\\)`,
+      aLatex: `${f}`,
+      check: inp => norm(inp) === norm(`${f}`)
     };
   }
   if (level === 2) {
-    // av^2 + bv → v(av+b)
+    // Number factor only OR variable factor only
+    if (Math.random() < 0.5) {
+      const a = rnd(2,8), b = rnd(2,8), t2 = a*b;
+      const ans = `${a}(${v}+${b})`;
+      return {
+        qText: `Factorise \\(${a}${v} + ${t2}\\)`,
+        aLatex: `${a}(${v} + ${b})`,
+        check: inp => norm(inp) === norm(ans)
+      };
+    }
     const a = rnd(2,7), b = rnd(2,9);
     const ans = `${v}(${a}${v}+${b})`;
     return {
-      qText: `Factorise fully \\(${a}${v}^2 + ${b}${v}\\)`,
+      qText: `Factorise \\(${a}${v}^2 + ${b}${v}\\)`,
       aLatex: `${v}(${a}${v} + ${b})`,
       check: inp => norm(inp) === norm(ans)
     };
   }
-  // level 3: abv^2 + acv → av(bv+c)
+  // level 3: full HCF (number + variable); ~40% chance the HCF steals a full term (leaving 1)
+  if (Math.random() < 0.4) {
+    const a = rnd(2,6), b = rnd(2,5), t1 = a*b;
+    const ans = `${a}${v}(${b}${v}+1)`;
+    return {
+      qText: `Factorise fully \\(${t1}${v}^2 + ${a}${v}\\)`,
+      aLatex: `${a}${v}(${b}${v} + 1)`,
+      check: inp => norm(inp) === norm(ans)
+    };
+  }
   const a = rnd(2,5), b = rnd(2,5), c = rnd(2,7), t1 = a*b, t2 = a*c;
   const ans = `${a}${v}(${b}${v}+${c})`;
   return {
@@ -696,38 +763,132 @@ function genSimultaneous(level) {
     };
   }
   if (level === 2) {
-    // elimination: ax + by = p, cx + dy = q — simple coefficients
-    const x = rnd(1,6), y = rnd(1,6);
-    const a = rnd(1,4), b = rnd(1,4), c = rnd(1,4), d = rnd(1,4);
-    const p = a*x + b*y, q = c*x + d*y;
+    // linear + quadratic: y = x^2 + c and y = bx
+    const r = rnd(1,4), s = rnd(1,4);
+    const bv = r + s, cv = -(r * s);
+    const x1 = r, x2 = -s, y1 = bv*x1, y2 = bv*x2;
+    const cvStr = cv >= 0 ? `+ ${cv}` : `- ${Math.abs(cv)}`;
     return {
-      qText: `Solve simultaneously:\\(${a}x + ${b}y = ${p}\\) and \\(${c}x + ${d}y = ${q}\\)`,
-      aLatex: `x = ${x},\\; y = ${y}`,
+      qText: `Solve simultaneously: \\(y = x^2 ${cvStr}\\) and \\(y = ${bv}x\\)`,
+      aLatex: `(${x1},\\,${y1}) \\text{ and } (${x2},\\,${y2})`,
       check: inp => {
         const n = norm(inp);
-        return (n.includes(`x=${x}`) && n.includes(`y=${y}`)) ||
-               (n.includes(`${x}`) && n.includes(`${y}`));
+        const pair1 = `(${x1},${y1})`, pair2 = `(${x2},${y2})`;
+        return (n.includes(norm(pair1)) && n.includes(norm(pair2)));
       }
     };
   }
-  // level 3: one linear one quadratic
-  const b = rnd(1,5), c = rnd(-4,4);
-  // y = x^2 + c  and  y = bx; intersect: x^2 - bx + c = 0 → need discriminant ≥ 0
-  // use b^2 - 4c ≥ 0; pick c ≤ b^2/4; also want integer roots so c = -(r*s), b = r+s
-  const r = rnd(1,4), s = rnd(1,4);
-  const bv = r + s, cv = -(r * s);
-  const x1 = r, x2 = -s, y1 = bv*x1, y2 = bv*x2;
-  const cvStr = cv >= 0 ? `+ ${cv}` : `- ${Math.abs(cv)}`;
+  // level 3: elimination — ax + by = p, cx + dy = q
+  const x = rnd(1,6), y = rnd(1,6);
+  const a = rnd(1,4), b = rnd(1,4), c = rnd(1,4), d = rnd(1,4);
+  const p = a*x + b*y, q = c*x + d*y;
   return {
-    qText: `Solve simultaneously: \\(y = x^2 ${cvStr}\\) and \\(y = ${bv}x\\)`,
-    aLatex: `(${x1},\\,${y1}) \\text{ and } (${x2},\\,${y2})`,
+    qText: `Solve simultaneously:\\(${a}x + ${b}y = ${p}\\) and \\(${c}x + ${d}y = ${q}\\)`,
+    aLatex: `x = ${x},\\; y = ${y}`,
     check: inp => {
       const n = norm(inp);
-      const pair1 = `(${x1},${y1})`, pair2 = `(${x2},${y2})`;
-      const pair3 = `(${x2},${y2})`, pair4 = `(${x1},${y1})`;
-      return (n.includes(norm(pair1)) && n.includes(norm(pair2)));
+      return (n.includes(`x=${x}`) && n.includes(`y=${y}`)) ||
+             (n.includes(`${x}`) && n.includes(`${y}`));
     }
   };
+}
+
+// ── Explanations (Shift+Z) ────────────────────────────────────────────────────
+const EXPLANATIONS = {
+  'like-terms': [
+    'Like terms share the same letter (or combination of letters and powers). We can only add or subtract terms that are alike — think of grouping the same types of things together before counting them up.',
+    '<b>L1 ·</b> Add the numbers in front of matching letters. &ensp; \\(3x + 5x = 8x\\)',
+    '<b>L2 ·</b> Only like letters combine; different letters and constants collect separately. &ensp; \\(4x + 3y - 2x + 5 = 2x + 3y + 5\\)',
+    '<b>L3 ·</b> Letter combinations (like \\(xy\\)) or powers (like \\(x^2\\)) each form their own like-term groups. &ensp; \\(3x^2 + 2x - x^2 = 2x^2 + 2x\\) &ensp; · &ensp; \\(2x^2y + 3xy + 4xy = 2x^2y + 7xy\\)',
+  ],
+  'mult-terms': [
+    'When multiplying algebraic terms, multiply the number parts together, then deal with the letters. For the same letter, add the indices. Different letters sit side-by-side in the answer.',
+    '<b>L1 ·</b> Multiply the numbers together and keep the letter. &ensp; \\(3 \\times 4x = 12x\\)',
+    '<b>L2 ·</b> Multiply the numbers and write both letters side by side. &ensp; \\(3x \\times 4y = 12xy\\)',
+    '<b>L3 ·</b> Add the indices for the same letter; different letters stay side by side. &ensp; \\(3x^2 \\times 2x = 6x^3\\) &ensp; · &ensp; \\(4x^2 \\times 3y = 12x^2y\\)',
+  ],
+  'single-bracket': [
+    'Expanding a bracket means multiplying the term outside by every term inside. Draw an arrow from the outside term to each term inside as a reminder — every single term inside must be multiplied.',
+    '<b>L1 ·</b> Multiply the term outside by every term inside. &ensp; \\(3(x + 4) = 3x + 12\\)',
+    '<b>L2 ·</b> Same rule when the variable inside has a coefficient. &ensp; \\(2(3x + 5) = 6x + 10\\)',
+    '<b>L3 ·</b> Expand two separate brackets, then collect like terms to simplify. Watch out for subtraction between brackets — it flips the signs of the second bracket. &ensp; \\(3(2x + 5) + 2(x + 4) = 6x + 15 + 2x + 8 = 8x + 23\\) &ensp; · &ensp; \\(4(x + 3) - 2(x + 1) = 4x + 12 - 2x - 2 = 2x + 10\\)',
+  ],
+  'double-bracket': [
+    'To expand double brackets, every term in the first bracket multiplies every term in the second. Draw four lines: first→first, first→last, last→first, last→last. Add all four products, then collect like terms.',
+    '<b>L1 ·</b> Four multiplications, then collect. &ensp; \\((x+3)(x+4)\\): \\(x{\\cdot}x + x{\\cdot}4 + 3{\\cdot}x + 3{\\cdot}4 = x^2 + 4x + 3x + 12 = x^2 + 7x + 12\\)',
+    '<b>L2 ·</b> Same process; a negative in one bracket changes the sign of two of the four products. &ensp; \\((x+5)(x-2) = x^2 - 2x + 5x - 10 = x^2 + 3x - 10\\)',
+    '<b>L3 ·</b> Both negatives: the two middle products are both negative; last×last is positive (neg × neg). &ensp; \\((x-3)(x-4) = x^2 - 4x - 3x + 12 = x^2 - 7x + 12\\)',
+  ],
+  'factorise-hcf': [
+    'Factorising is the reverse of expanding. We steal as much as possible from every term — the most we can steal is the HCF. It goes outside the bracket; what\'s left after dividing each term by the HCF goes inside. If you expand back out, you should always return to the original expression.',
+    '<b>L1 ·</b> Find the largest number that divides evenly into all numbers given. &ensp; HCF of \\(12\\) and \\(18\\) = \\(6\\) &ensp; · &ensp; HCF of \\(20\\) and \\(15\\) = \\(5\\)',
+    '<b>L2 ·</b> Place the HCF outside and divide each term by it to fill the bracket. &ensp; \\(4x + 12\\): steal \\(4\\) → \\(4(x + 3)\\) &ensp; · &ensp; \\(3x^2 + 5x\\): steal \\(x\\) → \\(x(3x + 5)\\)',
+    '<b>L3 ·</b> Steal both the number and the variable. If the HCF equals a whole term, that term leaves a \\(1\\) behind in the bracket. &ensp; \\(6x^2 + 9x = 3x(2x + 3)\\) &ensp; · &ensp; \\(3x^2 + 3x = 3x(x + 1)\\) — the \\(3x\\) term leaves 1. &ensp; Expand to check.',
+  ],
+  'factorise-quad': [
+    'To factorise a quadratic, find two numbers that multiply to the constant term and add to the coefficient of \\(x\\). Those two numbers go into the brackets: \\((x + p)(x + q)\\).',
+    '<b>L1 ·</b> Both roots positive — find two positive numbers that multiply to the constant and add to the \\(x\\) coefficient. &ensp; \\(x^2+7x+12\\): 3×4=12, 3+4=7 → \\((x+3)(x+4)\\)',
+    '<b>L2 ·</b> One bracket adds, one subtracts; the larger number takes the sign of the middle term. &ensp; \\(x^2+3x-10\\): 5×2=10, 5−2=3 → \\((x+5)(x-2)\\)',
+    '<b>L3 ·</b> Both brackets subtract; the pair multiplies to a positive constant and sums to a negative middle. &ensp; \\(x^2-7x+12\\): 3×4=12, 3+4=7 → \\((x-3)(x-4)\\)',
+  ],
+  'solve-eq': [
+    'Solving an equation means finding the unknown value. We rearrange by applying the same adjustment to both sides — the adjustment cancels a term on one side and moves its effect to the other. Work in reverse BIDMAS: deal with addition and subtraction before multiplication and division.',
+    '<b>L1 ·</b> One adjustment undoes the operation. &ensp; \\(x+5=8\\): subtract 5 from both sides → \\(x=3\\) &ensp; · &ensp; \\(3x=12\\): divide both sides by 3 → \\(x=4\\)',
+    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient. &ensp; \\(3x+4=13\\) → subtract 4 from both sides → \\(3x=9\\) → divide both sides by 3 → \\(x=3\\)',
+    '<b>L3 ·</b> Move all \\(x\\) terms to one side by subtracting from both sides, then solve as normal. &ensp; \\(5x+2=2x+11\\) → subtract \\(2x\\) from both sides → \\(3x+2=11\\) → subtract 2 from both sides → \\(3x=9\\) → \\(x=3\\)',
+  ],
+  'substitution': [
+    'Substitution means swapping a letter for its value. Always write the number in brackets where the letter was — this keeps the order of operations correct and ensures a calculator processes it the same way.',
+    '<b>L1 ·</b> Replace the letter with its value in brackets, then calculate. &ensp; \\(y=3x+2,\\ x=4\\): &ensp; \\(y=3(4)+2=12+2=14\\)',
+    '<b>L2 ·</b> Substitute both values in brackets, one at a time. &ensp; \\(A=lw,\\ l=5,\\ w=3\\): &ensp; \\(A=(5)(3)=15\\)',
+    '<b>L3 ·</b> Replace every letter in brackets, then work through BIDMAS. &ensp; \\(v=u+at,\\ u=4,\\ a=3,\\ t=5\\): &ensp; \\(v=(4)+(3)(5)=4+15=19\\)',
+  ],
+  'rearrange': [
+    'Rearranging a formula means making a different letter the subject. Apply the same operation to both sides — always say "subtract from both sides" or "divide both sides by" to keep it clear.',
+    '<b>L1 ·</b> Apply the opposite operation to both sides. &ensp; \\(y=x+5\\): subtract 5 from both sides → \\(x=y-5\\)',
+    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient. &ensp; \\(y=3x+2\\): subtract 2 from both sides → \\(y-2=3x\\) → divide both sides by 3 → \\(x=\\dfrac{y-2}{3}\\)',
+    '<b>L3 ·</b> Isolate the term containing the target letter, then divide both sides to leave it alone. &ensp; \\(v=u+at\\): subtract \\(u\\) from both sides → \\(v-u=at\\) → divide both sides by \\(t\\) → \\(a=\\dfrac{v-u}{t}\\)',
+  ],
+  'index-laws': [
+    'The <b>base</b> is the number or letter being raised to a power. The small raised number is the <b>index</b> (plural: <b>indices</b>), also called the <b>exponent</b> or <b>power</b>. Index laws give us shortcut rules for multiplying and dividing expressions that share the same base.',
+    '<b>L1 ·</b> Multiplying the same base: add the indices. &ensp; \\(x^3 \\times x^4 = x^7\\)',
+    '<b>L2 ·</b> Dividing: subtract the indices. Power of a power: multiply. With coefficients: multiply numbers and add letter indices. If the bottom index is bigger, the remainder stays on the bottom. &ensp; \\(x^5 \\div x^2=x^3\\) · \\((x^2)^3=x^6\\) · \\(3x^2 \\times 2x^3=6x^5\\) · \\(x^2 \\div x^5=\\tfrac{1}{x^3}\\)',
+    '<b>L3 ·</b> Negative index: flip the term to the denominator. Fraction index: take a root. &ensp; \\(x^{-2}=\\tfrac{1}{x^2}\\) · \\(x^{-3}=\\tfrac{1}{x^3}\\) · \\(x^{1/2}=\\sqrt{x}\\) · \\(x^{1/3}=\\sqrt[3]{x}\\)',
+  ],
+  'alg-fractions': [
+    'Simplifying algebraic fractions works like simplifying number fractions — find a common factor in the numerator and denominator, factorise it out of both, then cancel. Anything divided by itself equals 1, so the common factor disappears.',
+    '<b>L1 ·</b> Factorise the common number from top and bottom, then cancel. &ensp; \\(\\dfrac{12x}{4} = \\dfrac{4 \\cdot 3x}{4 \\cdot 1} = 3x\\)',
+    '<b>L2 ·</b> Factorise the common number and variable from top and bottom, then cancel. &ensp; \\(\\dfrac{6x^2}{3x} = \\dfrac{3x \\cdot 2x}{3x \\cdot 1} = 2x\\)',
+    '<b>L3 ·</b> To add fractions with different denominators, cross-multiply to find a common denominator, convert each fraction, then add the numerators. &ensp; \\(\\dfrac{1}{2x}+\\dfrac{1}{3x}\\): common denom is \\(6x\\) → \\(\\dfrac{3}{6x}+\\dfrac{2}{6x}=\\dfrac{5}{6x}\\)',
+  ],
+  'inequalities': [
+    'Inequalities are solved exactly like equations, with one key exception: if you ever multiply or divide both sides by a negative number, the inequality sign flips direction.',
+    '<b>L1 ·</b> Solve like an equation — the inequality sign just replaces =. &ensp; \\(x+3>7\\) → subtract 3 from both sides → \\(x>4\\)',
+    '<b>L2 ·</b> Two steps: undo add/subtract first, then divide. The sign stays the same when dividing by a positive. &ensp; \\(3x+2>11\\) → subtract 2 → \\(3x>9\\) → divide by 3 → \\(x>3\\)',
+    '<b>L3 ·</b> Collect \\(x\\) terms to one side first; the sign only flips if you divide by a negative. &ensp; \\(5x+2>2x+8\\) → subtract \\(2x\\) → \\(3x+2>8\\) → subtract 2 → \\(3x>6\\) → \\(x>2\\)',
+  ],
+  'complete-square': [
+    'Completing the square rewrites a quadratic in the form \\((x+b)^2 + k\\). Halve the \\(x\\) coefficient to find \\(b\\), then subtract \\(b^2\\) to compensate for the extra constant that squaring the bracket introduces.',
+    '<b>L1 ·</b> Halve the \\(x\\) coefficient to get \\(b\\), then subtract \\(b^2\\). &ensp; \\(x^2+6x=(x+3)^2-9\\)',
+    '<b>L2 ·</b> Same method, then add the constant back on. &ensp; \\(x^2+6x+2=(x+3)^2-9+2=(x+3)^2-7\\)',
+    '<b>L3 ·</b> Negative middle term — the bracket subtracts \\(b\\) instead of adding it. &ensp; \\(x^2-8x+3=(x-4)^2-16+3=(x-4)^2-13\\)',
+  ],
+  'simultaneous': [
+    'Simultaneous equations are two equations that must be true at the same time. We solve them by finding the values of both unknowns that satisfy both equations together.',
+    '<b>L1 ·</b> When both equations equal \\(y\\), set the right-hand sides equal and solve. &ensp; \\(y=3x+1\\) and \\(y=x+5\\): set equal → \\(3x+1=x+5\\) → \\(x=2\\), then \\(y=7\\)',
+    '<b>L2 ·</b> Substitute the linear equation into the quadratic, rearrange to zero, then factorise. &ensp; \\(y=x^2-6\\) and \\(y=x\\): sub in → \\(x=x^2-6\\) → \\(x^2-x-6=0\\) → \\((x-3)(x+2)=0\\) → \\((3,3)\\) and \\((-2,-2)\\)',
+    '<b>L3 ·</b> Eliminate one variable by adding or subtracting the two equations, then back-substitute. &ensp; \\(2x+y=7\\) and \\(x+y=4\\): subtract → \\(x=3\\) → sub back → \\(y=1\\)',
+  ],
+};
+
+function toggleExplanation() {
+  if (!currentQ) return;
+  const el = document.getElementById('explanation');
+  if (el.style.display !== 'none') { el.style.display = 'none'; return; }
+  const lines = EXPLANATIONS[currentQ.topicKey];
+  if (!lines) return;
+  el.innerHTML = lines.map((l, i) => `<div${i === 0 ? ' class="expl-overview"' : ''}>${renderQ(l)}</div>`).join('');
+  el.style.display = 'block';
 }
 
 // ── Generator map ──────────────────────────────────────────────────────────────
@@ -760,7 +921,8 @@ function nextQuestion() {
   document.getElementById('question-wrap').innerHTML = renderQ(currentQ.qText);
   document.getElementById('feedback').textContent    = '';
   document.getElementById('answer-reveal').innerHTML = '';
-  document.getElementById('hint').textContent        = 'press Enter to submit';
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('hint').textContent        = 'Enter to submit  ·  Shift+Z to explain';
   document.getElementById('btn-action').textContent  = 'Submit';
 
   const inp = document.getElementById('answer-input');
@@ -849,9 +1011,14 @@ document.getElementById('topic-list').addEventListener('click', e => {
 document.getElementById('top-left').addEventListener('click', goHome);
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && qpage.style.display !== 'none') {
+  if (qpage.style.display === 'none') return;
+  if (e.key === 'Enter') {
     e.preventDefault();
     submitAnswer();
+  }
+  if (e.shiftKey && e.key === 'Z') {
+    e.preventDefault();
+    toggleExplanation();
   }
 });
 </script>
