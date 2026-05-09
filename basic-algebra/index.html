@@ -355,12 +355,19 @@ function genDoubleBracket(level) {
 function genFactoriseHCF(level) {
   const v = pick(['x','y','a','n']);
   if (level === 1) {
-    // Find the HCF of two numbers
     const f = rnd(2,9);
     const coprimePairs = [[2,3],[2,5],[3,4],[3,5],[4,5],[2,7],[3,7],[5,6],[5,7],[4,7]];
     const [pb, pc] = pick(coprimePairs);
+    const n1 = f * pb, n2 = f * pc;
+    if (Math.random() < 0.5) {
+      return {
+        qText: `Find the HCF of \\(${n1}${v}\\) and \\(${n2}${v}\\)`,
+        aLatex: `${f}${v}`,
+        check: inp => norm(inp) === norm(`${f}${v}`)
+      };
+    }
     return {
-      qText: `Find the HCF of \\(${f*pb}\\) and \\(${f*pc}\\)`,
+      qText: `Find the HCF of \\(${n1}\\) and \\(${n2}\\)`,
       aLatex: `${f}`,
       check: inp => norm(inp) === norm(`${f}`)
     };
@@ -821,7 +828,7 @@ const EXPLANATIONS = {
   ],
   'factorise-hcf': [
     'Factorising is the reverse of expanding. We steal as much as possible from every term — the most we can steal is the HCF. It goes outside the bracket; what\'s left after dividing each term by the HCF goes inside. If you expand back out, you should always return to the original expression.',
-    '<b>L1 ·</b> Find the largest number that divides evenly into all numbers given. &ensp; HCF of \\(12\\) and \\(18\\) = \\(6\\) &ensp; · &ensp; HCF of \\(20\\) and \\(15\\) = \\(5\\)',
+    '<b>L1 ·</b> Find the largest number (and shared letter, if present) that divides into all terms. &ensp; HCF of \\(12\\) and \\(18\\): well \\(12 = 2 \\times 6\\) and \\(18 = 3 \\times 6\\) — 6 appears in both, so HCF = \\(6\\). &ensp; HCF of \\(6x\\) and \\(9x\\): well we can steal a 3 from the 6 and the 9, and an \\(x\\) from both terms so HCF = \\(3x\\).',
     '<b>L2 ·</b> Place the HCF outside and divide each term by it to fill the bracket. &ensp; \\(4x + 12\\): steal \\(4\\) → \\(4(x + 3)\\) &ensp; · &ensp; \\(3x^2 + 5x\\): steal \\(x\\) → \\(x(3x + 5)\\)',
     '<b>L3 ·</b> Steal both the number and the variable. If the HCF equals a whole term, that term leaves a \\(1\\) behind in the bracket. &ensp; \\(6x^2 + 9x = 3x(2x + 3)\\) &ensp; · &ensp; \\(3x^2 + 3x = 3x(x + 1)\\) — the \\(3x\\) term leaves 1. &ensp; Expand to check.',
   ],
@@ -887,7 +894,10 @@ function toggleExplanation() {
   if (el.style.display !== 'none') { el.style.display = 'none'; return; }
   const lines = EXPLANATIONS[currentQ.topicKey];
   if (!lines) return;
-  el.innerHTML = lines.map((l, i) => `<div${i === 0 ? ' class="expl-overview"' : ''}>${renderQ(l)}</div>`).join('');
+  const s = stats[currentQ.topicKey];
+  const maxLevel = s.c1 < 7 ? 1 : s.c2 < 7 ? 2 : 3;
+  const visible = lines.slice(0, maxLevel + 1); // index 0 = overview, 1–3 = L1–L3
+  el.innerHTML = visible.map((l, i) => `<div${i === 0 ? ' class="expl-overview"' : ''}>${renderQ(l)}</div>`).join('');
   el.style.display = 'block';
 }
 
