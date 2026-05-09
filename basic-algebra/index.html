@@ -819,7 +819,7 @@ const EXPLANATIONS = {
     'Expanding a bracket means multiplying the term outside by every term inside. Draw an arrow from the outside term to each term inside as a reminder — every single term inside must be multiplied.',
     '<b>L1 ·</b> Multiply the term outside by every term inside. &ensp; \\(3(x + 4) = 3x + 12\\)',
     '<b>L2 ·</b> Same rule when the variable inside has a coefficient. &ensp; \\(2(3x + 5) = 6x + 10\\)',
-    '<b>L3 ·</b> Expand two separate brackets, then collect like terms to simplify. Watch out for subtraction between brackets — it flips the signs of the second bracket. &ensp; \\(3(2x + 5) + 2(x + 4) = 6x + 15 + 2x + 8 = 8x + 23\\) &ensp; · &ensp; \\(4(x + 3) - 2(x + 1) = 4x + 12 - 2x - 2 = 2x + 10\\)',
+    '<b>L3 ·</b> Expand two separate brackets, then collect like terms to simplify. Watch out for subtraction between brackets — it flips the signs of the second bracket.<br>&emsp;\\(3(2x + 5) + 2(x + 4)\\)<br>&emsp;\\(= 6x + 15 + 2x + 8\\)<br>&emsp;\\(= 8x + 23\\)<br>&emsp;\\(4(x + 3) - 2(x + 1)\\)<br>&emsp;\\(= 4x + 12 - 2x - 2\\)<br>&emsp;\\(= 2x + 10\\)',
   ],
   'double-bracket': [
     'To expand double brackets, every term in the first bracket multiplies every term in the second. Draw four lines: first→first, first→last, last→first, last→last. Add all four products, then collect like terms.',
@@ -835,27 +835,27 @@ const EXPLANATIONS = {
   ],
   'factorise-quad': [
     'To factorise a quadratic, find two numbers that multiply to the constant term and add to the coefficient of \\(x\\). Those two numbers go into the brackets: \\((x + p)(x + q)\\).',
-    '<b>L1 ·</b> Both roots positive — find two positive numbers that multiply to the constant and add to the \\(x\\) coefficient. &ensp; \\(x^2+7x+12\\): 3×4=12, 3+4=7 → \\((x+3)(x+4)\\)',
-    '<b>L2 ·</b> One bracket adds, one subtracts; the larger number takes the sign of the middle term. &ensp; \\(x^2+3x-10\\): 5×2=10, 5−2=3 → \\((x+5)(x-2)\\)',
-    '<b>L3 ·</b> Both brackets subtract; the pair multiplies to a positive constant and sums to a negative middle. &ensp; \\(x^2-7x+12\\): 3×4=12, 3+4=7 → \\((x-3)(x-4)\\)',
+    '<b>L1 ·</b> Both roots positive — find two positive numbers that multiply to the constant and add to the \\(x\\) coefficient.<br>&emsp;\\(x^2+7x+12\\): need two numbers where product = 12 and sum = 7<br>&emsp;3 × 4 = 12 and 3 + 4 = 7 ✓<br>&emsp;\\((x+3)(x+4)\\)',
+    '<b>L2 ·</b> One bracket adds, one subtracts; the larger number takes the sign of the middle term.<br>&emsp;\\(x^2+3x-10\\): need product = 10 and difference = 3<br>&emsp;5 × 2 = 10 and 5 − 2 = 3 ✓<br>&emsp;\\((x+5)(x-2)\\)',
+    '<b>L3 ·</b> Both brackets subtract; the pair multiplies to a positive constant and sums to a negative middle.<br>&emsp;\\(x^2-7x+12\\): need product = 12 and sum = 7 (both negative)<br>&emsp;3 × 4 = 12 and 3 + 4 = 7 ✓<br>&emsp;\\((x-3)(x-4)\\)',
   ],
   'solve-eq': [
     'Solving an equation means finding the unknown value. We rearrange by applying the same adjustment to both sides — the adjustment cancels a term on one side and moves its effect to the other. Work in reverse BIDMAS: deal with addition and subtraction before multiplication and division.',
     '<b>L1 ·</b> One adjustment undoes the operation. &ensp; \\(x+5=8\\): subtract 5 from both sides → \\(x=3\\) &ensp; · &ensp; \\(3x=12\\): divide both sides by 3 → \\(x=4\\)',
-    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient. &ensp; \\(3x+4=13\\) → subtract 4 from both sides → \\(3x=9\\) → divide both sides by 3 → \\(x=3\\)',
-    '<b>L3 ·</b> Move all \\(x\\) terms to one side by subtracting from both sides, then solve as normal. &ensp; \\(5x+2=2x+11\\) → subtract \\(2x\\) from both sides → \\(3x+2=11\\) → subtract 2 from both sides → \\(3x=9\\) → \\(x=3\\)',
+    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient.<br>&emsp;\\(3x+4=13\\)<br>&emsp;subtract 4 from both sides: \\(3x=9\\)<br>&emsp;divide both sides by 3: \\(x=3\\)',
+    '<b>L3 ·</b> Move all \\(x\\) terms to one side by subtracting from both sides, then solve as normal.<br>&emsp;\\(5x+2=2x+11\\)<br>&emsp;subtract \\(2x\\) from both sides: \\(3x+2=11\\)<br>&emsp;subtract 2 from both sides: \\(3x=9\\)<br>&emsp;\\(x=3\\)',
   ],
   'substitution': [
     'Substitution means swapping a letter for its value. Always write the number in brackets where the letter was — this keeps the order of operations correct and ensures a calculator processes it the same way.',
-    '<b>L1 ·</b> Replace the letter with its value in brackets, then calculate. &ensp; \\(y=3x+2,\\ x=4\\): &ensp; \\(y=3(4)+2=12+2=14\\)',
-    '<b>L2 ·</b> Substitute both values in brackets, one at a time. &ensp; \\(A=lw,\\ l=5,\\ w=3\\): &ensp; \\(A=(5)(3)=15\\)',
-    '<b>L3 ·</b> Replace every letter in brackets, then work through BIDMAS. &ensp; \\(v=u+at,\\ u=4,\\ a=3,\\ t=5\\): &ensp; \\(v=(4)+(3)(5)=4+15=19\\)',
+    '<b>L1 ·</b> Replace the letter with its value in brackets, then calculate. &ensp; \\(y=3x+2,\\ x=4\\):<br>&emsp;\\(y=3(4)+2\\)<br>&emsp;\\(=12+2\\)<br>&emsp;\\(=14\\)',
+    '<b>L2 ·</b> Substitute both values in brackets, one at a time. &ensp; \\(A=lw,\\ l=5,\\ w=3\\):<br>&emsp;\\(A=(5)(3)=15\\)',
+    '<b>L3 ·</b> Replace every letter in brackets, then work through BIDMAS. &ensp; \\(v=u+at,\\ u=4,\\ a=3,\\ t=5\\):<br>&emsp;\\(v=(4)+(3)(5)\\)<br>&emsp;\\(=4+15\\)<br>&emsp;\\(=19\\)',
   ],
   'rearrange': [
     'Rearranging a formula means making a different letter the subject. Apply the same operation to both sides — always say "subtract from both sides" or "divide both sides by" to keep it clear.',
-    '<b>L1 ·</b> Apply the opposite operation to both sides. &ensp; \\(y=x+5\\): subtract 5 from both sides → \\(x=y-5\\)',
-    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient. &ensp; \\(y=3x+2\\): subtract 2 from both sides → \\(y-2=3x\\) → divide both sides by 3 → \\(x=\\dfrac{y-2}{3}\\)',
-    '<b>L3 ·</b> Isolate the term containing the target letter, then divide both sides to leave it alone. &ensp; \\(v=u+at\\): subtract \\(u\\) from both sides → \\(v-u=at\\) → divide both sides by \\(t\\) → \\(a=\\dfrac{v-u}{t}\\)',
+    '<b>L1 ·</b> Apply the opposite operation to both sides.<br>&emsp;\\(y=x+5\\)<br>&emsp;subtract 5 from both sides: \\(x=y-5\\)',
+    '<b>L2 ·</b> Subtract the constant from both sides first, then divide both sides by the coefficient.<br>&emsp;\\(y=3x+2\\)<br>&emsp;subtract 2 from both sides: \\(y-2=3x\\)<br>&emsp;divide both sides by 3: \\(x=\\dfrac{y-2}{3}\\)',
+    '<b>L3 ·</b> Isolate the term containing the target letter, then divide both sides to leave it alone.<br>&emsp;\\(v=u+at\\)<br>&emsp;subtract \\(u\\) from both sides: \\(v-u=at\\)<br>&emsp;divide both sides by \\(t\\): \\(a=\\dfrac{v-u}{t}\\)',
   ],
   'index-laws': [
     'The <b>base</b> is the number or letter being raised to a power. The small raised number is the <b>index</b> (plural: <b>indices</b>), also called the <b>exponent</b> or <b>power</b>. Index laws give us shortcut rules for multiplying and dividing expressions that share the same base.',
@@ -865,15 +865,15 @@ const EXPLANATIONS = {
   ],
   'alg-fractions': [
     'Simplifying algebraic fractions works like simplifying number fractions — find a common factor in the numerator and denominator, factorise it out of both, then cancel. Anything divided by itself equals 1, so the common factor disappears.',
-    '<b>L1 ·</b> Factorise the common number from top and bottom, then cancel.<br>&emsp;\\(\\dfrac{12x}{4} = \\dfrac{4 \\cdot 3x}{4 \\cdot 1} = 3x\\)',
-    '<b>L2 ·</b> Factorise the common number and variable from top and bottom, then cancel.<br>&emsp;\\(\\dfrac{6x^2}{3x} = \\dfrac{3x \\cdot 2x}{3x \\cdot 1} = 2x\\)',
+    '<b>L1 ·</b> Factorise the common number from top and bottom, then cancel.<br>&emsp;\\(\\dfrac{12x}{4}\\)<br>&emsp;\\(= \\dfrac{4 \\cdot 3x}{4 \\cdot 1}\\)<br>&emsp;\\(= 3x\\)',
+    '<b>L2 ·</b> Factorise the common number and variable from top and bottom, then cancel.<br>&emsp;\\(\\dfrac{6x^2}{3x}\\)<br>&emsp;\\(= \\dfrac{3x \\cdot 2x}{3x \\cdot 1}\\)<br>&emsp;\\(= 2x\\)',
     '<b>L3 ·</b> To add fractions with different denominators, cross-multiply to find a common denominator, convert each fraction, then add the numerators.<br>&emsp;\\(\\dfrac{1}{2x}+\\dfrac{1}{3x}\\)<br>&emsp;\\(= \\dfrac{3}{6x}+\\dfrac{2}{6x}\\)<br>&emsp;\\(= \\dfrac{5}{6x}\\)',
   ],
   'inequalities': [
     'Inequalities are solved exactly like equations, with one key exception: if you ever multiply or divide both sides by a negative number, the inequality sign flips direction.',
-    '<b>L1 ·</b> Solve like an equation — the inequality sign just replaces =. &ensp; \\(x+3>7\\) → subtract 3 from both sides → \\(x>4\\)',
-    '<b>L2 ·</b> Two steps: undo add/subtract first, then divide. The sign stays the same when dividing by a positive. &ensp; \\(3x+2>11\\) → subtract 2 → \\(3x>9\\) → divide by 3 → \\(x>3\\)',
-    '<b>L3 ·</b> Collect \\(x\\) terms to one side first; the sign only flips if you divide by a negative. &ensp; \\(5x+2>2x+8\\) → subtract \\(2x\\) → \\(3x+2>8\\) → subtract 2 → \\(3x>6\\) → \\(x>2\\)',
+    '<b>L1 ·</b> Solve like an equation — the inequality sign just replaces =.<br>&emsp;\\(x+3>7\\)<br>&emsp;subtract 3 from both sides: \\(x>4\\)',
+    '<b>L2 ·</b> Two steps: undo add/subtract first, then divide. The sign stays the same when dividing by a positive.<br>&emsp;\\(3x+2>11\\)<br>&emsp;subtract 2 from both sides: \\(3x>9\\)<br>&emsp;divide both sides by 3: \\(x>3\\)',
+    '<b>L3 ·</b> Collect \\(x\\) terms to one side first; the sign only flips if you divide by a negative.<br>&emsp;\\(5x+2>2x+8\\)<br>&emsp;subtract \\(2x\\) from both sides: \\(3x+2>8\\)<br>&emsp;subtract 2 from both sides: \\(3x>6\\)<br>&emsp;\\(x>2\\)',
   ],
   'complete-square': [
     'Completing the square rewrites a quadratic in the form \\((x+b)^2 + k\\). Halve the \\(x\\) coefficient to find \\(b\\), then subtract \\(b^2\\) to compensate for the extra constant that squaring the bracket introduces.',
@@ -883,9 +883,9 @@ const EXPLANATIONS = {
   ],
   'simultaneous': [
     'Simultaneous equations are two equations that must be true at the same time. We solve them by finding the values of both unknowns that satisfy both equations together.',
-    '<b>L1 ·</b> When both equations equal \\(y\\), set the right-hand sides equal and solve. &ensp; \\(y=3x+1\\) and \\(y=x+5\\): set equal → \\(3x+1=x+5\\) → \\(x=2\\), then \\(y=7\\)',
-    '<b>L2 ·</b> Substitute the linear equation into the quadratic, rearrange to zero, then factorise. &ensp; \\(y=x^2-6\\) and \\(y=x\\): sub in → \\(x=x^2-6\\) → \\(x^2-x-6=0\\) → \\((x-3)(x+2)=0\\) → \\((3,3)\\) and \\((-2,-2)\\)',
-    '<b>L3 ·</b> Eliminate one variable by adding or subtracting the two equations, then back-substitute. &ensp; \\(2x+y=7\\) and \\(x+y=4\\): subtract → \\(x=3\\) → sub back → \\(y=1\\)',
+    '<b>L1 ·</b> When both equations equal \\(y\\), set the right-hand sides equal and solve.<br>&emsp;\\(y=3x+1\\) and \\(y=x+5\\)<br>&emsp;set equal: \\(3x+1=x+5\\)<br>&emsp;\\(x=2\\), then \\(y=7\\)',
+    '<b>L2 ·</b> Substitute the linear equation into the quadratic, rearrange to zero, then factorise.<br>&emsp;\\(y=x^2-6\\) and \\(y=x\\)<br>&emsp;sub \\(y=x\\) in: \\(x=x^2-6\\)<br>&emsp;rearrange: \\(x^2-x-6=0\\)<br>&emsp;factorise: \\((x-3)(x+2)=0\\)<br>&emsp;solutions: \\((3,3)\\) and \\((-2,-2)\\)',
+    '<b>L3 ·</b> Eliminate one variable by adding or subtracting the two equations, then back-substitute.<br>&emsp;\\(2x+y=7\\) and \\(x+y=4\\)<br>&emsp;subtract equations: \\(x=3\\)<br>&emsp;sub back in: \\(y=1\\)',
   ],
 };
 
