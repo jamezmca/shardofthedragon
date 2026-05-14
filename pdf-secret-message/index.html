@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Secret Message</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d0d12;
+  color: #c8c8d8;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+}
+h1 {
+  text-align: center;
+  color: #a06cf8;
+  font-size: 22px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.subtitle {
+  text-align: center;
+  color: #555570;
+  font-size: 11px;
+  letter-spacing: 1px;
+  margin-bottom: 36px;
+}
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+@media (max-width: 720px) { .panels { grid-template-columns: 1fr; } }
+
+.panel {
+  background: #13131f;
+  border: 1px solid #2a2a3e;
+  padding: 24px;
+}
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #a06cf8;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #2a2a3e;
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 1px dashed #3a3a58;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 16px;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.over { border-color: #a06cf8; background: #1a1a2e; }
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-zone-label { font-size: 11px; color: #555570; pointer-events: none; }
+.drop-zone-label span { color: #a06cf8; }
+.file-name {
+  font-size: 11px;
+  color: #7070a0;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* JSON editor */
+label.field-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #555570;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+textarea {
+  width: 100%;
+  background: #0a0a14;
+  border: 1px solid #2a2a3e;
+  color: #c8c8d8;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  min-height: 180px;
+}
+textarea:focus { border-color: #a06cf8; }
+.json-error { color: #ff5060; font-size: 10px; margin-top: 5px; min-height: 14px; }
+
+/* Buttons */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 14px;
+  background: #a06cf8;
+  color: #0d0d12;
+  border: none;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+button:hover { background: #b88cff; }
+button:disabled { background: #2a2a3e; color: #555570; cursor: not-allowed; }
+button.secondary {
+  background: transparent;
+  border: 1px solid #a06cf8;
+  color: #a06cf8;
+  margin-top: 8px;
+}
+button.secondary:hover { background: #1a1a2e; }
+
+/* Results */
+.results {
+  margin-top: 16px;
+  display: none;
+}
+.results.visible { display: block; }
+.result-section {
+  margin-bottom: 16px;
+}
+.result-section-title {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #555570;
+  margin-bottom: 8px;
+}
+.kv-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  font-size: 11px;
+}
+.kv-key { color: #7070a0; white-space: nowrap; padding: 2px 0; }
+.kv-val { color: #c8c8d8; padding: 2px 0; word-break: break-all; }
+.secret-block {
+  background: #0a0a14;
+  border: 1px solid #a06cf840;
+  padding: 12px;
+  font-size: 11px;
+  white-space: pre;
+  overflow-x: auto;
+  color: #d0b8ff;
+  line-height: 1.6;
+}
+.no-secret {
+  font-size: 11px;
+  color: #555570;
+  font-style: italic;
+}
+.badge-ok  { color: #50e878; }
+.badge-err { color: #ff5060; }
+</style>
+</head>
+<body>
+
+<h1>PDF Secret Message</h1>
+<p class="subtitle">encode &amp; decode hidden JSON metadata in PDF files</p>
+
+<div class="panels">
+
+  <!-- ── ENCODE ─────────────────────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel-title">Encode</div>
+
+    <div class="drop-zone" id="enc-drop">
+      <input type="file" id="enc-file" accept=".pdf,application/pdf">
+      <div class="drop-zone-label">Drop a PDF or <span>click to browse</span></div>
+    </div>
+    <div class="file-name" id="enc-file-name">No file selected</div>
+
+    <br>
+    <label class="field-label">Secret metadata (JSON)</label>
+    <textarea id="enc-json" spellcheck="false">{
+  "message": "Hello, world!",
+  "author": "anonymous",
+  "tags": ["secret", "hidden"],
+  "version": 1
+}</textarea>
+    <div class="json-error" id="enc-error"></div>
+
+    <button id="enc-btn" disabled>Encode &amp; Download</button>
+  </div>
+
+  <!-- ── DECODE ─────────────────────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel-title">Decode</div>
+
+    <div class="drop-zone" id="dec-drop">
+      <input type="file" id="dec-file" accept=".pdf,application/pdf">
+      <div class="drop-zone-label">Drop a PDF or <span>click to browse</span></div>
+    </div>
+    <div class="file-name" id="dec-file-name">No file selected</div>
+
+    <button id="dec-btn" disabled style="margin-top:14px">Decode</button>
+
+    <div class="results" id="dec-results">
+
+      <div class="result-section" style="margin-top:16px">
+        <div class="result-section-title">File Info</div>
+        <div class="kv-grid" id="file-info"></div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-section-title">PDF Metadata</div>
+        <div class="kv-grid" id="pdf-meta"></div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-section-title">Secret Metadata <span id="secret-badge"></span></div>
+        <div id="secret-out"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const MARKER_START = '%SMJSON_BEGIN:';
+const MARKER_END   = ':SMJSON_END%';
+
+function encodeSecret(json) {
+  return '\n' + MARKER_START + btoa(unescape(encodeURIComponent(JSON.stringify(json)))) + MARKER_END + '\n';
+}
+
+function decodeSecret(text) {
+  const si = text.lastIndexOf(MARKER_START);
+  if (si === -1) return null;
+  const ei = text.indexOf(MARKER_END, si);
+  if (ei === -1) return null;
+  const b64 = text.slice(si + MARKER_START.length, ei);
+  try { return JSON.parse(decodeURIComponent(escape(atob(b64)))); }
+  catch { return null; }
+}
+
+function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  return new Date(ts).toLocaleString();
+}
+
+// PDF text extraction (latin1 so binary is readable as chars)
+function pdfText(buf) {
+  return new TextDecoder('latin1').decode(buf);
+}
+
+// Parse PDF info dictionary fields from raw text
+function extractPDFMeta(text) {
+  const fields = ['Title','Author','Subject','Keywords','Creator','Producer','CreationDate','ModDate','Trapped'];
+  const result = {};
+  for (const f of fields) {
+    // String form: /Field (value with possible \n or \t escapes)
+    const strRe = new RegExp('/' + f + '\\s*\\(([^)\\\\]*(?:\\\\.[^)\\\\]*)*)\\)');
+    // Hex form: /Field <hexhex>
+    const hexRe = new RegExp('/' + f + '\\s*<([0-9a-fA-F]+)>');
+    let m = text.match(strRe);
+    if (m) { result[f] = m[1].replace(/\\n/g,'\n').replace(/\\r/g,'').replace(/\\t/g,'\t').replace(/\\\\/g,'\\').replace(/\\\(/g,'(').replace(/\\\)/g,')'); continue; }
+    m = text.match(hexRe);
+    if (m) {
+      const hex = m[1];
+      let s = '';
+      for (let i = 0; i < hex.length; i += 2) s += String.fromCharCode(parseInt(hex.slice(i, i+2), 16));
+      result[f] = s;
+    }
+  }
+  // PDF version from header
+  const verM = text.match(/^%PDF-(\d+\.\d+)/);
+  if (verM) result['PDF Version'] = verM[1];
+  // Page count (rough)
+  const pageM = text.match(/\/Type\s*\/Pages[\s\S]{0,200}?\/Count\s+(\d+)/);
+  if (pageM) result['Page Count'] = pageM[1];
+  return result;
+}
+
+// ── Drag-and-drop helpers ─────────────────────────────────────────────────────
+
+function setupDrop(zone) {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file) zone.querySelector('input[type="file"]').dispatchEvent(Object.assign(new Event('change'), { _file: file }));
+  });
+}
+
+// ── ENCODE ────────────────────────────────────────────────────────────────────
+
+let encFile = null;
+
+const encDrop   = document.getElementById('enc-drop');
+const encInput  = document.getElementById('enc-file');
+const encName   = document.getElementById('enc-file-name');
+const encJson   = document.getElementById('enc-json');
+const encError  = document.getElementById('enc-error');
+const encBtn    = document.getElementById('enc-btn');
+
+setupDrop(encDrop);
+
+encInput.addEventListener('change', function(e) {
+  const file = e._file || this.files[0];
+  if (!file) return;
+  encFile = file;
+  encName.textContent = file.name + '  (' + fmtBytes(file.size) + ')';
+  updateEncBtn();
+});
+
+function validateJson() {
+  const val = encJson.value.trim();
+  if (!val) { encError.textContent = 'JSON is empty.'; return null; }
+  try { const p = JSON.parse(val); encError.textContent = ''; return p; }
+  catch(e) { encError.textContent = '✗ ' + e.message; return null; }
+}
+
+encJson.addEventListener('input', () => { validateJson(); updateEncBtn(); });
+
+function updateEncBtn() {
+  encBtn.disabled = !encFile || !validateJson();
+}
+
+encBtn.addEventListener('click', async () => {
+  const parsed = validateJson();
+  if (!encFile || !parsed) return;
+
+  const buf = await encFile.arrayBuffer();
+  const secret = new TextEncoder().encode(encodeSecret(parsed));
+  const out = new Uint8Array(buf.byteLength + secret.length);
+  out.set(new Uint8Array(buf), 0);
+  out.set(secret, buf.byteLength);
+
+  const blob = new Blob([out], { type: 'application/pdf' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const base = encFile.name.replace(/\.pdf$/i, '');
+  a.download = base + '_encoded.pdf';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ── DECODE ────────────────────────────────────────────────────────────────────
+
+let decFile = null;
+
+const decDrop    = document.getElementById('dec-drop');
+const decInput   = document.getElementById('dec-file');
+const decName    = document.getElementById('dec-file-name');
+const decBtn     = document.getElementById('dec-btn');
+const decResults = document.getElementById('dec-results');
+const fileInfo   = document.getElementById('file-info');
+const pdfMeta    = document.getElementById('pdf-meta');
+const secretOut  = document.getElementById('secret-out');
+const secretBadge = document.getElementById('secret-badge');
+
+setupDrop(decDrop);
+
+decInput.addEventListener('change', function(e) {
+  const file = e._file || this.files[0];
+  if (!file) return;
+  decFile = file;
+  decName.textContent = file.name + '  (' + fmtBytes(file.size) + ')';
+  decBtn.disabled = false;
+});
+
+decBtn.addEventListener('click', async () => {
+  if (!decFile) return;
+  const buf = await decFile.arrayBuffer();
+  const text = pdfText(buf);
+
+  // File info
+  fileInfo.innerHTML = kv([
+    ['Name',     decFile.name],
+    ['Size',     fmtBytes(decFile.size)],
+    ['Type',     decFile.type || 'application/pdf'],
+    ['Modified', fmtDate(decFile.lastModified)],
+  ]);
+
+  // PDF metadata
+  const meta = extractPDFMeta(text);
+  const metaRows = Object.entries(meta);
+  pdfMeta.innerHTML = metaRows.length
+    ? kv(metaRows)
+    : '<span style="color:#555570;font-size:11px;font-style:italic">No standard metadata found</span>';
+
+  // Secret metadata
+  const secret = decodeSecret(text);
+  if (secret !== null) {
+    secretBadge.innerHTML = '<span class="badge-ok">✓ found</span>';
+    secretOut.innerHTML = '<div class="secret-block">' + escHtml(JSON.stringify(secret, null, 2)) + '</div>';
+  } else {
+    secretBadge.innerHTML = '<span class="badge-err">✗ not found</span>';
+    secretOut.innerHTML = '<div class="no-secret">No secret metadata detected in this file.</div>';
+  }
+
+  decResults.classList.add('visible');
+});
+
+function kv(pairs) {
+  return pairs.map(([k, v]) =>
+    `<div class="kv-key">${escHtml(String(k))}</div><div class="kv-val">${escHtml(String(v))}</div>`
+  ).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

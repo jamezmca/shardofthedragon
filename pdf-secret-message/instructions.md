@@ -1,0 +1,2 @@
+i want a simple html site where i can upload a pdf and encode metadata into it. the metadata encoder should basically be json so i can havey value pairs, arrays, numbers, strings etc. then there should be an encode button, which encodes the data and suggests i save it. it should also have a decode btn which when i upload a file, it spits out the encoded data along with other metrics such as file name, size and anything else that can be read in the meta data.
+
