@@ -41,6 +41,7 @@ h1 {
   background: #13131f;
   border: 1px solid #2a2a3e;
   padding: 24px;
+  min-width: 0;
 }
 .panel-title {
   font-size: 11px;
@@ -72,9 +73,8 @@ h1 {
   font-size: 11px;
   color: #7070a0;
   margin-top: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 /* JSON editor */
