@@ -27,3 +27,5 @@ ideas (general themes are societal resets i.e. emotional regulation, social norm
 - the suscpensful coin flip (just goes for randomly ages)
 - the grape scape (shows the relative scale of our local universe
 - the earth scroll scale (positions contents by number of earths))
+- which greek god are you (basically a bunch of stories or hypotheticals see if they agree and it's what the gods did but shocker stuff)
+- morse code site - who is morse and what does he code?
