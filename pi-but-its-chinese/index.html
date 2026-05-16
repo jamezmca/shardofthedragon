@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pi but it's Chinese</title>
+  <style>
+    body { margin: 0; font-family: monospace; }
+
+    #test-btn {
+      position: fixed; top: 12px; right: 12px;
+      padding: 8px 18px; font-size: 1rem; cursor: pointer; z-index: 10;
+    }
+
+    /* ── Display view ── */
+    #display { padding: 48px 0 32px; }
+
+    h1 { text-align: center; font-size: 1.2rem; margin: 0 0 24px; font-weight: normal; }
+
+    .pi-row { display: flex; border-top: 1px solid #e8e8e8; }
+    .pi-row:last-child { border-bottom: 1px solid #e8e8e8; }
+
+    .pi-cell {
+      flex: 1;
+      text-align: center;
+      padding: 10px 2px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .pi-cell:last-child { border-right: none; }
+
+    .pi-cell .pos  { font-size: 0.55rem; color: #bbb; line-height: 1; }
+    .pi-cell .dig  { font-size: 1rem; color: #888; margin: 3px 0 2px; }
+    .pi-cell .pin  { font-size: 1rem; font-weight: bold; }
+
+    .pi-dec {
+      flex: 0 0 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; color: #aaa; border-right: 1px solid #f0f0f0;
+    }
+
+    /* ── Test view ── */
+    #test { display: none; padding: 56px 20px 32px; }
+
+    #test-output {
+      font-size: 1.5rem;
+      line-height: 2.2;
+      min-height: 120px;
+      word-spacing: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .w-done { color: #333; }
+
+    .w-partial { color: #000; }
+
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 1.1em;
+      background: #000;
+      vertical-align: middle;
+      margin-left: 1px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    #test-controls { display: none; margin-top: 24px; }
+    #test-controls .wrong-label { color: #c00; margin-right: 10px; font-size: 1rem; }
+    #test-controls button { margin-right: 8px; padding: 7px 16px; font-size: 0.95rem; cursor: pointer; }
+
+    #done-msg { display: none; color: green; font-size: 1.2rem; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<button id="test-btn">Test</button>
+
+<div id="display">
+  <h1>π in Mandarin (Pinyin)</h1>
+  <div id="pi-grid"></div>
+</div>
+
+<div id="test">
+  <div id="test-output"></div>
+  <div id="done-msg">✓ Complete! All 100 digits done.</div>
+  <div id="test-controls">
+    <span class="wrong-label">✗ wrong</span>
+    <button id="reset-btn">Reset</button>
+    <button id="quit-btn">Quit</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const DIGITS = [
+    3,1,4,1,5,9,2,6,5,3,
+    5,8,9,7,9,3,2,3,8,4,
+    6,2,6,4,3,3,8,3,2,7,
+    9,5,0,2,8,8,4,1,9,7,
+    1,6,9,3,9,9,3,7,5,1,
+    0,5,8,2,0,9,7,4,9,4,
+    4,5,9,2,3,0,7,8,1,6,
+    4,0,6,2,8,6,2,0,8,9,
+    9,8,6,2,8,0,3,4,8,2,
+    5,3,4,2,1,1,7,0,6,7,
+  ];
+
+  const PIN = ['ling','yi','er','san','si','wu','liu','qi','ba','jiu'];
+  const WORDS = DIGITS.map(d => PIN[d]);
+
+  // ── Build display grid ──────────────────────────────────────────────────
+
+  const grid = document.getElementById('pi-grid');
+
+  for (let row = 0; row < 10; row++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'pi-row';
+
+    for (let col = 0; col < 10; col++) {
+      const idx = row * 10 + col;
+
+      // Decimal point between position 1 and 2
+      if (idx === 1) {
+        const dec = document.createElement('div');
+        dec.className = 'pi-dec';
+        dec.textContent = '.';
+        rowEl.appendChild(dec);
+      }
+
+      const cell = document.createElement('div');
+      cell.className = 'pi-cell';
+      cell.innerHTML =
+        `<div class="pos">${idx + 1}</div>` +
+        `<div class="dig">${DIGITS[idx]}</div>` +
+        `<div class="pin">${WORDS[idx]}</div>`;
+      rowEl.appendChild(cell);
+    }
+
+    grid.appendChild(rowEl);
+  }
+
+  // ── Test mode ──────────────────────────────────────────────────────────
+
+  let wordIdx = 0, charIdx = 0, isWrong = false;
+
+  const displayEl  = document.getElementById('display');
+  const testEl     = document.getElementById('test');
+  const outputEl   = document.getElementById('test-output');
+  const controlsEl = document.getElementById('test-controls');
+  const doneEl     = document.getElementById('done-msg');
+
+  function renderTest() {
+    let html = '';
+
+    // Completed words
+    for (let i = 0; i < wordIdx; i++) {
+      html += `<span class="w-done">${WORDS[i]}</span> `;
+    }
+
+    if (wordIdx < 100) {
+      // Partial current word
+      const partial = WORDS[wordIdx].slice(0, charIdx);
+      html += `<span class="w-partial">${partial}</span>`;
+      if (!isWrong) html += `<span class="cursor"></span>`;
+    }
+
+    outputEl.innerHTML = html;
+    doneEl.style.display = wordIdx >= 100 ? 'block' : 'none';
+  }
+
+  function resetTest() {
+    wordIdx = 0; charIdx = 0; isWrong = false;
+    controlsEl.style.display = 'none';
+    renderTest();
+  }
+
+  function enterTest() {
+    displayEl.style.display = 'none';
+    testEl.style.display = 'block';
+    resetTest();
+  }
+
+  function quitTest() {
+    testEl.style.display = 'none';
+    displayEl.style.display = 'block';
+  }
+
+  document.getElementById('test-btn').addEventListener('click', enterTest);
+  document.getElementById('reset-btn').addEventListener('click', resetTest);
+  document.getElementById('quit-btn').addEventListener('click', quitTest);
+
+  document.addEventListener('keydown', e => {
+    if (testEl.style.display === 'none') return;
+    if (isWrong || wordIdx >= 100) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key.length !== 1) return;
+
+    const expected = WORDS[wordIdx][charIdx];
+
+    if (e.key === expected) {
+      charIdx++;
+      if (charIdx === WORDS[wordIdx].length) {
+        wordIdx++;
+        charIdx = 0;
+      }
+    } else {
+      isWrong = true;
+      controlsEl.style.display = 'block';
+    }
+
+    renderTest();
+  });
+
+  renderTest();
+})();
+</script>
+</body>
+</html>
