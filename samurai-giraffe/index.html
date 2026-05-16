@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samurai Giraffe</title>
+<meta name="description" content="Execute criminal giraffes with perfect samurai precision. Angle your cut through skin and bone.">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #111;
+  color: #ddd;
+  font-family: monospace;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+body { display: flex; flex-direction: column; height: 100dvh; }
+
+/* ── Level strip ── */
+#strip {
+  flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  padding: 7px 8px;
+  overflow-x: auto;
+  background: #0a0a0a;
+  border-bottom: 2px solid #222;
+  scrollbar-width: none;
+}
+#strip::-webkit-scrollbar { display: none; }
+
+.tile {
+  flex-shrink: 0;
+  width: 54px; height: 66px;
+  border: 2px solid #333;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background: #181818;
+}
+.tile.active { border-color: #eee; }
+.tile.locked { opacity: 0.35; cursor: default; }
+.tile canvas { display: block; width: 100%; height: 54px; image-rendering: pixelated; }
+.tile-lbl {
+  position: absolute;
+  bottom: 2px; left: 0; right: 0;
+  text-align: center; font-size: 8px; color: #888;
+}
+.tile-stamp {
+  position: absolute;
+  inset: 0 0 14px 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.55);
+  color: #c00; font-size: 7px; font-weight: bold; letter-spacing: 1px;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.tile-best {
+  position: absolute;
+  top: 2px; right: 3px;
+  font-size: 7px; color: #fc0;
+}
+.tile-lock {
+  position: absolute;
+  inset: 0 0 14px 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.tile-train { border-color: #446; }
+
+/* ── Main ── */
+#main { flex: 1; position: relative; overflow: hidden; }
+#gc {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+  image-rendering: pixelated;
+}
+
+/* ── Stats panel ── */
+#stats {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid #333;
+  padding: 9px 11px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  pointer-events: none;
+  max-width: 240px;
+}
+#face-mini { image-rendering: pixelated; flex-shrink: 0; border: 1px solid #444; }
+#stats-text { font-size: 11px; line-height: 1.85; min-width: 0; }
+#stats-text .gname { font-size: 12px; color: #fc0; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#stats-text .crime { color: #f88; font-style: italic; font-size: 10px; margin-top: 4px; line-height: 1.5; }
+
+/* ── Toggle ── */
+#toggle {
+  position: absolute;
+  top: 10px; right: 10px;
+  display: flex;
+}
+#toggle button {
+  background: #1a1a1a; color: #aaa;
+  border: 1px solid #444;
+  padding: 6px 12px;
+  font-family: monospace; font-size: 11px;
+  cursor: pointer;
+}
+#toggle button:first-child { border-right: none; border-radius: 3px 0 0 3px; }
+#toggle button:last-child  { border-radius: 0 3px 3px 0; }
+#toggle button.on { background: #333; color: #eee; border-color: #888; }
+
+/* ── Tutorial hint ── */
+#tut-hint {
+  position: absolute;
+  bottom: 60px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,20,0.88);
+  border: 1px solid #556;
+  padding: 10px 18px;
+  font-size: 13px;
+  color: #aac;
+  text-align: center;
+  letter-spacing: 1px;
+  pointer-events: none;
+  display: none;
+  white-space: nowrap;
+}
+@media (pointer: coarse) { #tut-hint { bottom: 80px; } }
+
+/* ── Execute btn (touch only) ── */
+#exec-btn {
+  position: absolute;
+  bottom: 14px; left: 50%;
+  transform: translateX(-50%);
+  background: #5a0000; color: #fdd;
+  border: 2px solid #a00;
+  padding: 11px 32px;
+  font-family: monospace; font-size: 14px;
+  cursor: pointer; letter-spacing: 2px; border-radius: 2px;
+}
+#exec-btn:disabled { opacity: 0.35; cursor: default; }
+@media (pointer: fine) { #exec-btn { display: none; } }
+
+/* ── Keyboard hint ── */
+#hint {
+  position: absolute;
+  bottom: 14px; right: 14px;
+  font-size: 10px; color: #555;
+  pointer-events: none;
+}
+@media (pointer: coarse) { #hint { display: none; } }
+
+/* ── Result overlay ── */
+#result {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.87);
+  display: none;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+}
+#result.show { display: flex; }
+#res-score  { font-size: 80px; font-weight: bold; line-height: 1; }
+#res-verdict { font-size: 18px; letter-spacing: 3px; }
+#res-detail  { font-size: 12px; color: #aaa; text-align: center; line-height: 2; }
+#res-btns { display: flex; gap: 10px; margin-top: 6px; }
+#res-btns button {
+  background: #1a1a1a; color: #ddd;
+  border: 1px solid #555;
+  padding: 9px 22px;
+  font-family: monospace; font-size: 12px;
+  cursor: pointer; border-radius: 2px;
+}
+#res-btns button:hover { background: #333; }
+</style>
+</head>
+<body>
+
+<div id="strip"></div>
+<div id="main">
+  <canvas id="gc"></canvas>
+
+  <div id="stats">
+    <canvas id="face-mini" width="64" height="64"></canvas>
+    <div id="stats-text"></div>
+  </div>
+
+  <div id="toggle">
+    <button id="btn-photo" class="on" onclick="setView('photo')">PHOTO</button>
+    <button id="btn-xray"        onclick="setView('xray')">X-RAY</button>
+  </div>
+
+  <div id="tut-hint"></div>
+
+  <button id="exec-btn" disabled onclick="doExecute()">EXECUTE</button>
+  <div id="hint">draw slash · SPACE to execute</div>
+
+  <div id="result">
+    <div id="res-score"></div>
+    <div id="res-verdict"></div>
+    <div id="res-detail"></div>
+    <div id="res-btns">
+      <button onclick="retry()">RETRY</button>
+      <button id="btn-next" onclick="goNext()" style="display:none">NEXT ›</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Giraffe data ──────────────────────────────────────────────────────────────
+const GIRAFFES = [
+  {
+    name: 'Training I',
+    sub: 'The Bone',
+    isTutorial: true, tutView: 'xray',
+    tutHint: 'X-RAY shows the bone angle. Cut perpendicular to it.',
+    height: '—', weight: '—', age: '—',
+    crime: 'A training dummy. No crimes. Feel free.',
+    fatness: 0.0, boniness: 1.0,
+    boneSign: 1,
+    spotSeed: 11,
+    skinCol: '#9aaabb', spotCol: '#5a6a7a',
+  },
+  {
+    name: 'Training II',
+    sub: 'The Flesh',
+    isTutorial: true, tutView: 'photo',
+    tutHint: 'PHOTO shows the skin & fat. Cut perpendicular to the surface.',
+    height: '—', weight: '—', age: '—',
+    crime: 'Another dummy. Particularly well-padded.',
+    fatness: 1.0, boniness: 0.0,
+    boneSign: -1,
+    spotSeed: 77,
+    skinCol: '#E0C060', spotCol: '#A07820',
+  },
+  {
+    name: 'Gerald Longneck III',
+    sub: null,
+    isTutorial: false,
+    height: '5.2m', weight: '820kg', age: 14,
+    crime: 'Consumed the last leaf of the Sacred Acacia of Nairobi. No remorse shown.',
+    fatness: 0.18, boniness: 0.72,
+    boneSign: 1,
+    spotSeed: 1337,
+    skinCol: '#C8A84B', spotCol: '#7B5218',
+  },
+  {
+    name: 'Beatrice Patchworth',
+    sub: null,
+    isTutorial: false,
+    height: '4.1m', weight: '1240kg', age: 5,
+    crime: "Sat on a tourist's Land Rover deliberately. Twice. Smirked both times.",
+    fatness: 0.82, boniness: 0.22,
+    boneSign: -1,
+    spotSeed: 420,
+    skinCol: '#D4B356', spotCol: '#8A6120',
+  },
+];
+GIRAFFES.forEach((g, i) => {
+  g.id = i;
+  g.spots = makeSpots(g.spotSeed);
+});
+
+function makeSpots(seed, n = 13) {
+  const s = [];
+  let r = seed >>> 0;
+  for (let i = 0; i < n; i++) {
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const u = r / 0xffffffff;
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const v = r / 0xffffffff;
+    r = (r * 1664525 + 1013904223) >>> 0;
+    const rad = 0.04 + (r / 0xffffffff) * 0.11;
+    s.push({ u, v, rad });
+  }
+  return s;
+}
+
+function inSpot(u, v, spots) {
+  for (const s of spots) {
+    const du = u - s.u, dv = v - s.v;
+    if (du * du + dv * dv < s.rad * s.rad) return true;
+  }
+  return false;
+}
+
+// ── Persist ───────────────────────────────────────────────────────────────────
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem('samgiraffe') || '{}'); } catch(e) {}
+if (!saved.unlocked || saved.unlocked < 2) saved.unlocked = 2; // both tutorials always open
+if (!saved.best) saved.best = [];
+function persist() { localStorage.setItem('samgiraffe', JSON.stringify(saved)); }
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let lvl     = 0;
+let view    = 'photo';
+let cut     = null;
+let phase   = 'idle';   // 'idle' | 'anim' | 'done'
+let drawing = false;
+let drawPt  = null;
+let blood   = [];
+let fallT   = 0;
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('gc');
+const ctx    = canvas.getContext('2d');
+let CW = 0, CH = 0;
+
+function resize() {
+  const m = document.getElementById('main');
+  CW = canvas.width  = m.clientWidth;
+  CH = canvas.height = m.clientHeight;
+  render();
+}
+window.addEventListener('resize', resize);
+
+// ── Geometry ──────────────────────────────────────────────────────────────────
+// Neck spans full diagonal — from bottom-right corner to top-left corner
+function geo(g) {
+  const p1 = { x: CW, y: CH };   // bottom-right (off-screen intentional for overflow)
+  const p2 = { x: 0,  y: 0  };   // top-left
+  const dx  = p2.x - p1.x;       // = -CW
+  const dy  = p2.y - p1.y;       // = -CH
+  const len = Math.hypot(dx, dy); // canvas diagonal
+  const ang = Math.atan2(dy, dx);
+  const px  = -dy / len;          // perpendicular unit vector
+  const py  =  dx / len;
+
+  const scale    = Math.min(CW, CH) / 400;
+  const halfSkin = (52 + g.fatness * 72) * scale;
+  const halfBone = (13 + g.boniness * 15) * scale;
+  // Bone angular offset — small so bone stays within neck
+  const boneOff  = (0.008 + g.boniness * 0.016) * g.boneSign;
+  const boneAng  = ang + boneOff;
+  // Bone perpendicular (width direction for bone polygon)
+  const bpx = Math.sin(boneAng);   // = -sin(boneAng) rotated... perpendicular to boneAng
+  const bpy = -Math.cos(boneAng);  // perp to direction boneAng: rotate 90° → (-sin, cos) but let's use standard
+  // Actually: direction boneAng → (cos(boneAng), sin(boneAng))
+  // Perpendicular (rotate +90°) → (-sin(boneAng), cos(boneAng))
+  const bpxV = -Math.sin(boneAng);
+  const bpyV =  Math.cos(boneAng);
+
+  return { p1, p2, dx, dy, len, ang, px, py, halfSkin, halfBone, boneOff, boneAng, bpxV, bpyV };
+}
+
+// ── Neck paths ────────────────────────────────────────────────────────────────
+const TAPER = 0.82;
+
+function neckPath(G) {
+  const { p1, p2, px, py, halfSkin } = G;
+  const hw1 = halfSkin, hw2 = halfSkin * TAPER;
+  const p = new Path2D();
+  p.moveTo(p1.x + px * hw1, p1.y + py * hw1);
+  p.lineTo(p2.x + px * hw2, p2.y + py * hw2);
+  p.lineTo(p2.x - px * hw2, p2.y - py * hw2);
+  p.lineTo(p1.x - px * hw1, p1.y - py * hw1);
+  p.closePath();
+  return p;
+}
+
+function bonePath(G) {
+  // Bone traces the same center line (p1→p2) but uses bone's perpendicular direction
+  const { p1, p2, halfBone, bpxV, bpyV } = G;
+  const hw1 = halfBone, hw2 = halfBone * TAPER;
+  const p = new Path2D();
+  p.moveTo(p1.x + bpxV * hw1, p1.y + bpyV * hw1);
+  p.lineTo(p2.x + bpxV * hw2, p2.y + bpyV * hw2);
+  p.lineTo(p2.x - bpxV * hw2, p2.y - bpyV * hw2);
+  p.lineTo(p1.x - bpxV * hw1, p1.y - bpyV * hw1);
+  p.closePath();
+  return p;
+}
+
+// ── Drawing ───────────────────────────────────────────────────────────────────
+function PSIZ() { return Math.max(4, Math.round(Math.min(CW, CH) / 70)); }
+
+function drawNeck(g, G, clipSide, tx, ty, rot) {
+  ctx.save();
+
+  if (clipSide && cut) {
+    const { x1, y1, x2, y2 } = cut;
+    const cdx = x2 - x1, cdy = y2 - y1;
+    const cl  = Math.hypot(cdx, cdy) || 1;
+    const ext = Math.hypot(CW, CH) + 400;
+    const ex  = cdx / cl, ey = cdy / cl;
+    // Normal toward p2 (head / top-left side)
+    let nx = -cdy / cl, ny = cdx / cl;
+    const side = (G.p2.x - x1) * cdy - (G.p2.y - y1) * cdx;
+    if (side < 0) { nx = -nx; ny = -ny; }
+    if (clipSide === 'body') { nx = -nx; ny = -ny; }
+
+    ctx.beginPath();
+    ctx.moveTo(x1 - ex * ext,              y1 - ey * ext);
+    ctx.lineTo(x1 - ex * ext + nx * ext,   y1 - ey * ext + ny * ext);
+    ctx.lineTo(x2 + ex * ext + nx * ext,   y2 + ey * ext + ny * ext);
+    ctx.lineTo(x2 + ex * ext,              y2 + ey * ext);
+    ctx.closePath();
+    ctx.clip();
+  }
+
+  if (tx !== 0 || ty !== 0 || rot !== 0) {
+    const mx = cut ? (cut.x1 + cut.x2) / 2 : CW / 2;
+    const my = cut ? (cut.y1 + cut.y2) / 2 : CH / 2;
+    ctx.translate(mx + tx, my + ty);
+    ctx.rotate(rot);
+    ctx.translate(-mx, -my);
+  }
+
+  view === 'photo' ? drawPhoto(g, G) : drawXray(g, G);
+
+  ctx.restore();
+}
+
+function drawPhoto(g, G) {
+  const np = neckPath(G);
+
+  // 1. Solid base fill — zero gaps
+  ctx.fillStyle = g.skinCol;
+  ctx.fill(np);
+
+  // 2. Pixel-art spots overlaid, clipped to neck shape
+  ctx.save();
+  ctx.clip(np);
+  const { p1, p2, px, py, halfSkin, len } = G;
+  const ps     = PSIZ();
+  const steps  = Math.ceil(len / ps);
+  ctx.fillStyle = g.spotCol;
+
+  for (let i = 0; i <= steps; i++) {
+    const t  = i / steps;
+    const hw = halfSkin * (1 - t * 0.18);
+    const cx = p1.x + (p2.x - p1.x) * t;
+    const cy = p1.y + (p2.y - p1.y) * t;
+    const ns = Math.ceil(hw / ps);
+    for (let j = -ns; j <= ns; j++) {
+      const d = j * ps;
+      const v = hw > 0 ? (d / hw * 0.5 + 0.5) : 0.5;
+      if (inSpot(t, Math.max(0, Math.min(1, v)), g.spots)) {
+        ctx.fillRect(cx + px * d - ps / 2, cy + py * d - ps / 2, ps, ps);
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function drawXray(g, G) {
+  const np = neckPath(G);
+  const bp = bonePath(G);
+
+  // Dark neck fill
+  ctx.fillStyle = '#0d1520';
+  ctx.fill(np);
+
+  // Edge highlight
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.lineWidth = 4;
+  ctx.stroke(np);
+
+  // Bone — clipped inside neck so it never overflows
+  ctx.save();
+  ctx.clip(np);
+  ctx.fillStyle = '#dde0e8';
+  ctx.fill(bp);
+  // Bright bone center line
+  const { p1, p2, halfBone, bpxV, bpyV } = G;
+  const hw = halfBone * 0.28;
+  const highlight = new Path2D();
+  highlight.moveTo(p1.x + bpxV * hw, p1.y + bpyV * hw);
+  highlight.lineTo(p2.x + bpxV * hw * TAPER, p2.y + bpyV * hw * TAPER);
+  highlight.lineTo(p2.x - bpxV * hw * TAPER, p2.y - bpyV * hw * TAPER);
+  highlight.lineTo(p1.x - bpxV * hw, p1.y - bpyV * hw);
+  highlight.closePath();
+  ctx.fillStyle = '#fff';
+  ctx.fill(highlight);
+  ctx.restore();
+}
+
+// ── Main render ───────────────────────────────────────────────────────────────
+function render() {
+  if (!CW) return;
+  ctx.clearRect(0, 0, CW, CH);
+
+  const g = GIRAFFES[lvl];
+  const G = geo(g);
+
+  if (phase === 'done' && cut) {
+    const ft2   = fallT * fallT;
+    const fallY = ft2 * CH * 0.75;
+    const fallX = -fallT * CW * 0.07;
+    const fallR = fallT * 0.45;
+    drawNeck(g, G, 'body', 0, 0, 0);
+    drawNeck(g, G, 'head', fallX, fallY, fallR);
+  } else {
+    drawNeck(g, G, null, 0, 0, 0);
+  }
+
+  // Blood
+  for (const p of blood) {
+    ctx.fillStyle = `rgba(160,0,0,${p.a.toFixed(2)})`;
+    ctx.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s);
+  }
+
+  // Cut line
+  if (cut && phase !== 'anim') {
+    ctx.strokeStyle = 'rgba(255,255,255,0.92)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(cut.x1, cut.y1);
+    ctx.lineTo(cut.x2, cut.y2);
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    [[cut.x1, cut.y1], [cut.x2, cut.y2]].forEach(([x, y]) =>
+      ctx.fillRect(x - 3, y - 3, 6, 6)
+    );
+  }
+}
+
+// ── Scoring ───────────────────────────────────────────────────────────────────
+function scorecut(g, G, c) {
+  const cutAng = Math.atan2(c.y2 - c.y1, c.x2 - c.x1);
+  const cutLen = Math.hypot(c.x2 - c.x1, c.y2 - c.y1);
+
+  // Ideal angle = weighted blend: fat → skin perpendicular, bone → bone perpendicular
+  const skinPerpAng = G.ang + Math.PI / 2;
+  const bonePerpAng = G.boneAng + Math.PI / 2;
+  const fw = 0.2 + g.fatness  * 0.6;
+  const bw = 0.2 + g.boniness * 0.6;
+  const idealAng = (skinPerpAng * fw + bonePerpAng * bw) / (fw + bw);
+
+  let diff = cutAng - idealAng;
+  while (diff >  Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  diff = Math.min(Math.abs(diff), Math.PI - Math.abs(diff));
+  const angleScore = Math.max(0, 1 - diff / (Math.PI / 4));
+
+  const resistance = 0.18 + g.fatness * 0.14 + g.boniness * 0.18;
+  const maxLen     = Math.hypot(CW, CH);
+  const power      = cutLen / maxLen;
+  const ratio      = power / resistance;
+
+  let powerScore;
+  if      (ratio < 0.6)  powerScore = 0;
+  else if (ratio < 1.0)  powerScore = (ratio - 0.6) / 0.4;
+  else if (ratio < 1.6)  powerScore = 1 - (ratio - 1) / 0.6 * 0.3;
+  else                   powerScore = Math.max(0, 0.7 - (ratio - 1.6) * 1.2);
+
+  const cutThrough = ratio >= 0.6;
+  const explosion  = ratio > 2.2;
+  const total      = Math.round((angleScore * 0.6 + powerScore * 0.4) * 100);
+  return { total, angleScore, powerScore, cutThrough, explosion };
+}
+
+// ── Execute ───────────────────────────────────────────────────────────────────
+function doExecute() {
+  if (!cut || phase !== 'idle') return;
+  const g  = GIRAFFES[lvl];
+  const G  = geo(g);
+  const sc = scorecut(g, G, cut);
+
+  if (!sc.cutThrough) { showNoCut(); return; }
+
+  phase = 'anim';
+  document.getElementById('exec-btn').disabled = true;
+
+  const mx = (cut.x1 + cut.x2) / 2;
+  const my = (cut.y1 + cut.y2) / 2;
+  spawnBlood(mx, my, sc.explosion ? 160 : 55);
+
+  const t0 = performance.now(), dur = 1100;
+  function frame(now) {
+    const t = Math.min((now - t0) / dur, 1);
+    blood.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.a -= 0.012; });
+    blood  = blood.filter(p => p.a > 0);
+    fallT  = t < 0.32 ? 0 : ((t - 0.32) / 0.68) ** 1.7;
+    render();
+    if (t < 1) requestAnimationFrame(frame);
+    else       showResult(sc);
+  }
+  requestAnimationFrame(frame);
+}
+
+function spawnBlood(mx, my, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const spd = 1 + Math.random() * 7;
+    blood.push({ x: mx, y: my, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 3,
+                 a: 0.7 + Math.random() * 0.3, s: 2 + Math.ceil(Math.random() * 4) });
+  }
+}
+
+function showNoCut() {
+  document.getElementById('res-score').textContent  = '—';
+  document.getElementById('res-score').style.color  = '#666';
+  document.getElementById('res-verdict').textContent = 'INSUFFICIENT FORCE';
+  document.getElementById('res-detail').textContent  = 'Draw a longer slash.';
+  document.getElementById('btn-next').style.display  = 'none';
+  document.getElementById('result').classList.add('show');
+}
+
+function showResult(sc) {
+  phase = 'done';
+  if (saved.best[lvl] == null || sc.total > saved.best[lvl]) saved.best[lvl] = sc.total;
+  if (sc.total > 0 && lvl + 1 < GIRAFFES.length)
+    saved.unlocked = Math.max(saved.unlocked, lvl + 2);
+  persist();
+  buildStrip();
+
+  const col = sc.total >= 80 ? '#44ee88' : sc.total >= 50 ? '#fc0' : '#f44';
+  document.getElementById('res-score').textContent  = sc.total;
+  document.getElementById('res-score').style.color  = col;
+
+  const verdict =
+    sc.total >= 90 ? 'FLAWLESS EXECUTION' :
+    sc.total >= 70 ? 'CLEAN CUT' :
+    sc.total >= 50 ? 'ADEQUATE' :
+    sc.explosion   ? 'EXPLOSIVE MESS' : 'SLOPPY';
+
+  document.getElementById('res-verdict').textContent = verdict;
+  document.getElementById('res-detail').innerHTML =
+    `Angle ${Math.round(sc.angleScore * 100)}%  ·  Power ${Math.round(sc.powerScore * 100)}%<br>` +
+    `Best: ${saved.best[lvl]}`;
+  document.getElementById('btn-next').style.display =
+    (lvl + 1 < GIRAFFES.length && saved.unlocked > lvl + 1) ? '' : 'none';
+  document.getElementById('result').classList.add('show');
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function selectLevel(i) {
+  if (i >= saved.unlocked) return;
+  lvl     = i;
+  cut     = null;
+  phase   = 'idle';
+  blood   = [];
+  fallT   = 0;
+  drawing = false;
+
+  const g = GIRAFFES[i];
+  view = g.isTutorial ? g.tutView : 'photo';
+
+  document.getElementById('exec-btn').disabled = true;
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('btn-photo').classList.toggle('on', view === 'photo');
+  document.getElementById('btn-xray').classList.toggle('on',  view === 'xray');
+
+  const tutEl = document.getElementById('tut-hint');
+  if (g.isTutorial) {
+    tutEl.textContent = g.tutHint;
+    tutEl.style.display = 'block';
+  } else {
+    tutEl.style.display = 'none';
+  }
+
+  buildStrip();
+  updateStats();
+  render();
+}
+
+function retry()  { selectLevel(lvl); }
+function goNext() { if (lvl + 1 < GIRAFFES.length) selectLevel(lvl + 1); }
+
+function setView(v) {
+  view = v;
+  document.getElementById('btn-photo').classList.toggle('on', v === 'photo');
+  document.getElementById('btn-xray').classList.toggle('on',  v === 'xray');
+  render();
+}
+
+// ── Level strip ───────────────────────────────────────────────────────────────
+function buildStrip() {
+  const strip = document.getElementById('strip');
+  strip.innerHTML = '';
+  GIRAFFES.forEach((g, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile'
+      + (i === lvl ? ' active' : '')
+      + (i >= saved.unlocked ? ' locked' : '')
+      + (g.isTutorial ? ' tile-train' : '');
+
+    const mc = document.createElement('canvas');
+    mc.width = 54; mc.height = 54;
+    drawMugshot(mc, g);
+    tile.appendChild(mc);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'tile-lbl';
+    lbl.textContent = g.isTutorial ? `T${i + 1}` : `LVL ${i - 1}`;
+    tile.appendChild(lbl);
+
+    if (saved.best[i] != null) {
+      const bs = document.createElement('div');
+      bs.className = 'tile-best';
+      bs.textContent = saved.best[i];
+      tile.appendChild(bs);
+      const st = document.createElement('div');
+      st.className = 'tile-stamp';
+      st.textContent = 'DONE';
+      tile.appendChild(st);
+    }
+
+    if (i >= saved.unlocked) {
+      const lk = document.createElement('div');
+      lk.className = 'tile-lock';
+      lk.textContent = '🔒';
+      tile.appendChild(lk);
+    } else {
+      tile.addEventListener('click', () => selectLevel(i));
+    }
+
+    strip.appendChild(tile);
+  });
+}
+
+// ── Mugshot ───────────────────────────────────────────────────────────────────
+function drawMugshot(mc, g) {
+  const tc = mc.getContext('2d');
+  const w = mc.width, h = mc.height;
+  tc.clearRect(0, 0, w, h);
+
+  if (g.isTutorial && g.tutView === 'xray') {
+    // Ghostly x-ray mugshot
+    tc.fillStyle = '#0d1520';
+    tc.fillRect(0, 0, w, h);
+    tc.fillStyle = '#dde';
+    // Skull-ish bone shapes
+    tc.fillRect(w*.3, h*.08, w*.4, h*.28);   // head bone
+    tc.fillRect(w*.38, h*.34, w*.24, h*.48); // neck bone
+    tc.fillStyle = '#0d1520';
+    tc.fillRect(w*.36, h*.14, w*.1, h*.1);   // eye socket
+    tc.fillRect(w*.54, h*.14, w*.1, h*.1);
+  } else {
+    // Normal giraffe mugshot
+    // Ears
+    tc.fillStyle = g.skinCol;
+    tc.fillRect(w*.20, h*.10, w*.12, h*.14);
+    tc.fillRect(w*.68, h*.10, w*.12, h*.14);
+    // Head
+    tc.fillRect(w*.28, h*.06, w*.44, h*.32);
+    // Horns
+    tc.fillStyle = '#8B6530';
+    tc.fillRect(w*.32, h*.01, w*.08, h*.11);
+    tc.fillRect(w*.60, h*.01, w*.08, h*.11);
+    // Neck
+    tc.fillStyle = g.skinCol;
+    tc.fillRect(w*.33, h*.36, w*.34, h*.50);
+    // Spots
+    tc.fillStyle = g.spotCol;
+    g.spots.slice(0, 6).forEach(s => {
+      tc.fillRect(w*.33 + s.u * w*.34 - w*.04, h*.06 + s.v * h*.80 - h*.04, w*.09, h*.09);
+    });
+    // Re-fill head/neck base where spots overlap
+    // (paint order: skin → spots → facial features)
+    // Eyes
+    tc.fillStyle = '#111';
+    tc.fillRect(w*.36, h*.14, w*.09, h*.09);
+    tc.fillRect(w*.55, h*.14, w*.09, h*.09);
+    tc.fillStyle = '#eee';
+    tc.fillRect(w*.37, h*.15, w*.04, h*.04);
+    tc.fillRect(w*.56, h*.15, w*.04, h*.04);
+    // Nostrils
+    tc.fillStyle = g.spotCol;
+    tc.fillRect(w*.40, h*.28, w*.06, h*.05);
+    tc.fillRect(w*.54, h*.28, w*.06, h*.05);
+  }
+}
+
+// ── Stats panel ───────────────────────────────────────────────────────────────
+function updateStats() {
+  const g = GIRAFFES[lvl];
+  const faceMini = document.getElementById('face-mini');
+  drawMugshot(faceMini, g);
+
+  const isReal = !g.isTutorial;
+  document.getElementById('stats-text').innerHTML =
+    `<div class="gname">${g.name}${g.sub ? ` <span style="color:#88a;font-size:10px">${g.sub}</span>` : ''}</div>` +
+    (isReal ? `<div>Height: ${g.height}</div><div>Weight: ${g.weight}</div><div>Age: ${g.age} yrs</div>` : '') +
+    `<div class="crime">${g.crime}</div>`;
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+function evtPos(e) {
+  const r  = canvas.getBoundingClientRect();
+  const sx = CW / r.width, sy = CH / r.height;
+  const src = e.touches ? e.touches[0] : e;
+  return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
+}
+
+function onDown(e) {
+  if (phase !== 'idle') return;
+  e.preventDefault();
+  drawing = true;
+  drawPt  = evtPos(e);
+  cut     = null;
+  document.getElementById('exec-btn').disabled = true;
+}
+
+function onMove(e) {
+  if (!drawing || phase !== 'idle') return;
+  e.preventDefault();
+  const p = evtPos(e);
+  render();
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth   = 2;
+  ctx.setLineDash([8, 5]);
+  ctx.beginPath();
+  ctx.moveTo(drawPt.x, drawPt.y);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function onUp(e) {
+  if (!drawing || phase !== 'idle') return;
+  e.preventDefault();
+  drawing = false;
+  const r   = canvas.getBoundingClientRect();
+  const sx  = CW / r.width, sy = CH / r.height;
+  const src = e.changedTouches ? e.changedTouches[0] : e;
+  const p   = { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
+  if (Math.hypot(p.x - drawPt.x, p.y - drawPt.y) > 12) {
+    cut = { x1: drawPt.x, y1: drawPt.y, x2: p.x, y2: p.y };
+    document.getElementById('exec-btn').disabled = false;
+  }
+  render();
+}
+
+canvas.addEventListener('mousedown',  onDown);
+canvas.addEventListener('mousemove',  onMove);
+canvas.addEventListener('mouseup',    onUp);
+canvas.addEventListener('touchstart', onDown, { passive: false });
+canvas.addEventListener('touchmove',  onMove, { passive: false });
+canvas.addEventListener('touchend',   onUp,   { passive: false });
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); doExecute(); }
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+buildStrip();
+updateStats();
+const g0 = GIRAFFES[0];
+view = g0.tutView;
+document.getElementById('btn-photo').classList.toggle('on', view === 'photo');
+document.getElementById('btn-xray').classList.toggle('on',  view === 'xray');
+document.getElementById('tut-hint').textContent  = g0.tutHint;
+document.getElementById('tut-hint').style.display = 'block';
+resize();
+</script>
+</body>
+</html>

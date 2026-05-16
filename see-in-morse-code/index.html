@@ -16,6 +16,7 @@
       min-height: 100vh;
     }
 
+    /* ── Top press banner ── */
     #press-banner {
       width: 100%;
       height: 120px;
@@ -34,7 +35,9 @@
       outline: none;
     }
 
-    #press-banner.down { background: #1e3020; }
+    #press-banner.down {
+      background: #1e3020;
+    }
 
     #banner-left {
       display: flex;
@@ -74,6 +77,7 @@
       flex-shrink: 0;
     }
 
+    /* ── Output banner ── */
     #output-banner {
       width: 100%;
       height: 64px;
@@ -110,20 +114,15 @@
 
     #clear-btn:hover { border-color: #8a4a4a; color: #cc8888; }
 
+    /* ── Tree ── */
     #tree-wrap {
       flex: 1;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 8px 4px 16px;
+      overflow-x: auto;
+      overflow-y: visible;
+      padding: 8px 0;
     }
 
-    #morse-tree {
-      width: 100%;
-      max-width: 500px;
-      height: auto;
-      display: block;
-    }
+    #morse-tree { display: block; margin: 0 auto; }
   </style>
 </head>
 <body>
@@ -143,7 +142,7 @@
   </div>
 
   <div id="tree-wrap">
-    <svg id="morse-tree" viewBox="0 0 420 440" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg id="morse-tree" width="1400" height="555"></svg>
   </div>
 
   <script>
@@ -156,9 +155,12 @@
       '--.-':'Q', '--..':'Z', '-.--':'Y', '-.-.':'C',
       '-..-':'X', '-...':'B', '.---':'J', '.--.':'P',
       '.-..':'L', '..-.':'F', '...-':'V', '....':'H',
+      '-----':'0','----.':'9','---..' :'8','--...':'7',
+      '-....':'6','.....':'5','....-':'4','...--':'3',
+      '..---':'2','.----':'1'
     };
 
-    // Build tree
+    // ── Build tree ────────────────────────────────────────────────────────
     const nodeMap = new Map();
     function getNode(seq) {
       if (!nodeMap.has(seq)) nodeMap.set(seq, { seq, char: MORSE[seq] || null, dash: null, dot: null, x: 0, y: 0 });
@@ -173,98 +175,62 @@
     }
     const root = getNode('');
 
-    // Layout: left = dash, right = dot
-    const ROOT_X = 210, ROOT_Y = 48, LEVEL_H = 88, SP0 = 95;
+    // ── Layout ────────────────────────────────────────────────────────────
+    const SVG_W = 1400, SVG_H = 555, LEVEL_H = 86;
     function layout(n, x, y, sp) {
       if (!n) return;
       n.x = x; n.y = y;
       layout(n.dash, x - sp, y + LEVEL_H, sp / 2);
       layout(n.dot,  x + sp, y + LEVEL_H, sp / 2);
     }
-    layout(root, ROOT_X, ROOT_Y, SP0);
+    layout(root, SVG_W / 2, 46, 350);
 
-    // SVG helpers
+    // ── Draw SVG ──────────────────────────────────────────────────────────
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.getElementById('morse-tree');
-    function mk(tag, attrs) {
+    function mkEl(tag, attrs) {
       const e = document.createElementNS(NS, tag);
       for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
       return e;
     }
-    function txt(parent, x, y, str, attrs = {}) {
-      const t = mk('text', { x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central', ...attrs });
+    function mkTxt(parent, x, y, str, attrs = {}) {
+      const t = mkEl('text', { x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central', ...attrs });
       t.textContent = str; parent.appendChild(t); return t;
     }
 
-    const edgeG = mk('g', {}), nodeG = mk('g', {});
+    const edgeG = mkEl('g', {}), nodeG = mkEl('g', {});
     svg.append(edgeG, nodeG);
 
-    // Header
-    txt(svg, ROOT_X - 56, 14, 'MORSE', { fill:'#666', 'font-size':'11', 'font-family':'Courier New', 'letter-spacing':'3', 'font-weight':'bold' });
-    txt(svg, ROOT_X + 56, 14, 'CODE',  { fill:'#666', 'font-size':'11', 'font-family':'Courier New', 'letter-spacing':'3', 'font-weight':'bold' });
+    mkTxt(svg, root.x, root.y - 34, 'START', { fill:'#666', 'font-size':'12', 'font-family':'Courier New', 'letter-spacing':'4' });
+    mkTxt(svg, root.x - 195, root.y - 18, '← DAH  (–)', { fill:'#444', 'font-size':'11', 'font-family':'Courier New' });
+    mkTxt(svg, root.x + 195, root.y - 18, '(·)  DIT →',  { fill:'#444', 'font-size':'11', 'font-family':'Courier New' });
 
-    // Antenna at root
-    const ax = ROOT_X, ay = ROOT_Y - 18;
-    svg.appendChild(mk('line', { x1:ax,    y1:ay+14, x2:ax,   y2:ay,    stroke:'#c8a400', 'stroke-width':'1.5' }));
-    svg.appendChild(mk('line', { x1:ax-9,  y1:ay+5,  x2:ax,   y2:ay,    stroke:'#c8a400', 'stroke-width':'1.2' }));
-    svg.appendChild(mk('line', { x1:ax+9,  y1:ay+5,  x2:ax,   y2:ay,    stroke:'#c8a400', 'stroke-width':'1.2' }));
-    svg.appendChild(mk('line', { x1:ax-14, y1:ay+2,  x2:ax,   y2:ay-6,  stroke:'#c8a400', 'stroke-width':'1' }));
-    svg.appendChild(mk('line', { x1:ax+14, y1:ay+2,  x2:ax,   y2:ay-6,  stroke:'#c8a400', 'stroke-width':'1' }));
-
-    // Dash/dot hint labels on the first branches
-    txt(svg, ROOT_X - 52, ROOT_Y + 22, '–', { fill:'#3a3a3a', 'font-size':'10', 'font-family':'Courier New' });
-    txt(svg, ROOT_X + 52, ROOT_Y + 22, '·', { fill:'#3a3a3a', 'font-size':'10', 'font-family':'Courier New' });
-
-    const edgeMap = new Map(), shapeMap = new Map();
-
-    // Node dimensions
-    const RECT_W = 20, RECT_H = 11, CIRC_R = 8, ROOT_R = 9;
-
-    function drawShape(s, n, fill, stroke) {
-      const isRoot = s === '';
-      const isDash = s.endsWith('-');
-      let shape;
-      if (isRoot) {
-        shape = mk('circle', { cx: n.x, cy: n.y, r: ROOT_R, fill, stroke, 'stroke-width': '2' });
-      } else if (isDash) {
-        shape = mk('rect', {
-          x: n.x - RECT_W / 2, y: n.y - RECT_H / 2,
-          width: RECT_W, height: RECT_H, rx: 2,
-          fill, stroke, 'stroke-width': '1.5'
-        });
-      } else {
-        shape = mk('circle', { cx: n.x, cy: n.y, r: CIRC_R, fill, stroke, 'stroke-width': '1.5' });
-      }
-      nodeG.appendChild(shape);
-      return shape;
-    }
-
-    function nodeFill(s)   { const n = nodeMap.get(s); return s==='' ? '#252015' : n.char ? '#142014' : '#161616'; }
-    function nodeStroke(s) { const n = nodeMap.get(s); return s==='' ? '#c8a400' : n.char ? '#2d5c2d' : '#222'; }
+    const R = d => d === 0 ? 20 : d <= 2 ? 17 : d <= 3 ? 15 : d <= 4 ? 13 : 10;
+    const edgeMap = new Map(), circMap = new Map();
 
     for (const [s, n] of nodeMap) {
       const d = s.length;
       if (d > 0) {
         const p = nodeMap.get(s.slice(0, -1));
-        const ln = mk('line', { x1:p.x, y1:p.y, x2:n.x, y2:n.y, stroke:'#2a2a2a', 'stroke-width':'1.5' });
-        edgeG.appendChild(ln);
-        edgeMap.set(s, ln);
+        const ln = mkEl('line', { x1:p.x, y1:p.y, x2:n.x, y2:n.y, stroke:'#2a2a2a', 'stroke-width':'1.5' });
+        edgeG.appendChild(ln); edgeMap.set(s, ln);
       }
-      const shape = drawShape(s, n, nodeFill(s), nodeStroke(s));
-      shapeMap.set(s, shape);
-
-      if (n.char) {
-        txt(nodeG, n.x, n.y, n.char, {
-          fill: '#a8d8a8',
-          'font-size': d <= 2 ? '8' : '7',
-          'font-family': 'Courier New',
-          'font-weight': 'bold',
-          'pointer-events': 'none'
-        });
-      }
+      const named = n.char !== null, isRoot = s === '';
+      const c = mkEl('circle', {
+        cx: n.x, cy: n.y, r: R(d),
+        fill:   isRoot ? '#252015' : named ? '#142014' : '#161616',
+        stroke: isRoot ? '#c8a400' : named ? '#2d5c2d' : '#222',
+        'stroke-width': isRoot ? '2' : '1.5'
+      });
+      nodeG.appendChild(c); circMap.set(s, c);
+      mkTxt(nodeG, n.x, n.y, isRoot ? '' : (n.char || ''), {
+        fill: named ? '#a8d8a8' : '#2a2a2a',
+        'font-size': d <= 3 ? '12' : '10',
+        'font-family': 'Courier New', 'font-weight': 'bold', 'pointer-events': 'none'
+      });
     }
 
-    // State
+    // ── State ─────────────────────────────────────────────────────────────
     let seq = '', t0 = 0, pressed = false, timer = null, outputText = '';
     const seqEl  = document.getElementById('seq-display');
     const charEl = document.getElementById('char-display');
@@ -292,23 +258,21 @@
       seq = ''; render();
     }
 
-    function setShape(s, fill, stroke) {
-      const shape = shapeMap.get(s);
-      if (!shape) return;
-      shape.setAttribute('fill', fill);
-      shape.setAttribute('stroke', stroke);
-    }
-
     function render() {
       seqEl.textContent = seq.split('').map(s => s === '.' ? '·' : '–').join(' ');
       charEl.textContent = MORSE[seq] || '';
-
       for (const [s, ln] of edgeMap) { ln.setAttribute('stroke', '#2a2a2a'); ln.setAttribute('stroke-width', '1.5'); }
-      for (const [s] of shapeMap)    setShape(s, nodeFill(s), nodeStroke(s));
-
+      for (const [s, c] of circMap) {
+        const n = nodeMap.get(s), named = n.char !== null, isRoot = s === '';
+        c.setAttribute('fill',   isRoot ? '#252015' : named ? '#142014' : '#161616');
+        c.setAttribute('stroke', isRoot ? '#c8a400' : named ? '#2d5c2d' : '#222');
+      }
       for (let i = 0; i <= seq.length; i++) {
-        const ps = seq.slice(0, i);
-        setShape(ps, i === seq.length ? '#c8a400' : '#2c2810', i === seq.length ? '#ffd700' : '#776800');
+        const ps = seq.slice(0, i), c = circMap.get(ps);
+        if (c) {
+          c.setAttribute('fill',   i === seq.length ? '#c8a400' : '#2c2810');
+          c.setAttribute('stroke', i === seq.length ? '#ffd700' : '#776800');
+        }
         if (i > 0) {
           const ln = edgeMap.get(ps);
           if (ln) { ln.setAttribute('stroke', '#c8a400'); ln.setAttribute('stroke-width', '2.5'); }
@@ -316,6 +280,7 @@
       }
     }
 
+    // ── Banner events ─────────────────────────────────────────────────────
     banner.addEventListener('mousedown',  pressStart);
     banner.addEventListener('mouseup',    pressEnd);
     banner.addEventListener('mouseleave', () => { if (pressed) pressEnd(); });
@@ -323,6 +288,7 @@
     banner.addEventListener('touchend',   e => { e.preventDefault(); pressEnd();   }, { passive: false });
     banner.addEventListener('touchcancel',e => { e.preventDefault(); if (pressed) pressEnd(); }, { passive: false });
 
+    // ── Keyboard ──────────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
       if (e.repeat) return;
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pressStart(); }
