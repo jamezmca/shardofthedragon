@@ -32,11 +32,7 @@
     .pi-cell .dig  { font-size: 1rem; color: #888; margin: 3px 0 2px; }
     .pi-cell .pin  { font-size: 1rem; font-weight: bold; }
 
-    .pi-dec {
-      flex: 0 0 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; color: #aaa; border-right: 1px solid #f0f0f0;
-    }
+    .pi-cell.dec .dig { font-size: 1.2rem; }
 
     /* ── Test view ── */
     #test { display: none; padding: 56px 20px 32px; }
@@ -81,7 +77,7 @@
 
 <div id="test">
   <div id="test-output"></div>
-  <div id="done-msg">✓ Complete! All 100 digits done.</div>
+  <div id="done-msg">✓ Complete! All 100 digits + dian done.</div>
   <div id="test-controls">
     <span class="wrong-label">✗ wrong</span>
     <button id="reset-btn">Reset</button>
@@ -105,7 +101,9 @@
   ];
 
   const PIN = ['ling','yi','er','san','si','wu','liu','qi','ba','jiu'];
-  const WORDS = DIGITS.map(d => PIN[d]);
+  const DIGIT_WORDS = DIGITS.map(d => PIN[d]);
+  // Insert 'dian' (decimal point) between position 1 and 2
+  const WORDS = [DIGIT_WORDS[0], 'dian', ...DIGIT_WORDS.slice(1)]; // 101 entries
 
   // ── Build display grid ──────────────────────────────────────────────────
 
@@ -118,11 +116,14 @@
     for (let col = 0; col < 10; col++) {
       const idx = row * 10 + col;
 
-      // Decimal point between position 1 and 2
+      // Decimal point cell between position 1 and 2
       if (idx === 1) {
         const dec = document.createElement('div');
-        dec.className = 'pi-dec';
-        dec.textContent = '.';
+        dec.className = 'pi-cell dec';
+        dec.innerHTML =
+          `<div class="pos">·</div>` +
+          `<div class="dig">.</div>` +
+          `<div class="pin">dian</div>`;
         rowEl.appendChild(dec);
       }
 
@@ -131,7 +132,7 @@
       cell.innerHTML =
         `<div class="pos">${idx + 1}</div>` +
         `<div class="dig">${DIGITS[idx]}</div>` +
-        `<div class="pin">${WORDS[idx]}</div>`;
+        `<div class="pin">${DIGIT_WORDS[idx]}</div>`;
       rowEl.appendChild(cell);
     }
 
@@ -164,7 +165,7 @@
     }
 
     outputEl.innerHTML = html;
-    doneEl.style.display = wordIdx >= 100 ? 'block' : 'none';
+    doneEl.style.display = wordIdx >= 101 ? 'block' : 'none';
   }
 
   function resetTest() {
@@ -190,7 +191,7 @@
 
   document.addEventListener('keydown', e => {
     if (testEl.style.display === 'none') return;
-    if (isWrong || wordIdx >= 100) return;
+    if (isWrong || wordIdx >= 101) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key.length !== 1) return;
 
