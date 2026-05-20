@@ -96,19 +96,14 @@
 
     /* ── Gallery ── */
     .gallery {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-flow: dense;
       gap: 3px;
       padding: 0;
-      align-items: flex-start;
     }
 
-    .col {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
+    .card.landscape { grid-column: span 2; }
 
     /* ── Card ── */
     .card {
@@ -215,6 +210,7 @@
       .profile-stats { margin-top: 10px; font-size: 0.82rem; }
       .profile-bio { margin-top: 10px; font-size: 0.82rem; }
       .name-tag { font-size: 0.5rem; padding: 2px 5px; }
+      .gallery { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -223,7 +219,7 @@
 <div class="profile">
   <div class="profile-pic-wrap">
     <img
-      src="profile.jpg"
+      src="public/dp.JPG"
       alt="Mr McArthur"
       class="profile-pic"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
@@ -250,11 +246,7 @@
   </div>
 </div>
 
-<div class="gallery" id="gallery">
-  <div class="col" id="col-0"></div>
-  <div class="col" id="col-1"></div>
-  <div class="col" id="col-2"></div>
-</div>
+<div class="gallery" id="gallery"></div>
 
 <div id="sentinel"></div>
 <footer>goated art by mr mcarthurs goated students</footer>
@@ -265,13 +257,12 @@
 
 <script>
 (() => {
-  const BATCH   = 24;
-  const RECENT  = 9; // top 3 per column × 3 columns
+  const BATCH  = 24;
+  const RECENT = 9; // top 3 per column × 3 columns
 
-  const cols = [0, 1, 2].map(i => document.getElementById('col-' + i));
-  let allImages = [], rendered = 0;
+  const gallery = document.getElementById('gallery');
+  let allItems = [], rendered = 0;
 
-  /* Parse student name from filename: anything after the last _ before the extension */
   function studentName(filename) {
     const base = filename.replace(/\.[^.]+$/, '');
     const i = base.lastIndexOf('_');
@@ -287,14 +278,24 @@
     return a;
   }
 
-  function makeCard(filename) {
-    const name = studentName(filename);
+  // Accept both old string format and new { file, landscape } format
+  function normalise(item) {
+    return typeof item === 'string'
+      ? { file: item, landscape: false }
+      : item;
+  }
 
-    const card   = document.createElement('div');
-    card.className = 'card';
+  function makeCard(item) {
+    const { file, landscape } = normalise(item);
+    const name = studentName(file);
+
+    const card = document.createElement('div');
+    card.className = landscape ? 'card landscape' : 'card';
 
     const aspect = document.createElement('div');
     aspect.className = 'aspect';
+    // Set correct initial ratio from manifest so there's no layout shift on load
+    aspect.style.paddingTop = landscape ? '70.711%' : '141.421%';
 
     const shimmer = document.createElement('div');
     shimmer.className = 'shimmer';
@@ -302,10 +303,10 @@
     const img = document.createElement('img');
     img.loading = 'lazy';
     img.alt = name;
-    img.src = 'art/' + filename;
+    img.src = 'art/' + file;
 
     img.addEventListener('load', () => {
-      // Snap to the image's real A4 ratio (portrait or landscape)
+      // Confirm with actual pixel ratio after load
       const ratio = img.naturalHeight / img.naturalWidth;
       aspect.style.paddingTop = (ratio * 100).toFixed(3) + '%';
       shimmer.style.animation = 'none';
@@ -324,18 +325,14 @@
 
     aspect.append(shimmer, img, tag);
     card.appendChild(aspect);
-
-    card.addEventListener('click', () => openModal('art/' + filename, name));
+    card.addEventListener('click', () => openModal('art/' + file, name));
     return card;
   }
 
   function renderBatch() {
-    if (rendered >= allImages.length) return;
-    const batch = allImages.slice(rendered, rendered + BATCH);
-    batch.forEach((file, i) => {
-      const col = (rendered + i) % 3;
-      cols[col].appendChild(makeCard(file));
-    });
+    if (rendered >= allItems.length) return;
+    const batch = allItems.slice(rendered, rendered + BATCH);
+    batch.forEach(item => gallery.appendChild(makeCard(item)));
     rendered += batch.length;
   }
 
@@ -362,22 +359,21 @@
   });
 
   /* ── Infinite scroll ── */
-  const sentinel = document.getElementById('sentinel');
   new IntersectionObserver(entries => {
     if (entries[0].isIntersecting) renderBatch();
-  }, { rootMargin: '400px' }).observe(sentinel);
+  }, { rootMargin: '400px' }).observe(document.getElementById('sentinel'));
 
   /* ── Init ── */
   const postCountEl = document.getElementById('post-count');
 
   fetch('manifest.json')
     .then(r => { if (!r.ok) throw 0; return r.json(); })
-    .then(files => {
-      if (!Array.isArray(files) || !files.length) return;
-      postCountEl.textContent = files.length;
-      const recent = files.slice(0, RECENT);
-      const rest   = shuffle(files.slice(RECENT));
-      allImages = [...recent, ...rest];
+    .then(items => {
+      if (!Array.isArray(items) || !items.length) return;
+      postCountEl.textContent = items.length;
+      const recent = items.slice(0, RECENT);
+      const rest   = shuffle(items.slice(RECENT));
+      allItems = [...recent, ...rest];
       renderBatch();
     })
     .catch(() => {
