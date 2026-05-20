@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goated</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #000;
+    }
+
+    /* ── Profile header ── */
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 28px 24px 20px;
+      max-width: 935px;
+      margin: 0 auto;
+    }
+
+    .profile-pic-wrap { flex-shrink: 0; }
+
+    .profile-pic,
+    .profile-pic-fallback {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .profile-pic-fallback {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #dbdbdb;
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: #737373;
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+
+    .profile-handle {
+      font-size: 1.25rem;
+      font-weight: 300;
+      color: #000;
+      letter-spacing: -0.01em;
+    }
+
+    .profile-stats {
+      margin-top: 18px;
+      font-size: 0.9375rem;
+      color: #262626;
+    }
+
+    .stat-num { font-weight: 600; }
+
+    .profile-bio {
+      margin-top: 14px;
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: #262626;
+      line-height: 1.5;
+    }
+
+    /* Tab bar */
+    .grid-tabs {
+      border-top: 1px solid #dbdbdb;
+      display: flex;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .grid-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #000;
+      border-top: 1px solid #000;
+      margin-top: -1px;
+    }
+
+    .grid-tab svg { display: block; }
+
+    /* ── Gallery ── */
+    .gallery {
+      display: flex;
+      gap: 3px;
+      padding: 0;
+      align-items: flex-start;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      background: #efefef;
+    }
+
+    .aspect {
+      position: relative;
+      width: 100%;
+      padding-top: 141.42%; /* default: portrait A4 */
+      overflow: hidden;
+    }
+
+    /* Shimmer skeleton */
+    .shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #e2e2e2 25%, #ececec 50%, #e2e2e2 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.5s ease infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 100% 50%; }
+      100% { background-position:   0% 50%; }
+    }
+
+    .card img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .card img.loaded { opacity: 1; }
+
+    .name-tag {
+      position: absolute;
+      bottom: 7px;
+      right: 7px;
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 0.56rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .card:hover .name-tag { opacity: 1; }
+
+    /* ── Modal ── */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      cursor: pointer;
+    }
+
+    #modal.open {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-img {
+      max-width: 92vw;
+      max-height: 92vh;
+      object-fit: contain;
+      display: block;
+      cursor: default;
+    }
+
+    /* ── Footer ── */
+    #sentinel { height: 1px; }
+
+    footer {
+      padding: 64px 16px 44px;
+      text-align: center;
+      font-size: 0.58rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #ccc;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .profile { gap: 20px; padding: 16px 16px 14px; }
+      .profile-pic,
+      .profile-pic-fallback { width: 86px; height: 86px; }
+      .profile-pic-fallback { font-size: 1.4rem; }
+      .profile-handle { font-size: 1rem; }
+      .profile-stats { margin-top: 10px; font-size: 0.82rem; }
+      .profile-bio { margin-top: 10px; font-size: 0.82rem; }
+      .name-tag { font-size: 0.5rem; padding: 2px 5px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="profile">
+  <div class="profile-pic-wrap">
+    <img
+      src="profile.jpg"
+      alt="Mr McArthur"
+      class="profile-pic"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+    >
+    <div class="profile-pic-fallback">M</div>
+  </div>
+  <div class="profile-info">
+    <div class="profile-handle">mrmcarthur</div>
+    <div class="profile-stats"><span class="stat-num" id="post-count">—</span> posts</div>
+    <div class="profile-bio">mathematics teacher</div>
+  </div>
+</div>
+
+<div class="grid-tabs">
+  <div class="grid-tab">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+      <rect x="0" y="0" width="3.5" height="3.5"/><rect x="4.25" y="0" width="3.5" height="3.5"/>
+      <rect x="8.5"  y="0" width="3.5" height="3.5"/><rect x="0"   y="4.25" width="3.5" height="3.5"/>
+      <rect x="4.25" y="4.25" width="3.5" height="3.5"/><rect x="8.5" y="4.25" width="3.5" height="3.5"/>
+      <rect x="0"    y="8.5"  width="3.5" height="3.5"/><rect x="4.25" y="8.5" width="3.5" height="3.5"/>
+      <rect x="8.5"  y="8.5"  width="3.5" height="3.5"/>
+    </svg>
+    Posts
+  </div>
+</div>
+
+<div class="gallery" id="gallery">
+  <div class="col" id="col-0"></div>
+  <div class="col" id="col-1"></div>
+  <div class="col" id="col-2"></div>
+</div>
+
+<div id="sentinel"></div>
+<footer>goated art by mr mcarthurs goated students</footer>
+
+<div id="modal">
+  <img id="modal-img" src="" alt="">
+</div>
+
+<script>
+(() => {
+  const BATCH   = 24;
+  const RECENT  = 9; // top 3 per column × 3 columns
+
+  const cols = [0, 1, 2].map(i => document.getElementById('col-' + i));
+  let allImages = [], rendered = 0;
+
+  /* Parse student name from filename: anything after the last _ before the extension */
+  function studentName(filename) {
+    const base = filename.replace(/\.[^.]+$/, '');
+    const i = base.lastIndexOf('_');
+    return (i >= 0 ? base.slice(i + 1) : base).replace(/-/g, ' ');
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function makeCard(filename) {
+    const name = studentName(filename);
+
+    const card   = document.createElement('div');
+    card.className = 'card';
+
+    const aspect = document.createElement('div');
+    aspect.className = 'aspect';
+
+    const shimmer = document.createElement('div');
+    shimmer.className = 'shimmer';
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = name;
+    img.src = 'art/' + filename;
+
+    img.addEventListener('load', () => {
+      // Snap to the image's real A4 ratio (portrait or landscape)
+      const ratio = img.naturalHeight / img.naturalWidth;
+      aspect.style.paddingTop = (ratio * 100).toFixed(3) + '%';
+      shimmer.style.animation = 'none';
+      shimmer.style.opacity   = '0';
+      img.classList.add('loaded');
+    });
+
+    img.addEventListener('error', () => {
+      shimmer.style.animation = 'none';
+      shimmer.style.background = '#e8e8e8';
+    });
+
+    const tag = document.createElement('div');
+    tag.className = 'name-tag';
+    tag.textContent = name;
+
+    aspect.append(shimmer, img, tag);
+    card.appendChild(aspect);
+
+    card.addEventListener('click', () => openModal('art/' + filename, name));
+    return card;
+  }
+
+  function renderBatch() {
+    if (rendered >= allImages.length) return;
+    const batch = allImages.slice(rendered, rendered + BATCH);
+    batch.forEach((file, i) => {
+      const col = (rendered + i) % 3;
+      cols[col].appendChild(makeCard(file));
+    });
+    rendered += batch.length;
+  }
+
+  /* ── Modal ── */
+  const modal    = document.getElementById('modal');
+  const modalImg = document.getElementById('modal-img');
+
+  function openModal(src, name) {
+    modalImg.src = src;
+    modalImg.alt = name;
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalImg.src = ''; }, 250);
+  }
+
+  modal.addEventListener('click', e => { if (e.target !== modalImg) closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  /* ── Infinite scroll ── */
+  const sentinel = document.getElementById('sentinel');
+  new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) renderBatch();
+  }, { rootMargin: '400px' }).observe(sentinel);
+
+  /* ── Init ── */
+  const postCountEl = document.getElementById('post-count');
+
+  fetch('manifest.json')
+    .then(r => { if (!r.ok) throw 0; return r.json(); })
+    .then(files => {
+      if (!Array.isArray(files) || !files.length) return;
+      postCountEl.textContent = files.length;
+      const recent = files.slice(0, RECENT);
+      const rest   = shuffle(files.slice(RECENT));
+      allImages = [...recent, ...rest];
+      renderBatch();
+    })
+    .catch(() => {
+      console.info('Drop images into /art then run: node generate-manifest.js');
+    });
+})();
+</script>
+</body>
+</html>
