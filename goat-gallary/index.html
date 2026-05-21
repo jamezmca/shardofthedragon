@@ -70,6 +70,14 @@
       line-height: 1.5;
     }
 
+    /* ── Sticky profile ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+    }
+
     /* Tab bar */
     .grid-tabs {
       border-top: 1px solid #dbdbdb;
@@ -201,6 +209,52 @@
       color: #ccc;
     }
 
+    /* ── Scroll collapse ── */
+    .site-header {
+      transition: box-shadow 0.3s ease;
+    }
+    .site-header.scrolled {
+      box-shadow: 0 1px 0 #dbdbdb;
+    }
+
+    .profile {
+      transition: padding 0.35s ease, gap 0.35s ease;
+    }
+    .site-header.scrolled .profile {
+      padding: 8px 20px;
+      gap: 12px;
+    }
+
+    .profile-pic,
+    .profile-pic-fallback {
+      transition: width 0.35s ease, height 0.35s ease;
+    }
+    .site-header.scrolled .profile-pic,
+    .site-header.scrolled .profile-pic-fallback {
+      width: 34px;
+      height: 34px;
+    }
+
+    .profile-handle {
+      transition: font-size 0.35s ease, font-weight 0.35s ease;
+    }
+    .site-header.scrolled .profile-handle {
+      font-size: 0.9rem;
+    }
+
+    .profile-stats,
+    .profile-bio {
+      overflow: hidden;
+      max-height: 80px;
+      transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.35s ease;
+    }
+    .site-header.scrolled .profile-stats,
+    .site-header.scrolled .profile-bio {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
       .profile { gap: 20px; padding: 16px 16px 14px; }
@@ -212,12 +266,13 @@
       .profile-bio { margin-top: 10px; font-size: 0.82rem; }
       .name-tag { font-size: 0.5rem; padding: 2px 5px; }
       .gallery { grid-template-columns: repeat(2, 1fr); }
-
+      .card[style*="grid-column"] { grid-column: 1 / -1 !important; }
     }
   </style>
 </head>
 <body>
 
+<header class="site-header">
 <div class="profile">
   <div class="profile-pic-wrap">
     <img
@@ -234,6 +289,7 @@
     <div class="profile-bio">drawings from my students as a mathematics teacher</div>
   </div>
 </div>
+</header>
 
 <div class="grid-tabs">
   <div class="grid-tab">
@@ -367,6 +423,12 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
+
+  /* ── Scroll collapse ── */
+  const siteHeader = document.querySelector('.site-header');
+  window.addEventListener('scroll', () => {
+    siteHeader.classList.toggle('scrolled', window.scrollY > 80);
+  }, { passive: true });
 
   /* ── Infinite scroll ── */
   new IntersectionObserver(entries => {
