@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Goated</title>
+  <title>Goated Gallary</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -103,14 +103,14 @@
       padding: 0;
     }
 
-    .card.landscape { grid-column: span 2; }
+    /* landscape grid-column set inline (alternates 1/3 and 2/4) */
 
     /* ── Card ── */
     .card {
       position: relative;
       cursor: pointer;
       overflow: hidden;
-      background: #efefef;
+      background: #fff;
     }
 
     .aspect {
@@ -142,6 +142,7 @@
       object-fit: cover;
       opacity: 0;
       transition: opacity 0.35s ease;
+      transform: scale(1.02);
     }
 
     .card img.loaded { opacity: 1; }
@@ -211,6 +212,7 @@
       .profile-bio { margin-top: 10px; font-size: 0.82rem; }
       .name-tag { font-size: 0.5rem; padding: 2px 5px; }
       .gallery { grid-template-columns: repeat(2, 1fr); }
+
     }
   </style>
 </head>
@@ -229,7 +231,7 @@
   <div class="profile-info">
     <div class="profile-handle">mrmcarthur</div>
     <div class="profile-stats"><span class="stat-num" id="post-count">—</span> posts</div>
-    <div class="profile-bio">mathematics teacher</div>
+    <div class="profile-bio">drawings from my students as a mathematics teacher</div>
   </div>
 </div>
 
@@ -285,17 +287,14 @@
       : item;
   }
 
-  function makeCard(item) {
-    const { file, landscape } = normalise(item);
-    const name = studentName(file);
+  let landscapeFlip = false; // alternates each landscape left ↔ right
 
-    const card = document.createElement('div');
-    card.className = landscape ? 'card landscape' : 'card';
+  function makeSlot(file, isLandscape) {
+    const name = studentName(file);
 
     const aspect = document.createElement('div');
     aspect.className = 'aspect';
-    // Set correct initial ratio from manifest so there's no layout shift on load
-    aspect.style.paddingTop = landscape ? '70.711%' : '141.421%';
+    aspect.style.paddingTop = isLandscape ? '70.711%' : '141.421%';
 
     const shimmer = document.createElement('div');
     shimmer.className = 'shimmer';
@@ -306,7 +305,6 @@
     img.src = 'art/' + file;
 
     img.addEventListener('load', () => {
-      // Confirm with actual pixel ratio after load
       const ratio = img.naturalHeight / img.naturalWidth;
       aspect.style.paddingTop = (ratio * 100).toFixed(3) + '%';
       shimmer.style.animation = 'none';
@@ -324,6 +322,18 @@
     tag.textContent = name;
 
     aspect.append(shimmer, img, tag);
+    return { aspect, name };
+  }
+
+  function makeCard(item) {
+    const { file, landscape } = normalise(item);
+    const { aspect, name } = makeSlot(file, landscape);
+    const card = document.createElement('div');
+    card.className = 'card';
+    if (landscape) {
+      landscapeFlip = !landscapeFlip;
+      card.style.gridColumn = landscapeFlip ? '1 / 3' : '2 / 4';
+    }
     card.appendChild(aspect);
     card.addEventListener('click', () => openModal('art/' + file, name));
     return card;
