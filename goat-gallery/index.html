@@ -70,10 +70,12 @@
       line-height: 1.5;
     }
 
-    /* ── Sticky profile ── */
+    /* ── Fixed profile ── */
     .site-header {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       background: #fff;
     }
@@ -426,8 +428,15 @@
 
   /* ── Scroll collapse ── */
   const siteHeader = document.querySelector('.site-header');
+  const gridTabs = document.querySelector('.grid-tabs');
+
+  new ResizeObserver(entries => {
+    const h = entries[0].borderBoxSize?.[0]?.blockSize ?? entries[0].contentRect.height;
+    gridTabs.style.marginTop = h + 'px';
+  }).observe(siteHeader);
+
   window.addEventListener('scroll', () => {
-    siteHeader.classList.toggle('scrolled', window.scrollY > 80);
+    siteHeader.classList.toggle('scrolled', window.scrollY > 0);
   }, { passive: true });
 
   /* ── Infinite scroll ── */
