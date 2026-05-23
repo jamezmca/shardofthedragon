@@ -217,6 +217,14 @@ h1 {
   border-color: #999;
 }
 
+/* Fraction slash */
+.frac-key {
+  background: #f5f0e8;
+  border-color: #c9b88a;
+  font-size: 1.3rem;
+  color: #7a5c00;
+}
+
 /* Zero spans 2 cols, enter spans 2 cols */
 .zero-key {
   grid-column: span 2;

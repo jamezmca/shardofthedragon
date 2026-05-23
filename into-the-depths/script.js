@@ -12,11 +12,16 @@ const OP_DISPLAY = {
 // 🎁 is always this many layers away
 const DEPTH = { easy: 2, medium: 3, hard: 4 };
 
+// Fraction pairs [p, q] for fractional coefficient layers: displays as (p/q)(x), inverse is × q/p
+const FRAC_PAIRS_MUL = [[2,3],[3,4],[3,2],[4,3],[2,5],[5,2]];
+// Fraction pairs [p, q] for fractional addend layers: displays as x + p/q, inverse is − p/q
+const FRAC_PAIRS_ADD = [[1,2],[1,3],[1,4],[2,3],[3,4]];
+
 // Layer types available per difficulty
 const OP_POOLS = {
   easy:   ["add", "sub", "mulN", "divN"],
   medium: ["add", "sub", "mulN", "divN", "sq", "sqrt", "neg", "recip"],
-  hard:   ["add", "sub", "mulN", "divN", "sq", "sqrt", "neg", "recip", "cu", "cbrt", "pow23", "pow32"],
+  hard:   ["add", "sub", "mulN", "divN", "sq", "sqrt", "neg", "recip", "cu", "cbrt", "pow23", "pow32", "addF", "subF", "mulF"],
 };
 
 function randomInt(min, max) {
@@ -45,15 +50,27 @@ function makeLayer(type) {
     case "pow32": return { type, display: x => `${needsWrap(x) ? `(${x})` : x}^(3/2)`,          inverse: `^(2/3)` };
     case "neg":   return { type, display: x => `−(${x})`,                                        inverse: `negate` };
     case "recip": return { type, display: x => `1/(${x})`,                                       inverse: `1/x` };
+    case "addF": {
+      const [p, q] = FRAC_PAIRS_ADD[Math.floor(Math.random() * FRAC_PAIRS_ADD.length)];
+      return { type, p, q, display: x => `${x} + ${p}/${q}`, inverse: `− ${p}/${q}` };
+    }
+    case "subF": {
+      const [p, q] = FRAC_PAIRS_ADD[Math.floor(Math.random() * FRAC_PAIRS_ADD.length)];
+      return { type, p, q, display: x => `${x} − ${p}/${q}`, inverse: `+ ${p}/${q}` };
+    }
+    case "mulF": {
+      const [p, q] = FRAC_PAIRS_MUL[Math.floor(Math.random() * FRAC_PAIRS_MUL.length)];
+      return { type, p, q, display: x => `(${p}/${q})${needsWrap(x) ? `(${x})` : x}`, inverse: `× ${q}/${p}` };
+    }
   }
 }
 
 // adjacentType = the layer this new one will sit directly beside (its inner or outer neighbour).
 // Rules: no two consecutive additive layers (display ambiguity); no double neg or double recip.
 function generateLayer(difficulty, adjacentType) {
-  const addAdj = adjacentType === "add" || adjacentType === "sub";
+  const addAdj = adjacentType === "add" || adjacentType === "sub" || adjacentType === "addF" || adjacentType === "subF";
   const pool = OP_POOLS[difficulty].filter(t => {
-    if (addAdj && (t === "add" || t === "sub")) return false;
+    if (addAdj && (t === "add" || t === "sub" || t === "addF" || t === "subF")) return false;
     if (adjacentType === "neg"   && t === "neg")   return false;
     if (adjacentType === "recip" && t === "recip") return false;
     return true;
@@ -101,6 +118,9 @@ function applyLayerInverse(layer, rhs) {
     case "pow32": return rhs ** (2 / 3);
     case "neg":   return -rhs;
     case "recip": return 1 / rhs;
+    case "addF":  return rhs - layer.p / layer.q;
+    case "subF":  return rhs + layer.p / layer.q;
+    case "mulF":  return rhs * layer.q / layer.p;
     default:      return rhs;
   }
 }
@@ -175,7 +195,11 @@ function handleCalcKey(type, value, buttonEl) {
     document.querySelectorAll(".calc-btn").forEach(b => b.classList.remove("active"));
     if (buttonEl) buttonEl.classList.add("active");
   } else if (type === "num") {
-    if (calcNum.length < 2) calcNum += value;
+    const parts = calcNum.split("/");
+    if (parts.length === 1 && parts[0].length < 2) calcNum += value;
+    else if (parts.length === 2 && parts[1].length < 1) calcNum += value;
+  } else if (type === "frac") {
+    if (calcNum.length > 0 && !calcNum.includes("/")) calcNum += "/";
   }
   updateCalcDisplay();
 }
