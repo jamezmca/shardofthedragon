@@ -108,6 +108,7 @@ function updateScore() {
 }
 
 function renderGame() {
+  resetCalc();
   document.getElementById("score").textContent = score;
   document.getElementById("best").textContent = bestScore;
   document.getElementById("equation").textContent = buildExpressionString(stack);
@@ -209,6 +210,7 @@ function checkOperation(operation) {
 
 function endGame(correctOperation) {
   isGameOver = true;
+  resetCalc();
   const feedback = document.getElementById("feedback");
   feedback.textContent = `Wrong. Correct move was: ${correctOperation}`;
   feedback.className = "feedback wrong";
