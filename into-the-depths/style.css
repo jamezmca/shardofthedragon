@@ -1,0 +1,256 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f5f5f5;
+  color: #1a1a1a;
+  font-family: Georgia, serif;
+  min-height: 100vh;
+  padding: 24px 16px;
+}
+
+#app {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+/* Difficulty buttons */
+.difficulty-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.diff-btn {
+  padding: 10px 24px;
+  font-size: 1rem;
+  border: 2px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.diff-btn:hover {
+  background: #e8e8e8;
+  border-color: #999;
+}
+
+.diff-btn.active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+/* Score */
+.score-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 28px;
+  font-size: 1.1rem;
+}
+
+.score-row span {
+  font-weight: bold;
+}
+
+/* Game area */
+.game-area {
+  background: #fff;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+#equation {
+  font-size: 2.2rem;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  transition: transform 0.15s;
+}
+
+#equation.solved {
+  transform: scale(1.08);
+  color: #2a7a2a;
+}
+
+#next-equation {
+  font-size: 1.1rem;
+  color: #555;
+  min-height: 1.5em;
+  margin-bottom: 24px;
+}
+
+/* Calculator */
+.calc-display {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: right;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  min-height: 58px;
+  letter-spacing: 0.02em;
+  color: #1a1a1a;
+  font-family: monospace;
+}
+
+.calc-display.placeholder {
+  color: #aaa;
+}
+
+.calc-keys {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.calc-spacer {
+  /* invisible alignment cell */
+}
+
+.calc-btn {
+  padding: 13px 0;
+  font-size: 1.15rem;
+  font-family: Georgia, serif;
+  border: 2px solid #bbb;
+  background: #fafafa;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.1s, border-color 0.1s;
+  line-height: 1.2;
+}
+
+.calc-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+  border-color: #888;
+}
+
+/* Function keys: roots and powers */
+.fn-key {
+  background: #eef0f8;
+  border-color: #99a;
+  font-size: 1rem;
+}
+
+.fn-key sup {
+  font-size: 0.7em;
+}
+
+.fn-key:hover:not(:disabled) {
+  background: #dde0f0;
+  border-color: #778;
+}
+
+/* Arithmetic op keys */
+.op-key {
+  background: #f0f0f0;
+  border-color: #999;
+  font-size: 1.3rem;
+}
+
+.op-key:hover:not(:disabled) {
+  background: #e0e0e0;
+  border-color: #777;
+}
+
+/* Active state for whichever op/fn is currently selected */
+.calc-btn.active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.calc-btn.active:hover {
+  background: #333;
+}
+
+/* Backspace */
+.back-key {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
+/* Zero spans 2 cols, enter spans 2 cols */
+.zero-key {
+  grid-column: span 2;
+}
+
+.enter-key {
+  grid-column: span 2;
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+  font-size: 1.4rem;
+}
+
+.enter-key:hover:not(:disabled) {
+  background: #444;
+  border-color: #444;
+}
+
+.calc-keys.disabled .calc-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Feedback */
+.feedback {
+  font-size: 1.1rem;
+  font-weight: bold;
+  min-height: 1.6em;
+  margin-bottom: 16px;
+}
+
+.feedback.correct {
+  color: #2a7a2a;
+}
+
+.feedback.wrong {
+  color: #b32020;
+}
+
+/* Restart */
+#restart-btn {
+  display: none;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 2px solid #1a1a1a;
+  background: #1a1a1a;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+
+#restart-btn:hover {
+  background: #444;
+  border-color: #444;
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algebra Unlock</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <h1>Algebra Unlock</h1>
+    <p class="subtitle">Enter the inverse operation to peel away each layer.</p>
+
+    <div class="difficulty-row">
+      <button class="diff-btn" data-difficulty="easy">Easy</button>
+      <button class="diff-btn" data-difficulty="medium">Medium</button>
+      <button class="diff-btn" data-difficulty="hard">Hard</button>
+    </div>
+
+    <div class="score-row">
+      <div>Score: <span id="score">0</span></div>
+      <div>Best: <span id="best">0</span></div>
+    </div>
+
+    <div class="game-area">
+      <div id="equation"></div>
+      <div id="next-equation"></div>
+      <div id="calc-display" class="calc-display">—</div>
+      <div id="calc-keys" class="calc-keys">
+
+        <!-- Function ops row 1: roots and powers -->
+        <button class="calc-btn fn-key" data-type="fn" data-value="√">√</button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="∛">∛</button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="^2">x²</button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="^3">x³</button>
+
+        <!-- Function ops row 2: fractional exponents, negation, reciprocal -->
+        <button class="calc-btn fn-key" data-type="fn" data-value="^(2/3)">x<sup>2/3</sup></button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="^(3/2)">x<sup>3/2</sup></button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="negate">−x</button>
+        <button class="calc-btn fn-key" data-type="fn" data-value="1/x">1/x</button>
+
+        <!-- Arithmetic ops -->
+        <button class="calc-btn op-key" data-type="op" data-value="+">+</button>
+        <button class="calc-btn op-key" data-type="op" data-value="−">−</button>
+        <button class="calc-btn op-key" data-type="op" data-value="×">×</button>
+        <button class="calc-btn op-key" data-type="op" data-value="÷">÷</button>
+
+        <!-- Numpad -->
+        <button class="calc-btn" data-type="num" data-value="7">7</button>
+        <button class="calc-btn" data-type="num" data-value="8">8</button>
+        <button class="calc-btn" data-type="num" data-value="9">9</button>
+        <button class="calc-btn back-key" id="calc-back">⌫</button>
+
+        <button class="calc-btn" data-type="num" data-value="4">4</button>
+        <button class="calc-btn" data-type="num" data-value="5">5</button>
+        <button class="calc-btn" data-type="num" data-value="6">6</button>
+        <div class="calc-spacer"></div>
+
+        <button class="calc-btn" data-type="num" data-value="1">1</button>
+        <button class="calc-btn" data-type="num" data-value="2">2</button>
+        <button class="calc-btn" data-type="num" data-value="3">3</button>
+        <div class="calc-spacer"></div>
+
+        <button class="calc-btn zero-key" data-type="num" data-value="0">0</button>
+        <button class="calc-btn enter-key" id="calc-enter">↵</button>
+
+      </div>
+
+      <div id="feedback" class="feedback"></div>
+      <button id="restart-btn">Restart</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
