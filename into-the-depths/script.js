@@ -34,8 +34,8 @@ function makeLayer(type) {
           : (type === "mulN" || type === "divN") ? randomInt(2, 6)
           : null;
 
-  // For postfix ops (powers, div) skip wrapping parens when inner is bare 🎁
-  const needsWrap = x => x !== "🎁";
+  // For postfix ops (powers, div) skip wrapping parens when inner is the bare variable
+  const needsWrap = x => x !== currentVar;
 
   switch (type) {
     case "add":   return { type, n, display: x => `${x} + ${n}`,                                    inverse: `− ${n}` };
@@ -90,7 +90,7 @@ function buildInitialStack(difficulty) {
 }
 
 function buildExpressionString(stack) {
-  let expr = "🎁";
+  let expr = currentVar;
   for (const layer of stack) expr = layer.display(expr);
   return expr;
 }
@@ -98,6 +98,7 @@ function buildExpressionString(stack) {
 // ---- game state ----
 
 let currentDifficulty = "easy";
+let currentVar = "🎁";
 let stack = [];
 let score = 0;
 let bestScore = 0;
@@ -273,12 +274,14 @@ function endGame(correctOperation) {
 document.addEventListener("DOMContentLoaded", () => {
   bestScore = parseInt(localStorage.getItem("algebraUnlockBest") || "0", 10);
 
-  document.querySelectorAll(".diff-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      startGame(btn.dataset.difficulty);
-    });
+  document.getElementById("var-select").addEventListener("change", e => {
+    currentVar = e.target.value;
+    document.getElementById("current-var").textContent = currentVar;
+    startGame(currentDifficulty);
+  });
+
+  document.getElementById("diff-select").addEventListener("change", e => {
+    startGame(e.target.value);
   });
 
   document.getElementById("calc-keys").addEventListener("click", e => {
@@ -315,5 +318,4 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   startGame("easy");
-  document.querySelector('.diff-btn[data-difficulty="easy"]').classList.add("active");
 });
