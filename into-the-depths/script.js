@@ -138,6 +138,10 @@ function formatRhs(value) {
 let calcOp = "";
 let calcNum = "";
 
+function updateSolveHint() {
+  document.getElementById("solve-hint").textContent = `rearrange and solve for ${currentVar}`;
+}
+
 function startGame(difficulty) {
   currentDifficulty = difficulty;
   score = 0;
@@ -277,6 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("var-select").addEventListener("change", e => {
     currentVar = e.target.value;
     document.getElementById("current-var").textContent = currentVar;
+    updateSolveHint();
     startGame(currentDifficulty);
   });
 
@@ -317,5 +322,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startGame(currentDifficulty);
   });
 
+  updateSolveHint();
   startGame("easy");
 });

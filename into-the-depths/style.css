@@ -75,6 +75,13 @@ h1 {
   transform: scale(1.08);
 }
 
+.solve-hint {
+  font-size: 0.78rem;
+  color: #999;
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
 #next-equation {
   font-size: 1rem;
   color: #666;
