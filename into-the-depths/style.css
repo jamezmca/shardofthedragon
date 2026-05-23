@@ -30,6 +30,28 @@ h1 {
   margin-bottom: 24px;
 }
 
+/* Instructions */
+.instructions {
+  max-width: 620px;
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  color: #444;
+  line-height: 1.65;
+  text-align: left;
+}
+
+.instructions p {
+  margin-bottom: 10px;
+}
+
+.instructions p:last-child {
+  margin-bottom: 0;
+}
+
 /* Difficulty buttons */
 .difficulty-row {
   display: flex;

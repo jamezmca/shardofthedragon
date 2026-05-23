@@ -33,10 +33,10 @@ function makeLayer(type) {
   const needsWrap = x => x !== "🎁";
 
   switch (type) {
-    case "add":   return { type, display: x => `${x} + ${n}`,                                    inverse: `− ${n}` };
-    case "sub":   return { type, display: x => `${x} − ${n}`,                                    inverse: `+ ${n}` };
-    case "mulN":  return { type, display: x => `${n}(${x})`,                                     inverse: `÷ ${n}` };
-    case "divN":  return { type, display: x => `${needsWrap(x) ? `(${x})` : x} ÷ ${n}`,         inverse: `× ${n}` };
+    case "add":   return { type, n, display: x => `${x} + ${n}`,                                    inverse: `− ${n}` };
+    case "sub":   return { type, n, display: x => `${x} − ${n}`,                                    inverse: `+ ${n}` };
+    case "mulN":  return { type, n, display: x => `${n}(${x})`,                                     inverse: `÷ ${n}` };
+    case "divN":  return { type, n, display: x => `${needsWrap(x) ? `(${x})` : x} ÷ ${n}`,         inverse: `× ${n}` };
     case "sq":    return { type, display: x => `${needsWrap(x) ? `(${x})` : x}²`,               inverse: `√` };
     case "cu":    return { type, display: x => `${needsWrap(x) ? `(${x})` : x}³`,               inverse: `∛` };
     case "sqrt":  return { type, display: x => `√(${x})`,                                        inverse: `^2` };
@@ -85,6 +85,32 @@ let stack = [];
 let score = 0;
 let bestScore = 0;
 let isGameOver = false;
+let rhsValue = 0;
+
+function applyLayerInverse(layer, rhs) {
+  switch (layer.type) {
+    case "add":   return rhs - layer.n;
+    case "sub":   return rhs + layer.n;
+    case "mulN":  return rhs / layer.n;
+    case "divN":  return rhs * layer.n;
+    case "sq":    return Math.sqrt(rhs);
+    case "cu":    return Math.cbrt(rhs);
+    case "sqrt":  return rhs ** 2;
+    case "cbrt":  return rhs ** 3;
+    case "pow23": return rhs ** (3 / 2);
+    case "pow32": return rhs ** (2 / 3);
+    case "neg":   return -rhs;
+    case "recip": return 1 / rhs;
+    default:      return rhs;
+  }
+}
+
+function formatRhs(value) {
+  if (isNaN(value))      return "?";
+  if (!isFinite(value))  return value > 0 ? "∞" : "-∞";
+  if (Number.isInteger(value)) return String(value);
+  return parseFloat(value.toFixed(4)).toString();
+}
 
 // ---- calculator state ----
 
@@ -95,6 +121,7 @@ function startGame(difficulty) {
   currentDifficulty = difficulty;
   score = 0;
   isGameOver = false;
+  rhsValue = 0;
   stack = buildInitialStack(difficulty);
   resetCalc();
   renderGame();
@@ -111,7 +138,7 @@ function renderGame() {
   resetCalc();
   document.getElementById("score").textContent = score;
   document.getElementById("best").textContent = bestScore;
-  document.getElementById("equation").textContent = buildExpressionString(stack);
+  document.getElementById("equation").textContent = buildExpressionString(stack) + " = " + formatRhs(rhsValue);
   document.getElementById("feedback").textContent = "";
   document.getElementById("feedback").className = "feedback";
   document.getElementById("restart-btn").style.display = isGameOver ? "inline-block" : "none";
@@ -187,9 +214,10 @@ function checkOperation(operation) {
     feedback.textContent = "Correct!";
     feedback.className = "feedback correct";
 
-    // Show the briefly-exposed inner structure before the new deepest layer wraps it
+    // Apply inverse to rhs, then show the briefly-exposed inner structure
+    rhsValue = applyLayerInverse(outermost, rhsValue);
     const exposed = buildExpressionString(stack.slice(0, -1));
-    document.getElementById("next-equation").textContent = "→ " + exposed;
+    document.getElementById("next-equation").textContent = "→ " + exposed + " = " + formatRhs(rhsValue);
 
     const equationEl = document.getElementById("equation");
     equationEl.classList.add("solved");
