@@ -1,8 +1,5 @@
-// Function ops need no digit — pressing one sets the full operation.
-// Arithmetic ops need a digit after: + − × ÷ followed by a number.
 const FUNCTION_OPS = new Set(["√", "∛", "^2", "^3", "^(2/3)", "^(3/2)", "negate", "1/x"]);
 
-// How each operation string displays in the calc screen
 const OP_DISPLAY = {
   "^2":     "x²",
   "^3":     "x³",
@@ -12,196 +9,85 @@ const OP_DISPLAY = {
   "1/x":    "1/x",
 };
 
-const puzzles = {
-  // Easy: 2 layers, arithmetic only
-  easy: [
-    {
-      layers: [
-        { equation: "3(🎁 + 4)",      correctOperation: "÷ 3", nextEquation: "🎁 + 4" },
-        { equation: "🎁 + 4",          correctOperation: "− 4", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "2(🎁 − 5)",      correctOperation: "÷ 2", nextEquation: "🎁 − 5" },
-        { equation: "🎁 − 5",          correctOperation: "+ 5", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "(🎁 + 6) × 4",   correctOperation: "÷ 4", nextEquation: "🎁 + 6" },
-        { equation: "🎁 + 6",          correctOperation: "− 6", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "5(🎁 + 3)",       correctOperation: "÷ 5", nextEquation: "🎁 + 3" },
-        { equation: "🎁 + 3",          correctOperation: "− 3", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "(🎁 − 2) × 3",   correctOperation: "÷ 3", nextEquation: "🎁 − 2" },
-        { equation: "🎁 − 2",          correctOperation: "+ 2", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "4(🎁 + 7)",       correctOperation: "÷ 4", nextEquation: "🎁 + 7" },
-        { equation: "🎁 + 7",          correctOperation: "− 7", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "(🎁 + 8) ÷ 2",   correctOperation: "× 2", nextEquation: "🎁 + 8" },
-        { equation: "🎁 + 8",          correctOperation: "− 8", nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "6(🎁 − 3)",       correctOperation: "÷ 6", nextEquation: "🎁 − 3" },
-        { equation: "🎁 − 3",          correctOperation: "+ 3", nextEquation: "🎁" }
-      ]
-    }
-  ],
+// 🎁 is always this many layers away
+const DEPTH = { easy: 2, medium: 3, hard: 4 };
 
-  // Medium: 3 layers — √/^2, negation, reciprocal
-  medium: [
-    {
-      layers: [
-        { equation: "3(🎁 + 2)²",        correctOperation: "÷ 3",    nextEquation: "(🎁 + 2)²" },
-        { equation: "(🎁 + 2)²",         correctOperation: "√",      nextEquation: "🎁 + 2" },
-        { equation: "🎁 + 2",            correctOperation: "− 2",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "(🎁 + 5)² − 9",     correctOperation: "+ 9",    nextEquation: "(🎁 + 5)²" },
-        { equation: "(🎁 + 5)²",         correctOperation: "√",      nextEquation: "🎁 + 5" },
-        { equation: "🎁 + 5",            correctOperation: "− 5",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "√(🎁 − 4) + 3",     correctOperation: "− 3",    nextEquation: "√(🎁 − 4)" },
-        { equation: "√(🎁 − 4)",         correctOperation: "^2",     nextEquation: "🎁 − 4" },
-        { equation: "🎁 − 4",            correctOperation: "+ 4",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "2(🎁 + 7)²",        correctOperation: "÷ 2",    nextEquation: "(🎁 + 7)²" },
-        { equation: "(🎁 + 7)²",         correctOperation: "√",      nextEquation: "🎁 + 7" },
-        { equation: "🎁 + 7",            correctOperation: "− 7",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "−(🎁 + 4) + 7",     correctOperation: "− 7",    nextEquation: "−(🎁 + 4)" },
-        { equation: "−(🎁 + 4)",         correctOperation: "negate", nextEquation: "🎁 + 4" },
-        { equation: "🎁 + 4",            correctOperation: "− 4",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "−(3(🎁 + 5))",      correctOperation: "negate", nextEquation: "3(🎁 + 5)" },
-        { equation: "3(🎁 + 5)",         correctOperation: "÷ 3",    nextEquation: "🎁 + 5" },
-        { equation: "🎁 + 5",            correctOperation: "− 5",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "3/(🎁 + 5)",        correctOperation: "÷ 3",    nextEquation: "1/(🎁 + 5)" },
-        { equation: "1/(🎁 + 5)",        correctOperation: "1/x",    nextEquation: "🎁 + 5" },
-        { equation: "🎁 + 5",            correctOperation: "− 5",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "1/(🎁 − 3) + 4",    correctOperation: "− 4",    nextEquation: "1/(🎁 − 3)" },
-        { equation: "1/(🎁 − 3)",        correctOperation: "1/x",    nextEquation: "🎁 − 3" },
-        { equation: "🎁 − 3",            correctOperation: "+ 3",    nextEquation: "🎁" }
-      ]
-    }
-  ],
-
-  // Hard: 4 layers — ^3, ∛, fractional exponents, negation, reciprocal
-  hard: [
-    {
-      layers: [
-        { equation: "2((🎁 + 1)³ − 4)",        correctOperation: "÷ 2",    nextEquation: "(🎁 + 1)³ − 4" },
-        { equation: "(🎁 + 1)³ − 4",           correctOperation: "+ 4",    nextEquation: "(🎁 + 1)³" },
-        { equation: "(🎁 + 1)³",               correctOperation: "∛",      nextEquation: "🎁 + 1" },
-        { equation: "🎁 + 1",                  correctOperation: "− 1",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "3∛(🎁 + 2) + 5",          correctOperation: "− 5",    nextEquation: "3∛(🎁 + 2)" },
-        { equation: "3∛(🎁 + 2)",              correctOperation: "÷ 3",    nextEquation: "∛(🎁 + 2)" },
-        { equation: "∛(🎁 + 2)",               correctOperation: "^3",     nextEquation: "🎁 + 2" },
-        { equation: "🎁 + 2",                  correctOperation: "− 2",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "4(🎁 − 3)^(2/3) + 12",   correctOperation: "− 12",   nextEquation: "4(🎁 − 3)^(2/3)" },
-        { equation: "4(🎁 − 3)^(2/3)",         correctOperation: "÷ 4",    nextEquation: "(🎁 − 3)^(2/3)" },
-        { equation: "(🎁 − 3)^(2/3)",          correctOperation: "^(3/2)", nextEquation: "🎁 − 3" },
-        { equation: "🎁 − 3",                  correctOperation: "+ 3",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "2(🎁 + 4)^(3/2) − 16",   correctOperation: "+ 16",   nextEquation: "2(🎁 + 4)^(3/2)" },
-        { equation: "2(🎁 + 4)^(3/2)",         correctOperation: "÷ 2",    nextEquation: "(🎁 + 4)^(3/2)" },
-        { equation: "(🎁 + 4)^(3/2)",          correctOperation: "^(2/3)", nextEquation: "🎁 + 4" },
-        { equation: "🎁 + 4",                  correctOperation: "− 4",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "−(3(🎁 + 2)²)",           correctOperation: "negate", nextEquation: "3(🎁 + 2)²" },
-        { equation: "3(🎁 + 2)²",              correctOperation: "÷ 3",    nextEquation: "(🎁 + 2)²" },
-        { equation: "(🎁 + 2)²",               correctOperation: "√",      nextEquation: "🎁 + 2" },
-        { equation: "🎁 + 2",                  correctOperation: "− 2",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "−(2(🎁 − 5)^(2/3))",     correctOperation: "negate", nextEquation: "2(🎁 − 5)^(2/3)" },
-        { equation: "2(🎁 − 5)^(2/3)",         correctOperation: "÷ 2",    nextEquation: "(🎁 − 5)^(2/3)" },
-        { equation: "(🎁 − 5)^(2/3)",          correctOperation: "^(3/2)", nextEquation: "🎁 − 5" },
-        { equation: "🎁 − 5",                  correctOperation: "+ 5",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "2/(🎁 + 4)²",             correctOperation: "÷ 2",    nextEquation: "1/(🎁 + 4)²" },
-        { equation: "1/(🎁 + 4)²",             correctOperation: "1/x",    nextEquation: "(🎁 + 4)²" },
-        { equation: "(🎁 + 4)²",               correctOperation: "√",      nextEquation: "🎁 + 4" },
-        { equation: "🎁 + 4",                  correctOperation: "− 4",    nextEquation: "🎁" }
-      ]
-    },
-    {
-      layers: [
-        { equation: "1/(🎁 + 1)³ + 4",         correctOperation: "− 4",    nextEquation: "1/(🎁 + 1)³" },
-        { equation: "1/(🎁 + 1)³",             correctOperation: "1/x",    nextEquation: "(🎁 + 1)³" },
-        { equation: "(🎁 + 1)³",               correctOperation: "∛",      nextEquation: "🎁 + 1" },
-        { equation: "🎁 + 1",                  correctOperation: "− 1",    nextEquation: "🎁" }
-      ]
-    }
-  ]
+// Layer types available per difficulty
+const OP_POOLS = {
+  easy:   ["add", "sub", "mulN", "divN"],
+  medium: ["add", "sub", "mulN", "divN", "sq", "sqrt", "neg", "recip"],
+  hard:   ["add", "sub", "mulN", "divN", "sq", "sqrt", "neg", "recip", "cu", "cbrt", "pow23", "pow32"],
 };
 
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Build a layer object. display(inner) renders the layer wrapping inner.
+function makeLayer(type) {
+  const n = (type === "add" || type === "sub")   ? randomInt(1, 9)
+          : (type === "mulN" || type === "divN") ? randomInt(2, 6)
+          : null;
+
+  // For postfix ops (powers, div) skip wrapping parens when inner is bare 🎁
+  const needsWrap = x => x !== "🎁";
+
+  switch (type) {
+    case "add":   return { type, display: x => `${x} + ${n}`,                                    inverse: `− ${n}` };
+    case "sub":   return { type, display: x => `${x} − ${n}`,                                    inverse: `+ ${n}` };
+    case "mulN":  return { type, display: x => `${n}(${x})`,                                     inverse: `÷ ${n}` };
+    case "divN":  return { type, display: x => `${needsWrap(x) ? `(${x})` : x} ÷ ${n}`,         inverse: `× ${n}` };
+    case "sq":    return { type, display: x => `${needsWrap(x) ? `(${x})` : x}²`,               inverse: `√` };
+    case "cu":    return { type, display: x => `${needsWrap(x) ? `(${x})` : x}³`,               inverse: `∛` };
+    case "sqrt":  return { type, display: x => `√(${x})`,                                        inverse: `^2` };
+    case "cbrt":  return { type, display: x => `∛(${x})`,                                        inverse: `^3` };
+    case "pow23": return { type, display: x => `${needsWrap(x) ? `(${x})` : x}^(2/3)`,          inverse: `^(3/2)` };
+    case "pow32": return { type, display: x => `${needsWrap(x) ? `(${x})` : x}^(3/2)`,          inverse: `^(2/3)` };
+    case "neg":   return { type, display: x => `−(${x})`,                                        inverse: `negate` };
+    case "recip": return { type, display: x => `1/(${x})`,                                       inverse: `1/x` };
+  }
+}
+
+// adjacentType = the layer this new one will sit directly beside (its inner or outer neighbour).
+// Rules: no two consecutive additive layers (display ambiguity); no double neg or double recip.
+function generateLayer(difficulty, adjacentType) {
+  const addAdj = adjacentType === "add" || adjacentType === "sub";
+  const pool = OP_POOLS[difficulty].filter(t => {
+    if (addAdj && (t === "add" || t === "sub")) return false;
+    if (adjacentType === "neg"   && t === "neg")   return false;
+    if (adjacentType === "recip" && t === "recip") return false;
+    return true;
+  });
+  return makeLayer(pool[Math.floor(Math.random() * pool.length)]);
+}
+
+// stack[0] = innermost layer (wraps 🎁), stack[N-1] = outermost (what player sees first).
+function buildInitialStack(difficulty) {
+  const depth = DEPTH[difficulty];
+  const stack = [];
+  for (let i = 0; i < depth; i++) {
+    const adj = stack.length ? stack[stack.length - 1].type : null;
+    stack.push(generateLayer(difficulty, adj));
+  }
+  return stack;
+}
+
+function buildExpressionString(stack) {
+  let expr = "🎁";
+  for (const layer of stack) expr = layer.display(expr);
+  return expr;
+}
+
+// ---- game state ----
+
 let currentDifficulty = "easy";
-let currentPuzzle = null;
-let currentLayerIndex = 0;
+let stack = [];
 let score = 0;
 let bestScore = 0;
 let isGameOver = false;
 
-// Calculator state
+// ---- calculator state ----
+
 let calcOp = "";
 let calcNum = "";
 
@@ -209,15 +95,9 @@ function startGame(difficulty) {
   currentDifficulty = difficulty;
   score = 0;
   isGameOver = false;
-  loadNewPuzzle();
+  stack = buildInitialStack(difficulty);
   resetCalc();
   renderGame();
-}
-
-function loadNewPuzzle() {
-  const pool = puzzles[currentDifficulty];
-  currentPuzzle = pool[Math.floor(Math.random() * pool.length)];
-  currentLayerIndex = 0;
 }
 
 function updateScore() {
@@ -230,10 +110,7 @@ function updateScore() {
 function renderGame() {
   document.getElementById("score").textContent = score;
   document.getElementById("best").textContent = bestScore;
-
-  const layer = currentPuzzle.layers[currentLayerIndex];
-  document.getElementById("equation").textContent = layer.equation;
-
+  document.getElementById("equation").textContent = buildExpressionString(stack);
   document.getElementById("feedback").textContent = "";
   document.getElementById("feedback").className = "feedback";
   document.getElementById("restart-btn").style.display = isGameOver ? "inline-block" : "none";
@@ -241,7 +118,7 @@ function renderGame() {
   document.getElementById("calc-keys").classList.toggle("disabled", isGameOver);
 }
 
-// --- Calculator ---
+// ---- calculator ----
 
 function resetCalc() {
   calcOp = "";
@@ -258,23 +135,13 @@ function updateCalcDisplay() {
     return;
   }
   display.classList.remove("placeholder");
-  const opLabel = OP_DISPLAY[calcOp] || calcOp;
-  if (FUNCTION_OPS.has(calcOp)) {
-    display.textContent = opLabel;
-  } else {
-    display.textContent = opLabel + (calcNum ? " " + calcNum : "");
-  }
+  const label = OP_DISPLAY[calcOp] || calcOp;
+  display.textContent = FUNCTION_OPS.has(calcOp) ? label : label + (calcNum ? " " + calcNum : "");
 }
 
 function handleCalcKey(type, value, buttonEl) {
   if (isGameOver) return;
-
-  if (type === "fn") {
-    calcOp = value;
-    calcNum = "";
-    document.querySelectorAll(".calc-btn").forEach(b => b.classList.remove("active"));
-    if (buttonEl) buttonEl.classList.add("active");
-  } else if (type === "op") {
+  if (type === "fn" || type === "op") {
     calcOp = value;
     calcNum = "";
     document.querySelectorAll(".calc-btn").forEach(b => b.classList.remove("active"));
@@ -282,7 +149,6 @@ function handleCalcKey(type, value, buttonEl) {
   } else if (type === "num") {
     if (calcNum.length < 2) calcNum += value;
   }
-
   updateCalcDisplay();
 }
 
@@ -301,7 +167,6 @@ function handleCalcEnter() {
   if (isGameOver || !calcOp) return;
   const isFn = FUNCTION_OPS.has(calcOp);
   if (!isFn && !calcNum) return;
-
   const operation = isFn ? calcOp : calcOp + " " + calcNum;
   resetCalc();
   checkOperation(operation);
@@ -309,9 +174,9 @@ function handleCalcEnter() {
 
 function checkOperation(operation) {
   if (isGameOver) return;
-  const layer = currentPuzzle.layers[currentLayerIndex];
+  const outermost = stack[stack.length - 1];
 
-  if (operation === layer.correctOperation) {
+  if (operation === outermost.inverse) {
     score++;
     updateScore();
     document.getElementById("score").textContent = score;
@@ -321,20 +186,24 @@ function checkOperation(operation) {
     feedback.textContent = "Correct!";
     feedback.className = "feedback correct";
 
-    document.getElementById("next-equation").textContent = "→ " + layer.nextEquation;
+    // Show the briefly-exposed inner structure before the new deepest layer wraps it
+    const exposed = buildExpressionString(stack.slice(0, -1));
+    document.getElementById("next-equation").textContent = "→ " + exposed;
 
     const equationEl = document.getElementById("equation");
     equationEl.classList.add("solved");
     setTimeout(() => equationEl.classList.remove("solved"), 400);
 
-    const isLastLayer = currentLayerIndex >= currentPuzzle.layers.length - 1;
     setTimeout(() => {
-      if (isLastLayer) loadNewPuzzle();
-      else currentLayerIndex++;
+      stack.pop(); // remove outermost
+      // New layer added at the bottom — 🎁 recedes one layer deeper
+      const adj = stack[0] ? stack[0].type : null;
+      stack.unshift(generateLayer(currentDifficulty, adj));
       renderGame();
     }, 700);
+
   } else {
-    endGame(layer.correctOperation);
+    endGame(outermost.inverse);
   }
 }
 
@@ -350,7 +219,6 @@ function endGame(correctOperation) {
 document.addEventListener("DOMContentLoaded", () => {
   bestScore = parseInt(localStorage.getItem("algebraUnlockBest") || "0", 10);
 
-  // Difficulty buttons
   document.querySelectorAll(".diff-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("active"));
@@ -359,7 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Calculator keypad — event delegation
   document.getElementById("calc-keys").addEventListener("click", e => {
     const btn = e.target.closest(".calc-btn[data-type]");
     if (!btn) return;
@@ -369,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("calc-back").addEventListener("click", handleCalcBack);
   document.getElementById("calc-enter").addEventListener("click", handleCalcEnter);
 
-  // Keyboard shortcuts for arithmetic ops and digits
   document.addEventListener("keydown", e => {
     if (isGameOver) return;
     if (e.key >= "0" && e.key <= "9") {
