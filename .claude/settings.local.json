@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git restore:*)",
+      "Bash(rm -rf a-brief-history/.git bored-scrolling/.git code-breaker/.git every-free-transcription-kills-a-tech-company/.git odds-of/.git pdf-png-slicer/.git seating-plan/.git)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(npm view:*)",
+      "Bash(ls /Users/jamesmcarthur/github2/shardofthedragon/go-to-the-gym/img/*.jpg)",
+      "Bash(xargs -I{} basename {} .jpg)",
+      "Bash(node *)"
+    ]
+  }
+}
