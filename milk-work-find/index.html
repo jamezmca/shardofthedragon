@@ -135,6 +135,48 @@
       }
 
       wordKeySet = new Set(wordKeyList);
+      scrubAccidentals();
+    }
+
+    function scrubAccidentals() {
+      let changed = true;
+      while (changed) {
+        changed = false;
+
+        for (let r = 0; r < SIZE && !changed; r++) {
+          for (let c = 0; c <= SIZE - 4 && !changed; c++) {
+            if (grid[r][c]==='M' && grid[r][c+1]==='I' && grid[r][c+2]==='L' && grid[r][c+3]==='K') {
+              const positions = [key(r,c), key(r,c+1), key(r,c+2), key(r,c+3)];
+              if (positions.join(',') === wordKeyList.join(',')) continue;
+              for (let i = 0; i < 4; i++) {
+                if (!wordKeySet.has(positions[i])) {
+                  const others = 'MILK'.replace(WORD[i], '');
+                  grid[r][c + i] = others[Math.floor(Math.random() * others.length)];
+                  changed = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        for (let c = 0; c < SIZE && !changed; c++) {
+          for (let r = 0; r <= SIZE - 4 && !changed; r++) {
+            if (grid[r][c]==='M' && grid[r+1][c]==='I' && grid[r+2][c]==='L' && grid[r+3][c]==='K') {
+              const positions = [key(r,c), key(r+1,c), key(r+2,c), key(r+3,c)];
+              if (positions.join(',') === wordKeyList.join(',')) continue;
+              for (let i = 0; i < 4; i++) {
+                if (!wordKeySet.has(positions[i])) {
+                  const others = 'MILK'.replace(WORD[i], '');
+                  grid[r + i][c] = others[Math.floor(Math.random() * others.length)];
+                  changed = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     function renderGrid() {
