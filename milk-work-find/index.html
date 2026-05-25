@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>milk word find</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f7f6f2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    header {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      color: #b0b0a8;
+      text-transform: uppercase;
+    }
+
+    #grid-wrap {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    #grid {
+      --cell: min(31px, calc((100vw - 50px) / 23));
+      display: grid;
+      grid-template-columns: repeat(23, var(--cell));
+      grid-template-rows: repeat(23, var(--cell));
+      gap: 1px;
+    }
+
+    .cell {
+      width: var(--cell, 31px);
+      height: var(--cell, 31px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(9px, calc(var(--cell, 31px) * 0.42), 12.5px);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border-radius: 3px;
+      color: #1e1e1e;
+      cursor: default;
+    }
+
+    .cell.selecting {
+      background: #dce8ff;
+      color: #1a44cc;
+    }
+
+    .cell.found {
+      background: #d2f0d2;
+      color: #1a5e1a;
+    }
+
+    #status {
+      font-size: 11.5px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: transparent;
+      height: 16px;
+    }
+
+    #status.visible {
+      color: #2a7a2a;
+    }
+  </style>
+</head>
+<body>
+  <header>find: milk</header>
+  <div id="grid-wrap">
+    <div id="grid"></div>
+  </div>
+  <div id="status">found</div>
+
+  <script>
+    const SIZE = 23;
+    const WORD = 'MILK';
+
+    let grid = [];
+    let wordKeyList = [];
+    let wordKeySet = new Set();
+
+    let isDragging = false;
+    let dragStart = null;
+    let dragEnd = null;
+    let gameOver = false;
+
+    function randomLetter() {
+      const pool = 'MILK';
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function key(r, c) {
+      return `${r},${c}`;
+    }
+
+    function buildGrid() {
+      grid = Array.from({ length: SIZE }, () =>
+        Array.from({ length: SIZE }, () => randomLetter())
+      );
+
+      const horiz = Math.random() < 0.5;
+      let r, c;
+
+      if (horiz) {
+        r = Math.floor(Math.random() * SIZE);
+        c = Math.floor(Math.random() * (SIZE - WORD.length + 1));
+        for (let i = 0; i < WORD.length; i++) grid[r][c + i] = WORD[i];
+        wordKeyList = WORD.split('').map((_, i) => key(r, c + i));
+      } else {
+        c = Math.floor(Math.random() * SIZE);
+        r = Math.floor(Math.random() * (SIZE - WORD.length + 1));
+        for (let i = 0; i < WORD.length; i++) grid[r + i][c] = WORD[i];
+        wordKeyList = WORD.split('').map((_, i) => key(r + i, c));
+      }
+
+      wordKeySet = new Set(wordKeyList);
+    }
+
+    function renderGrid() {
+      const el = document.getElementById('grid');
+      el.innerHTML = '';
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const div = document.createElement('div');
+          div.className = 'cell';
+          div.textContent = grid[r][c];
+          div.dataset.r = r;
+          div.dataset.c = c;
+          el.appendChild(div);
+        }
+      }
+    }
+
+    function selectionKeys(a, b) {
+      if (!a || !b) return [];
+      const r1 = +a.dataset.r, c1 = +a.dataset.c;
+      const r2 = +b.dataset.r, c2 = +b.dataset.c;
+      const keys = [];
+
+      if (r1 === r2) {
+        const step = c2 >= c1 ? 1 : -1;
+        for (let c = c1; c !== c2 + step; c += step) keys.push(key(r1, c));
+      } else if (c1 === c2) {
+        const step = r2 >= r1 ? 1 : -1;
+        for (let r = r1; r !== r2 + step; r += step) keys.push(key(r, c1));
+      } else {
+        keys.push(key(r1, c1));
+      }
+
+      return keys;
+    }
+
+    function applyClasses(selectedKeys) {
+      const sel = new Set(selectedKeys);
+      document.querySelectorAll('.cell').forEach(cell => {
+        const k = key(+cell.dataset.r, +cell.dataset.c);
+        if (gameOver && wordKeySet.has(k)) {
+          cell.className = 'cell found';
+        } else if (!gameOver && sel.has(k)) {
+          cell.className = 'cell selecting';
+        } else {
+          cell.className = 'cell';
+        }
+      });
+    }
+
+    function isWin(keys) {
+      if (keys.length !== WORD.length) return false;
+      const fwd = keys.join('|') === wordKeyList.join('|');
+      const bwd = keys.join('|') === [...wordKeyList].reverse().join('|');
+      return fwd || bwd;
+    }
+
+    function finishDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      const sel = selectionKeys(dragStart, dragEnd);
+      if (isWin(sel)) {
+        gameOver = true;
+        applyClasses([]);
+        const status = document.getElementById('status');
+        status.textContent = 'found it';
+        status.classList.add('visible');
+      } else {
+        applyClasses([]);
+      }
+      dragStart = null;
+      dragEnd = null;
+    }
+
+    document.getElementById('grid').addEventListener('mousedown', e => {
+      const cell = e.target.closest('.cell');
+      if (!cell || gameOver) return;
+      e.preventDefault();
+      isDragging = true;
+      dragStart = cell;
+      dragEnd = cell;
+      applyClasses(selectionKeys(dragStart, dragEnd));
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging || gameOver) return;
+      const cell = e.target.closest && e.target.closest('.cell');
+      if (cell && cell !== dragEnd) {
+        dragEnd = cell;
+        applyClasses(selectionKeys(dragStart, dragEnd));
+      }
+    });
+
+    document.addEventListener('mouseup', finishDrag);
+
+    buildGrid();
+    renderGrid();
+  </script>
+</body>
+</html>
