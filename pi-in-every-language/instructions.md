@@ -1,0 +1,5 @@
+for all intents and purposes, i want this to be a clone of /pi-but-its-chinese with a few modifications. 1, i want to remove the test btuton and feature. 2, in the heading where is says the language, i want to be able to click the current language and have a modal (full page modal) overlay show up with a bunch of common languages (min 10), and i want to be able to select another and that is now the new language in the heading, and now pi is shown in that language. (for character systems that don't pertain to english, i want phonetic spelling of the letters so we can pronounce it.). i don't want it obviously to be a drop down, but it should have a hover effect to show it has interaction.
+
+i really like the existing layout, so let's use that again. at least let's do maori, english, spanish, french, mandarin, korean, japanese, german, russian, indian, (major african language), egyptian, (so basically the 10-15 most spoken languages on earth). 
+
+also i quite like the recoleta bold

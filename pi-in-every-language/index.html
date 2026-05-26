@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>π in Every Language</title>
+  <link href="https://fonts.cdnfonts.com/css/recoleta" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: monospace; }
+
+    #display { padding: 48px 0 32px; }
+
+    h1 {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: 'Recoleta', serif;
+      margin: 0 0 24px;
+    }
+
+    #lang-label {
+      cursor: pointer;
+      border-bottom: 1px dashed #bbb;
+      padding-bottom: 1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    #lang-label:hover {
+      color: #555;
+      border-color: #555;
+    }
+
+    .pi-row { display: flex; border-top: 1px solid #e8e8e8; }
+    .pi-row:last-child { border-bottom: 1px solid #e8e8e8; }
+
+    .pi-cell {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      padding: 10px 2px;
+      border-right: 1px solid #f0f0f0;
+    }
+    .pi-cell:last-child { border-right: none; }
+
+    .pi-cell .pos { font-size: 0.55rem; color: #bbb; line-height: 1; }
+    .pi-cell .dig { font-size: 1rem; color: #888; margin: 3px 0 2px; }
+    .pi-cell .pin {
+      font-size: 0.82rem;
+      font-weight: 700;
+      font-family: 'Recoleta', serif;
+      word-break: break-word;
+      hyphens: auto;
+    }
+
+    .pi-cell.dec .dig { font-size: 1.2rem; }
+
+    /* ── Modal ── */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal.open { display: flex; }
+
+    .modal-label {
+      font-family: 'Recoleta', serif;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.14em;
+      margin: 0 0 40px;
+    }
+
+    #lang-grid {
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      gap: 6px 52px;
+      padding: 0 40px;
+    }
+
+    @media (max-width: 560px) {
+      #lang-grid { grid-template-columns: repeat(2, auto); gap: 6px 36px; }
+    }
+
+    .lang-option {
+      font-family: 'Recoleta', serif;
+      font-size: 1.65rem;
+      color: rgba(255, 255, 255, 0.65);
+      cursor: pointer;
+      padding: 7px 0;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .lang-option:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.55);
+    }
+    .lang-option.active {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+<div id="display">
+  <h1>π in <span id="lang-label">English</span></h1>
+  <div id="pi-grid"></div>
+</div>
+
+<div id="modal">
+  <p class="modal-label">choose a language</p>
+  <div id="lang-grid"></div>
+</div>
+
+<script>
+(() => {
+  const DIGITS = [
+    3,1,4,1,5,9,2,6,5,3,
+    5,8,9,7,9,3,2,3,8,4,
+    6,2,6,4,3,3,8,3,2,7,
+    9,5,0,2,8,8,4,1,9,7,
+    1,6,9,3,9,9,3,7,5,1,
+    0,5,8,2,0,9,7,4,9,4,
+    4,5,9,2,3,0,7,8,1,6,
+    4,0,6,2,8,6,2,0,8,9,
+    9,8,6,2,8,0,3,4,8,2,
+    5,3,4,2,1,1,7,0,6,7,
+  ];
+
+  const LANGUAGES = [
+    {
+      id: 'english', name: 'English',
+      digits: ['zero','one','two','three','four','five','six','seven','eight','nine'],
+      decimal: 'point'
+    },
+    {
+      id: 'spanish', name: 'Spanish',
+      digits: ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'],
+      decimal: 'punto'
+    },
+    {
+      id: 'portuguese', name: 'Portuguese',
+      digits: ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove'],
+      decimal: 'vírgula'
+    },
+    {
+      id: 'french', name: 'French',
+      digits: ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf'],
+      decimal: 'virgule'
+    },
+    {
+      id: 'german', name: 'German',
+      digits: ['null','eins','zwei','drei','vier','fünf','sechs','sieben','acht','neun'],
+      decimal: 'Komma'
+    },
+    {
+      id: 'russian', name: 'Russian',
+      digits: ["nol'","odin","dva","tri","chetyre","pyat'","shest'","sem'","vosem'","devyat'"],
+      decimal: 'zapyataya'
+    },
+    {
+      id: 'mandarin', name: 'Mandarin',
+      digits: ['líng','yī','èr','sān','sì','wǔ','liù','qī','bā','jiǔ'],
+      decimal: 'diǎn'
+    },
+    {
+      id: 'hindi', name: 'Hindi',
+      digits: ['shunya','ek','do','teen','chaar','paanch','chhah','saat','aath','nau'],
+      decimal: 'bindu'
+    },
+    {
+      id: 'bengali', name: 'Bengali',
+      digits: ['shunno','ek','dui','tin','char','pach','choy','shat','aat','noy'],
+      decimal: 'dashomik'
+    },
+    {
+      id: 'japanese', name: 'Japanese',
+      digits: ['rei','ichi','ni','san','shi','go','roku','nana','hachi','kyū'],
+      decimal: 'ten'
+    },
+    {
+      id: 'korean', name: 'Korean',
+      digits: ['yeong','il','i','sam','sa','o','yuk','chil','pal','gu'],
+      decimal: 'jeom'
+    },
+    {
+      id: 'arabic', name: 'Arabic',
+      digits: ["sifr","wahid","itneen","talata","arba'a","khamsa","sitta","sab'a","tamanya","tis'a"],
+      decimal: 'nuqta'
+    },
+    {
+      id: 'swahili', name: 'Swahili',
+      digits: ['sifuri','moja','mbili','tatu','nne','tano','sita','saba','nane','tisa'],
+      decimal: 'nukta'
+    },
+    {
+      id: 'maori', name: 'Māori',
+      digits: ['kore','tahi','rua','toru','whā','rima','ono','whitu','waru','iwa'],
+      decimal: 'ira'
+    },
+  ];
+
+  let currentLang = LANGUAGES[0];
+
+  function buildGrid() {
+    const grid = document.getElementById('pi-grid');
+    grid.innerHTML = '';
+
+    for (let row = 0; row < 10; row++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'pi-row';
+
+      for (let col = 0; col < 10; col++) {
+        const idx = row * 10 + col;
+
+        if (idx === 1) {
+          const dec = document.createElement('div');
+          dec.className = 'pi-cell dec';
+          dec.innerHTML =
+            `<div class="pos">·</div>` +
+            `<div class="dig">.</div>` +
+            `<div class="pin">${currentLang.decimal}</div>`;
+          rowEl.appendChild(dec);
+        }
+
+        const cell = document.createElement('div');
+        cell.className = 'pi-cell';
+        cell.innerHTML =
+          `<div class="pos">${idx + 1}</div>` +
+          `<div class="dig">${DIGITS[idx]}</div>` +
+          `<div class="pin">${currentLang.digits[DIGITS[idx]]}</div>`;
+        rowEl.appendChild(cell);
+      }
+
+      grid.appendChild(rowEl);
+    }
+  }
+
+  function selectLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('lang-label').textContent = lang.name;
+    buildGrid();
+    closeModal();
+    document.querySelectorAll('.lang-option').forEach(el =>
+      el.classList.toggle('active', el.dataset.id === lang.id)
+    );
+  }
+
+  // Build modal language options
+  const langGrid = document.getElementById('lang-grid');
+  LANGUAGES.forEach(lang => {
+    const el = document.createElement('div');
+    el.className = 'lang-option' + (lang.id === currentLang.id ? ' active' : '');
+    el.dataset.id = lang.id;
+    el.textContent = lang.name;
+    el.addEventListener('click', e => { e.stopPropagation(); selectLanguage(lang); });
+    langGrid.appendChild(el);
+  });
+
+  const modal = document.getElementById('modal');
+  function openModal()  { modal.classList.add('open'); }
+  function closeModal() { modal.classList.remove('open'); }
+
+  document.getElementById('lang-label').addEventListener('click', openModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  buildGrid();
+})();
+</script>
+</body>
+</html>
